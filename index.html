@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GEMACUU — gemacuu.org</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;
+  --border:rgba(255,255,255,0.08);
+  --accent:#238636;--accent2:#3fb950;
+  --blue:#1f6feb;--blue2:#58a6ff;
+  --red:#da3633;--red2:#f85149;
+  --yellow:#d29922;--purple2:#bc8cff;
+  --text:#e6edf3;--muted:#8b949e;--card:#161b22;
+}
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;height:100vh;z-index:10;overflow-y:auto}
+.main{flex:1;margin-left:240px;overflow-y:auto;min-height:100vh}
+.hidden{display:none!important}
+.logo{padding:16px;border-bottom:1px solid var(--border)}
+.logo-top{display:flex;align-items:center;gap:10px}
+.logo-icon{font-size:26px}
+.logo h1{font-size:14px;font-weight:700;color:var(--accent2);letter-spacing:.06em;text-transform:uppercase}
+.logo p{font-size:10px;color:var(--muted);margin-top:1px}
+.logo-credit{font-size:10px;color:rgba(255,255,255,.25);margin-top:8px;border-top:1px solid var(--border);padding-top:6px}
+.nav{flex:1;padding:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(35,134,54,.15);color:var(--accent2)}
+.user-box{padding:12px;border-top:1px solid var(--border)}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0}
+.user-name{font-size:12px;font-weight:600;color:var(--text)}
+.user-role{font-size:11px;color:var(--muted)}
+.logout-btn{width:100%;margin-top:8px;padding:7px;background:rgba(218,54,51,.1);border:1px solid rgba(218,54,51,.2);border-radius:6px;color:#f85149;font-size:12px;cursor:pointer}
+.welcome-banner{background:rgba(35,134,54,.1);border:1px solid rgba(35,134,54,.2);border-radius:10px;padding:14px 18px;margin-bottom:18px}
+.welcome-hora{font-size:11px;color:var(--muted)}
+.welcome-nombre{font-size:19px;font-weight:700;color:var(--accent2)}
+.welcome-msg{font-size:13px;color:var(--muted);margin-top:3px}
+.welcome-sec{margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.15);border-radius:6px;padding:4px 12px;font-size:12px;color:var(--blue2)}
+.page-header{padding:22px 28px 0}
+.page-header h2{font-size:21px;font-weight:700}
+.page-header p{font-size:13px;color:var(--muted);margin-top:3px}
+.content{padding:18px 28px 60px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.card-title{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:13px 15px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.stat-val{font-size:26px;font-weight:700;margin-top:3px;line-height:1}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500}
+td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.form-group{margin-bottom:13px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500}
+input,select,textarea{width:100%;padding:8px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue2)}
+select option{background:var(--bg2)}
+.btn{padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{background:#2ea043}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-danger{background:rgba(218,54,51,.15);color:#f85149;border:1px solid rgba(218,54,51,.25)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+.w-full{width:100%}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(63,185,80,.15);color:#3fb950}
+.badge-red{background:rgba(248,81,73,.15);color:#f85149}
+.badge-blue{background:rgba(88,166,255,.15);color:#58a6ff}
+.badge-yellow{background:rgba(210,153,34,.15);color:#d29922}
+.badge-gray{background:rgba(255,255,255,.06);color:var(--muted)}
+.badge-purple{background:rgba(188,140,255,.15);color:#bc8cff}
+.badge-orange{background:rgba(251,140,0,.15);color:#fb8c00}
+.badge-pink{background:rgba(236,72,153,.15);color:#ec4899}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{width:380px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:36px}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-icon{font-size:44px;margin-bottom:10px}
+.login-logo h1{font-size:28px;font-weight:700;color:#ffffff;letter-spacing:.06em}
+.login-err{background:rgba(218,54,51,.1);border:1px solid rgba(218,54,51,.2);border-radius:6px;padding:10px 14px;font-size:13px;color:#f85149;margin-bottom:14px}
+.loading-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-bottom:10px}
+.foto-thumb{aspect-ratio:1;background:var(--bg3);border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.foto-thumb img{width:100%;height:100%;object-fit:cover}
+.foto-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.75);border:none;color:white;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.foto-thumb.uploading{border-color:var(--blue2);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.add-foto{font-size:22px;color:var(--muted)}
+.persona-row{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;margin-bottom:8px;background:var(--bg3);border-radius:8px;padding:9px 11px}
+.persona-row input{background:transparent;border:none;padding:0;font-size:13px}
+.persona-row input:focus{outline:none}
+.rol-sel{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 7px;font-size:11px;color:var(--text);cursor:pointer}
+.vis-inp{width:65px!important;text-align:center}
+.asist-row{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;margin-bottom:8px;background:var(--bg3);border-radius:8px;padding:9px 11px}
+.asist-row input[type=text]{background:transparent;border:none;padding:0;font-size:13px}
+.asist-row input[type=text]:focus{outline:none}
+.asist-check{width:18px;height:18px;cursor:pointer;accent-color:var(--accent)}
+.total-box{background:rgba(35,134,54,.1);border:1px solid rgba(35,134,54,.2);border-radius:8px;padding:9px 13px;font-size:14px;font-weight:700;color:var(--accent2);margin-top:8px}
+.gps-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(31,111,235,.08);border:1px solid rgba(31,111,235,.15);border-radius:6px;font-size:12px;color:var(--blue2);margin-bottom:10px}
+.act-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:13px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+.act-card:hover{border-color:rgba(255,255,255,.2)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px;width:580px;max-width:100%;margin:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-header h3{font-size:15px;font-weight:700}
+.close-btn{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
+.map-container{height:320px;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px}
+.sep{height:1px;background:var(--border);margin:14px 0}
+.flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}
+.gap-2{gap:8px}.gap-3{gap:12px}
+.mt-2{margin-top:8px}.mt-3{margin-top:12px}.mt-4{margin-top:16px}
+.mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}.mb-4{margin-bottom:16px}
+.text-sm{font-size:13px}.text-xs{font-size:11px}.text-muted{color:var(--muted)}.font-bold{font-weight:700}
+.empty-state{text-align:center;padding:36px 20px;color:var(--muted)}
+.empty-icon{font-size:38px;margin-bottom:10px}
+.calle-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.2);border-radius:20px;padding:3px 10px;font-size:11px;color:#3fb950;margin:2px}
+
+/* BOTTOM NAV MÓVIL */
+.bottom-nav{display:none}
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0;padding-bottom:72px}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .content{padding:12px}
+  .page-header{padding:12px 12px 0}
+  .modal-bg{padding:0;align-items:flex-end}
+  .modal{border-radius:16px 16px 0 0;max-height:92vh;overflow-y:auto;width:100%;margin:0}
+  .persona-row{grid-template-columns:1fr auto auto}
+  .asist-row{grid-template-columns:1fr auto auto}
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:50;padding:5px 0 10px}
+  .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border:none;background:none;color:var(--muted);font-size:9px;cursor:pointer}
+  .bottom-nav-item.active{color:var(--accent2)}
+  .bottom-nav-item .bn-icon{font-size:19px}
+}
+#toast{position:fixed;bottom:80px;right:16px;background:#238636;color:white;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:300px}
+@media(min-width:769px){#toast{bottom:24px;right:24px}}
+</style>
+</head>
+<body>
+
+<div id="page-loading" class="loading-wrap">
+  <div class="spinner"></div>
+  <p style="color:var(--muted);font-size:13px">cargando gemacuu...</p>
+</div>
+
+<div id="page-login" class="login-wrap hidden">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-icon">🧹</div>
+      <h1>GEMACUU</h1>
+      
+      
+    </div>
+    <div id="login-err" class="login-err hidden">usuario o contraseña incorrectos</div>
+    <div class="form-group"><label>usuario</label><input id="inp-user" type="text" placeholder="tu usuario" autocomplete="username"/></div>
+    <div class="form-group"><label>contraseña (número de empleado)</label><input id="inp-pass" type="password" placeholder="••••••" autocomplete="current-password" inputmode="numeric"/></div>
+    <button class="btn btn-primary w-full" id="btn-login" onclick="doLogin()">entrar al sistema</button>
+  </div>
+</div>
+
+<div id="banner-demo" style="display:none;background:#d97706;color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:600;position:fixed;top:0;left:0;width:100%;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.3)">
+  📱 Vista previa — gemacuu.org disponible el lunes &nbsp;·&nbsp; <span style="opacity:.85;font-weight:400">Usa tu usuario y contraseña normales</span>
+</div>
+<div id="page-app" class="app hidden">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-top">
+        <div class="logo-icon">🧹</div>
+        <div><h1>GEMACUU</h1></div>
+      </div>
+      
+    </div>
+    <nav class="nav" id="sidebar-nav"></nav>
+    <div class="user-box">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="user-avatar" id="ui-avatar">O</div>
+        <div><div class="user-name" id="ui-username">—</div><div class="user-role" id="ui-role">—</div></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="hidden">
+      <div class="page-header"><h2>dashboard</h2><p id="dash-sub">resumen general</p></div>
+      <div class="content">
+        <div id="welcome-box"></div>
+        <div class="grid4 mb-4" id="dash-stats"></div>
+        <div class="grid2">
+          <div class="card"><div class="card-title">📊 visitas por equipo</div><div id="dash-equipos"></div></div>
+          <div class="card"><div class="card-title">📅 últimas actividades</div><div id="dash-actividades"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISITAS -->
+    <div id="view-visitas" class="hidden">
+      <div class="page-header"><h2>captura de visitas</h2><p>registra el reporte de tu equipo</p></div>
+      <div class="content">
+        <button class="btn btn-primary mb-4" onclick="showNuevaVisita()">+ nueva captura</button>
+        <div id="lista-visitas"></div>
+      </div>
+    </div>
+
+    <!-- ASISTENCIA -->
+    <div id="view-asistencia" class="hidden">
+      <div class="page-header"><h2>actividades</h2><p>registro de barridos, eventos, redes y más</p></div>
+      <div class="content">
+        <button class="btn btn-primary mb-4" onclick="showNuevaActividad()">+ nueva actividad</button>
+        <div id="lista-actividades"></div>
+      </div>
+    </div>
+
+    <!-- MAPA -->
+    <div id="view-mapa" class="hidden">
+      <div class="page-header"><h2>mapa de recorridos</h2><p>calles visitadas por sección</p></div>
+      <div class="content">
+        <div class="card mb-3">
+          <div class="form-group" style="margin-bottom:0">
+            <label>filtrar por sección</label>
+            <select id="mapa-filtro-sec" onchange="renderMapa()">
+              <option value="">todas las secciones</option>
+            </select>
+          </div>
+        </div>
+        <div class="map-container" id="mapa-div"></div>
+        <div class="card mt-3">
+          <div class="card-title">📍 calles registradas</div>
+          <div id="lista-calles"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERSONAL -->
+    <div id="view-personal" class="hidden">
+      <div class="page-header"><h2>personal</h2><p>164 colaboradores — gestión de padrinos y secciones</p></div>
+      <div class="content">
+        <div class="card mb-3">
+          <div class="grid3" style="gap:10px">
+            <div class="form-group" style="margin-bottom:0">
+              <label>buscar</label>
+              <input type="text" id="p-buscar" placeholder="nombre o área..." oninput="filtrarPersonal()"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>padrino</label>
+              <select id="p-filtro-padrino" onchange="filtrarPersonal()">
+                <option value="">todos</option>
+                <option value="rene">rene espinoza</option>
+                <option value="fernando">fernando amezcua</option>
+                <option value="martin">martin yañez</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>sección asignada</label>
+              <select id="p-filtro-sec" onchange="filtrarPersonal()">
+                <option value="">todas</option>
+                <option value="sin_seccion">sin sección</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button class="btn btn-secondary btn-sm" onclick="exportPersonalCSV()">📋 exportar csv</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportPersonalExcel()">📊 descargar excel</button>
+          </div>
+        </div>
+        <div class="text-xs text-muted mb-2" id="p-count"></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table id="tabla-personal">
+            <thead><tr><th>nombre</th><th>área</th><th>padrino</th><th>sección</th><th>núm. empleado</th><th></th></tr></thead>
+            <tbody id="personal-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div id="view-reportes" class="hidden">
+      <div class="page-header"><h2>reportes</h2><p id="rpt-sub">generado por octavio irigoyen</p></div>
+      <div class="content">
+        <!-- REPORTE EJECUTIVO -->
+        <div class="card mb-4" style="border:1px solid rgba(59,130,246,.3)">
+          <div class="card-title" style="color:var(--blue2)">📄 reporte ejecutivo para lic. armando ruiz</div>
+          <p class="text-xs text-muted mb-3">genera un reporte limpio por tipo de actividad</p>
+          <div class="grid2" style="gap:10px;margin-bottom:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label>tipo de actividad</label>
+              <select id="rpt-tipo-filtro">
+                <option value="">todos los tipos</option>
+                <option value="redes">📱 redes sociales</option>
+                <option value="barrido">🚶 barrido / recorrido</option>
+                <option value="crucero">🚦 crucero</option>
+                <option value="volanteo">✉️ volanteo</option>
+                <option value="evento">🎪 evento</option>
+                <option value="otro">➕ otro</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>período</label>
+              <select id="rpt-periodo">
+                <option value="hoy">hoy</option>
+                <option value="semana">esta semana</option>
+                <option value="mes">este mes</option>
+                <option value="todo">todo</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-primary btn-sm" onclick="generarReportePDF(false)">📄 PDF ejecutivo</button>
+            <button class="btn btn-secondary btn-sm" onclick="abrirReportePDF(false)">🔗 abrir PDF</button>
+            <button class="btn btn-primary btn-sm" style="background:#1f6feb" onclick="generarReportePDF(true)">🔍 PDF ampliado</button>
+            <button class="btn btn-blue btn-sm" onclick="generarReporteEjecutivo()">📝 txt</button>
+            <button class="btn btn-secondary btn-sm" onclick="renderReportes()">🔄 actualizar</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📋 csv</button>
+          </div>
+          <div class="form-group" style="margin-top:10px;margin-bottom:0">
+            <label>hora de corte para el reporte</label>
+            <input type="time" id="rpt-hora-corte" value="21:00" style="max-width:160px"/>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-title">🏠 visitas por encargado</div>
+          <table><thead><tr><th>sección</th><th>encargado</th><th>equipo</th><th>registrado por</th><th>fecha</th><th>total</th><th>calle</th></tr></thead>
+          <tbody id="rpt-visitas"></tbody></table>
+        </div>
+        <div class="card mb-4">
+          <div class="card-title">👥 detalle por persona</div>
+          <table><thead><tr><th>nombre</th><th>acción</th><th>detalle</th><th>sección</th><th>registrado por</th><th>fecha</th></tr></thead>
+          <tbody id="rpt-personas"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-title">📅 actividades</div>
+          <table><thead><tr><th>actividad</th><th>tipo</th><th>registrado por</th><th>equipo</th><th>fecha</th><th>participantes</th></tr></thead>
+          <tbody id="rpt-actividades"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════ DENUNCIAS ══════ -->
+    <div id="view-denuncias" class="hidden">
+      <div class="page-header">
+        <h2>📣 denuncias ciudadanas</h2>
+        <p>registro y seguimiento de reportes de mantenimiento urbano</p>
+      </div>
+      <div class="content">
+
+        <!-- FORMULARIO NUEVA DENUNCIA -->
+        <div class="card mb-4" id="form-denuncia-card">
+          <div class="card-title">➕ nueva denuncia</div>
+          <div class="grid2" style="gap:10px;margin-bottom:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label>categoría *</label>
+              <select id="den-categoria" onchange="updateSubcat()">
+                <option value="">— selecciona —</option>
+                <option value="vialidad">🚧 Vialidad</option>
+                <option value="alumbrado">💡 Alumbrado</option>
+                <option value="areas_verdes">🌳 Áreas Verdes</option>
+                <option value="agua_drenaje">💧 Agua y Drenaje</option>
+                <option value="limpieza">🗑️ Limpieza</option>
+                <option value="infraestructura">🏚️ Infraestructura</option>
+                <option value="seguridad">🚨 Seguridad Urbana</option>
+                <option value="otro">➕ Otro</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>subcategoría</label>
+              <select id="den-subcategoria">
+                <option value="">— primero elige categoría —</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid2" style="gap:10px;margin-bottom:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label>calle / ubicación *</label>
+              <div style="display:flex;gap:6px">
+                <input id="den-calle" type="text" placeholder="ej. Av. Universidad y Calle 5a"/>
+                <button class="btn btn-secondary btn-sm" onclick="getDenGPS()" title="usar GPS">📍</button>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>colonia / fraccionamiento</label>
+              <input id="den-colonia" type="text" placeholder="ej. Parque Industrial"/>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>descripción del problema</label>
+            <textarea id="den-descripcion" rows="2" placeholder="describe brevemente el problema..."></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>foto (opcional)</label>
+            <input id="den-foto" type="file" accept="image/*" capture="environment"/>
+          </div>
+          <input type="hidden" id="den-lat"/>
+          <input type="hidden" id="den-lng"/>
+          <button class="btn btn-primary w-full" onclick="guardarDenuncia()">📣 registrar denuncia</button>
+        </div>
+
+        <!-- FILTROS Y LISTA -->
+        <div class="card">
+          <div class="flex justify-between items-center mb-3" style="flex-wrap:wrap;gap:8px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select id="den-filtro-cat" onchange="renderDenuncias()" style="font-size:12px;padding:5px 8px">
+                <option value="">todas las categorías</option>
+                <option value="vialidad">🚧 Vialidad</option>
+                <option value="alumbrado">💡 Alumbrado</option>
+                <option value="areas_verdes">🌳 Áreas Verdes</option>
+                <option value="agua_drenaje">💧 Agua y Drenaje</option>
+                <option value="limpieza">🗑️ Limpieza</option>
+                <option value="infraestructura">🏚️ Infraestructura</option>
+                <option value="seguridad">🚨 Seguridad</option>
+                <option value="otro">➕ Otro</option>
+              </select>
+              <select id="den-filtro-estado" onchange="renderDenuncias()" style="font-size:12px;padding:5px 8px">
+                <option value="">todos los estados</option>
+                <option value="nueva">🟡 Nueva</option>
+                <option value="canalizada">🔵 Canalizada</option>
+                <option value="seguimiento">🟠 En seguimiento</option>
+                <option value="resuelta">✅ Resuelta</option>
+                <option value="no_corresponde">❌ No corresponde</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-secondary btn-sm" onclick="renderDenuncias()">🔄 actualizar</button>
+              <button class="btn btn-primary btn-sm" onclick="exportDenunciasExcel()">📊 exportar excel</button>
+            </div>
+          </div>
+          <div id="den-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+          <table><thead><tr>
+            <th>folio</th><th>categoría</th><th>calle</th><th>descripción</th>
+            <th>registrado por</th><th>fecha</th><th>estado</th><th>acciones</th>
+          </tr></thead>
+          <tbody id="den-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div id="view-usuarios" class="hidden">
+      <div class="page-header"><h2>usuarios</h2><p>solo el administrador puede modificar</p></div>
+      <div class="content">
+        <div class="card">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-sm text-muted"><span id="usr-count">0</span> usuarios</span>
+            <button class="btn btn-primary btn-sm" onclick="showAddUser()">+ agregar</button>
+          </div>
+          <table><thead><tr><th>nombre</th><th>usuario</th><th>rol</th><th>sección</th><th>estado</th><th></th></tr></thead>
+          <tbody id="usr-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="bottom-nav" id="bottom-nav"></div>
+
+<!-- MODAL NUEVA VISITA -->
+<!-- MODAL EDITAR PERSONA -->
+<div id="modal-persona" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>✏️ editar persona</h3><button class="close-btn" onclick="closeModal('modal-persona')">✕</button></div>
+    <input type="hidden" id="ep-id"/>
+    <div class="form-group"><label>nombre</label><input id="ep-nombre" type="text" disabled style="opacity:.6"/></div>
+    <div class="form-group"><label>área</label><input id="ep-area" type="text" disabled style="opacity:.6"/></div>
+    <div class="form-group">
+      <label>padrino</label>
+      <select id="ep-padrino">
+        <option value="rene">rene espinoza</option>
+        <option value="fernando">fernando amezcua</option>
+        <option value="martin">martin yañez</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>sección electoral asignada</label>
+      <select id="ep-seccion">
+        <option value="">— sin sección —</option>
+        <option>3228</option><option>3234</option><option>3235</option><option>3236</option>
+        <option>3237</option><option>3238</option><option>3239</option><option>3245</option>
+        <option>855</option><option>856</option><option>908</option><option>3227</option>
+        <option>3231</option><option>3232</option><option>3233</option>
+        <option>909</option><option>3244</option><option>3246</option><option>3255</option>
+        <option>3256</option><option>3259</option><option>3261</option><option>3263</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>número de empleado</label>
+      <input id="ep-empleado" type="text" inputmode="numeric" placeholder="número de empleado"/>
+    </div>
+    <div class="flex gap-2 mt-3">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-persona')">cancelar</button>
+      <button class="btn btn-primary w-full" onclick="guardarPersona()">💾 guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-visita" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>🧹 nueva captura de visitas</h3><button class="close-btn" onclick="closeModal('modal-visita')">✕</button></div>
+    <div class="form-group">
+      <label>sección</label>
+      <select id="v-seccion" disabled style="opacity:.7"></select>
+      <p class="text-xs text-muted mt-2" id="v-sec-note"></p>
+    </div>
+    <div class="form-group">
+      <label>captura de pantalla (opcional)</label>
+      <div id="v-foto-grid" class="foto-grid"></div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('v-inp-cam').click()">📷 cámara</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('v-inp-gal').click()">🖼️ galería</button>
+        <span id="v-upload-status" class="text-xs text-muted" style="align-self:center"></span>
+      </div>
+      <input type="file" id="v-inp-cam" accept="image/*" capture="environment" class="hidden" onchange="handleVisitaFoto(this)"/>
+      <input type="file" id="v-inp-gal" accept="image/*" class="hidden" onchange="handleVisitaFoto(this)"/>
+    </div>
+    <div class="sep"></div>
+    <div class="card-title">👥 personas y visitas del día</div>
+    <p class="text-xs text-muted mb-3">agrega a cada persona con su rol y cuántas visitas hizo hoy</p>
+    <div id="enc-lista"></div>
+    <button class="btn btn-secondary btn-sm mt-2" onclick="addPersona()">+ agregar persona</button>
+    <div class="total-box mt-3" id="enc-total">total: 0 visitas</div>
+    <div class="sep"></div>
+    <div id="v-gps-status" class="gps-badge">📍 obteniendo ubicación...</div>
+    <div class="flex gap-2">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-visita')">cancelar</button>
+      <button class="btn btn-primary w-full" id="btn-save-visita" onclick="saveVisita()">💾 guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA ACTIVIDAD -->
+<div id="modal-actividad" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>📋 nueva actividad</h3><button class="close-btn" onclick="closeModal('modal-actividad')">✕</button></div>
+    <div class="grid2">
+      <div class="form-group">
+        <label>tipo de actividad</label>
+        <select id="a-tipo" onchange="onTipoChange()">
+          <option value="barrido">🚶 barrido / recorrido</option>
+          <option value="crucero">🚦 crucero</option>
+          <option value="redes">📱 redes sociales</option>
+          <option value="volanteo">✉️ volanteo</option>
+          <option value="evento">🎪 evento</option>
+          <option value="otro">➕ otro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>fecha</label><input type="date" id="a-fecha"/></div>
+    </div>
+    <div class="form-group"><label>nombre de la actividad</label><input type="text" id="a-nombre" placeholder="ej: barrido sección 3228 — tarde"/></div>
+    <div class="sep"></div>
+    <div class="card-title">✅ lista de asistencia</div>
+    <p class="text-xs text-muted mb-3">cada registro queda guardado como evidencia de participación</p>
+    <div id="a-lista"></div>
+    <button class="btn btn-secondary btn-sm mt-2" onclick="addAsistente()">+ agregar persona</button>
+    <div id="a-resumen" class="total-box mt-3" style="display:none"></div>
+    <div class="sep"></div>
+    <div class="card-title">📷 fotos del evento</div>
+    <div id="a-foto-grid" class="foto-grid"></div>
+    <div class="flex gap-2 mb-3">
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('a-inp-cam').click()">📷 cámara</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('a-inp-gal').click()">🖼️ múltiples fotos</button>
+      <span id="a-upload-status" class="text-xs text-muted" style="align-self:center"></span>
+    </div>
+    <input type="file" id="a-inp-cam" accept="image/*" capture="environment" class="hidden" onchange="handleActFotos(this)"/>
+    <input type="file" id="a-inp-gal" accept="image/*" multiple class="hidden" onchange="handleActFotos(this)"/>
+    <div id="a-gps-status" class="gps-badge">📍 obteniendo ubicación...</div>
+    <div class="flex gap-2">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-actividad')">cancelar</button>
+      <button class="btn btn-primary w-full" id="btn-save-act" onclick="saveActividad()">💾 guardar actividad</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER ACTIVIDAD -->
+<div id="modal-ver-act" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-header"><h3 id="ver-act-titulo">actividad</h3><button class="close-btn" onclick="closeModal('modal-ver-act')">✕</button></div>
+    <div id="ver-act-body"></div>
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div id="modal-user" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>👤 agregar usuario</h3><button class="close-btn" onclick="closeModal('modal-user')">✕</button></div>
+    <div class="form-group"><label>nombre completo</label><input id="nu-nombre" type="text"/></div>
+    <div class="form-group"><label>usuario (login)</label><input id="nu-user" type="text" placeholder="minúsculas sin espacios"/></div>
+    <div class="form-group"><label>contraseña (número de empleado)</label><input id="nu-pass" type="text" inputmode="numeric" placeholder="solo números"/></div>
+    <div class="form-group"><label>rol</label>
+      <select id="nu-rol" onchange="toggleRolFields()">
+        <option value="lider">encargado de sección</option>
+        <option value="responsable">responsable de equipo</option>
+      </select>
+    </div>
+    <div class="form-group hidden" id="nu-equipo-wrap"><label>equipo</label>
+      <select id="nu-equipo">
+        <option value="rene">rene espinoza</option>
+        <option value="fernando">fernando amezcua</option>
+        <option value="martin">martin yañez</option>
+      </select>
+    </div>
+    <div class="form-group" id="nu-sec-wrap"><label>sección asignada</label>
+      <select id="nu-seccion">
+        <option value="">— selecciona —</option>
+        <option>3228</option><option>3234</option><option>3235</option><option>3236</option>
+        <option>3237</option><option>3238</option><option>3239</option><option>3245</option>
+        <option>855</option><option>856</option><option>908</option><option>3227</option>
+        <option>3231</option><option>3232</option><option>3233</option>
+        <option>909</option><option>3244</option><option>3246</option><option>3255</option>
+        <option>3256</option><option>3259</option><option>3261</option><option>3263</option>
+      </select>
+    </div>
+    <div class="flex gap-2 mt-3">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-user')">cancelar</button>
+      <button class="btn btn-primary w-full" id="btn-add-user" onclick="addUser()">guardar usuario</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SUPABASE_KEY='sb_publishable_2p9bArBsYLD3GG_seT6E7w_C7DSdwsP';
+const CLOUD_NAME='da7m6y3kk';
+const UPLOAD_PRESET='barrido_electoral';
+const CLD_URL=`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+const EQUIPOS={
+  rene:{nombre:'rene espinoza',secciones:['3228','3234','3235','3236','3237','3238','3239','3245']},
+  fernando:{nombre:'fernando amezcua',secciones:['855','856','908','3227','3231','3232','3233']},
+  martin:{nombre:'martin yañez',secciones:['909','3244','3246','3255','3256','3259','3261','3263']},
+};
+const LIDERES={
+  '3228':'lluvia aceves','3234':'alberto yahir favela','3235':'fabián gonzález',
+  '3236':'noé morales','3237':'víctor tg','3238':'ana payán','3239':'elizabeth chalaca',
+  '3245':'jesús gonzález','855':'karen alarcón','856':'jorge lom','908':'jorge lom juárez',
+  '3227':'rubí jurado','3231':'rubí azucena jurado','3232':'luis raúl vargas',
+  '3233':'luis raúl vargas ortega','909':'saúl bustillo','3244':'carlos daniel pérez',
+  '3246':'sergio carreón','3255':'félix vázquez','3256':'josé luis sánchez',
+  '3259':'jesús borruel','3261':'yesenia aróstegui','3263':'pedro hernández',
+};
+const ROLES_CAMPO=['encuestador','toca puertas','volantes','apoyo general','coordinador'];
+const TIPO_ACT={
+  barrido:{icon:'🚶',label:'barrido / recorrido',badge:'badge-green'},
+  crucero:{icon:'🚦',label:'crucero',badge:'badge-yellow'},
+  redes:{icon:'📱',label:'redes sociales',badge:'badge-blue'},
+  volanteo:{icon:'✉️',label:'volanteo',badge:'badge-orange'},
+  evento:{icon:'🎪',label:'evento',badge:'badge-purple'},
+  otro:{icon:'➕',label:'otro',badge:'badge-gray'},
+};
+
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null;
+let gpsCoords={lat:null,lng:null};
+let visitaFoto={url:null,public_id:null,uploading:false};
+let actFotos=[];
+let actUploadingCount=0;
+let mapaLeaflet=null;
+
+// ══════ GPS + CALLE ══════
+function getGPS(statusEl){
+  gpsCoords={lat:null,lng:null};
+  if(!navigator.geolocation){if(statusEl)statusEl.textContent='sin gps';return;}
+  navigator.geolocation.getCurrentPosition(
+    async p=>{
+      gpsCoords={lat:p.coords.latitude,lng:p.coords.longitude};
+      const calle=await getCalleName(gpsCoords.lat,gpsCoords.lng);
+      if(statusEl) statusEl.innerHTML=`📍 ${calle||gpsCoords.lat.toFixed(4)+', '+gpsCoords.lng.toFixed(4)}`;
+    },
+    ()=>{if(statusEl)statusEl.innerHTML='📍 sin gps (continúa sin él)';},
+    {timeout:10000,enableHighAccuracy:true}
+  );
+}
+
+async function getCalleName(lat,lng){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`);
+    const d=await r.json();
+    return d.address?.road||d.address?.pedestrian||d.address?.footway||null;
+  }catch(e){return null;}
+}
+
+// ══════ INIT ══════
+async function init(){
+  setTimeout(()=>{
+    document.getElementById('page-loading').classList.add('hidden');
+    document.getElementById('page-login').classList.remove('hidden');
+  },500);
+}
+
+// ══════ LOGIN ══════
+async function doLogin(){
+  const u=document.getElementById('inp-user').value.trim().toLowerCase();
+  const p=document.getElementById('inp-pass').value.trim();
+  const btn=document.getElementById('btn-login');
+  btn.textContent='verificando...';btn.disabled=true;
+  try{
+    const{data,error}=await sb.from('usuarios').select('*').eq('user_login',u).eq('password',p).eq('activo',true).single();
+    if(error||!data){document.getElementById('login-err').classList.remove('hidden');}
+    else{
+      currentUser=data;
+      document.getElementById('login-err').classList.add('hidden');
+      document.getElementById('page-login').classList.add('hidden');
+      document.getElementById('page-app').classList.remove('hidden');
+      document.getElementById('banner-demo').style.display='block';
+      document.getElementById('page-app').style.paddingTop='36px';
+      document.getElementById('ui-username').textContent=data.nombre;
+      document.getElementById('ui-role').textContent={admin:'administrador',responsable:'responsable',lider:'encargado de sección'}[data.rol];
+      document.getElementById('ui-avatar').textContent=data.nombre[0].toUpperCase();
+      buildNav();showView('dashboard');
+      // Cargar cache de usuarios para reportes
+      sb.from('usuarios').select('user_login,nombre').then(({data})=>{if(data)usuariosCache=data;});
+    }
+  }catch(e){toast('error de conexión','#da3633');}
+  btn.textContent='entrar al sistema';btn.disabled=false;
+}
+document.getElementById('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('page-app').classList.add('hidden');
+  document.getElementById('page-login').classList.remove('hidden');
+  document.getElementById('inp-user').value='';
+  document.getElementById('inp-pass').value='';
+}
+
+// ══════ NAV ══════
+function buildNav(){
+  const r=currentUser.rol;
+  const items=r==='admin'
+    ?[{id:'dashboard',icon:'📊',label:'dashboard'},{id:'visitas',icon:'🏠',label:'visitas'},{id:'asistencia',icon:'✅',label:'actividades'},{id:'mapa',icon:'🗺️',label:'mapa'},{id:'personal',icon:'👥',label:'personal'},{id:'reportes',icon:'📋',label:'reportes'},{id:'denuncias',icon:'📣',label:'denuncias'},{id:'usuarios',icon:'⚙️',label:'usuarios'}]
+    :r==='responsable'
+    ?[{id:'dashboard',icon:'📊',label:'dashboard'},{id:'visitas',icon:'🏠',label:'visitas'},{id:'asistencia',icon:'✅',label:'actividades'},{id:'mapa',icon:'🗺️',label:'mapa'},{id:'personal',icon:'👥',label:'personal'},{id:'reportes',icon:'📋',label:'reportes'},{id:'denuncias',icon:'📣',label:'denuncias'}]
+    :[{id:'dashboard',icon:'🏠',label:'inicio'},{id:'visitas',icon:'📸',label:'visitas'},{id:'asistencia',icon:'✅',label:'actividades'},{id:'mapa',icon:'🗺️',label:'mapa'},{id:'denuncias',icon:'📣',label:'denuncias'}];
+  document.getElementById('sidebar-nav').innerHTML=items.map(i=>
+    `<button class="nav-item" id="nav-${i.id}" onclick="showView('${i.id}')"><span style="font-size:15px">${i.icon}</span>${i.label}</button>`
+  ).join('');
+  document.getElementById('bottom-nav').innerHTML=items.map(i=>
+    `<button class="bottom-nav-item" id="bnav-${i.id}" onclick="showView('${i.id}')"><span class="bn-icon">${i.icon}</span>${i.label}</button>`
+  ).join('');
+  // Poblar filtro mapa
+  const secs=getSeccionesUser();
+  const sel=document.getElementById('mapa-filtro-sec');
+  sel.innerHTML='<option value="">todas las secciones</option>'+secs.map(s=>`<option value="${s}">sección ${s}</option>`).join('');
+}
+
+function showView(id){
+  document.querySelectorAll('[id^="view-"]').forEach(v=>v.classList.add('hidden'));
+  document.querySelectorAll('.nav-item,.bottom-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+id)?.classList.remove('hidden');
+  document.getElementById('nav-'+id)?.classList.add('active');
+  document.getElementById('bnav-'+id)?.classList.add('active');
+  if(id==='dashboard'){renderWelcome();renderDashboard();}
+  if(id==='visitas') renderVisitas();
+  if(id==='asistencia') renderAsistencia();
+  if(id==='mapa') renderMapa();
+  if(id==='personal') renderPersonal();
+  if(id==='reportes') renderReportes();
+  if(id==='usuarios') renderUsuarios();
+  if(id==='denuncias') renderDenuncias();
+}
+
+// ══════ UTILS ══════
+function getEquipo(){return currentUser.rol==='admin'?null:currentUser.equipo;}
+function getSeccionesUser(){
+  if(currentUser.rol==='admin') return Object.values(EQUIPOS).flatMap(e=>e.secciones);
+  return EQUIPOS[currentUser.equipo]?.secciones||[];
+}
+function toast(msg,color='#238636'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=color;t.style.opacity='1';
+  setTimeout(()=>t.style.opacity='0',3500);
+}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function fmt(d){if(!d)return'—';return new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});}
+function getEq(s){return Object.entries(EQUIPOS).find(([,e])=>e.secciones.includes(s));}
+function tipoBadge(tipo){
+  const t=TIPO_ACT[tipo]||{icon:'➕',label:tipo,badge:'badge-gray'};
+  return`<span class="badge ${t.badge}">${t.icon} ${t.label}</span>`;
+}
+function rolBadge(r){
+  const m={'encuestador':'badge-blue','toca puertas':'badge-green','volantes':'badge-yellow','apoyo general':'badge-gray','coordinador':'badge-purple'};
+  return`<span class="badge ${m[r]||'badge-gray'}">${r}</span>`;
+}
+
+// ══════ BIENVENIDA ══════
+function renderWelcome(){
+  const box=document.getElementById('welcome-box');
+  if(!box||currentUser.rol==='admin'){if(box)box.innerHTML='';return;}
+  const h=new Date().getHours();
+  const primer=currentUser.nombre.split(' ')[0].toLowerCase();
+  const sal=h<12?'☀️ buenos días':h<19?'🌤️ buenas tardes':'🌙 buenas noches';
+  const msg=h<12?`hoy es un gran día para hacer la diferencia, ${primer}.`:h<19?`tu trabajo hoy suma mucho al equipo, ${primer}.`:`gracias por tu dedicación a esta hora, ${primer}.`;
+  const sec=currentUser.seccion;
+  box.innerHTML=`<div class="welcome-banner">
+    <div class="welcome-hora">${sal}</div>
+    <div class="welcome-nombre">${currentUser.nombre.toLowerCase()}</div>
+    <div class="welcome-msg">${msg}</div>
+    ${sec?`<div class="welcome-sec">📍 sección ${sec} — ${LIDERES[sec]||''}</div>`:''}
+  </div>`;
+}
+
+// ══════ DASHBOARD ══════
+async function renderDashboard(){
+  const eq=getEquipo();
+  const vQ=sb.from('visitas').select('*,encuestadores_visita(total)');
+  const aQ=sb.from('actividades').select('*,asistencia(id)').order('fecha',{ascending:false}).limit(5);
+  if(eq){vQ.eq('equipo',eq);aQ.eq('equipo',eq);}
+  if(currentUser.rol==='lider'){vQ.eq('lider',currentUser.user_login);aQ.eq('lider',currentUser.user_login);}
+  const[vRes,aRes]=await Promise.all([vQ,aQ]);
+  const visitas=vRes.data||[];
+  const acts=aRes.data||[];
+  const totalV=visitas.reduce((a,v)=>a+(v.encuestadores_visita||[]).reduce((s,e)=>s+(e.total||0),0),0);
+  document.getElementById('dash-sub').textContent=eq?`equipo ${EQUIPOS[eq]?.nombre}`:currentUser.rol==='lider'?`sección ${currentUser.seccion}`:'vista general — todos los equipos';
+  const secs=currentUser.rol==='lider'?1:eq?EQUIPOS[eq]?.secciones.length:23;
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">total visitas</div><div class="stat-val" style="color:var(--accent2)">${totalV.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-label">capturas</div><div class="stat-val">${visitas.length}</div></div>
+    <div class="stat"><div class="stat-label">actividades</div><div class="stat-val" style="color:var(--blue2)">${acts.length}</div></div>
+    <div class="stat"><div class="stat-label">secciones</div><div class="stat-val">${secs}</div></div>`;
+  const eqs=currentUser.rol==='lider'?[currentUser.equipo]:eq?[eq]:Object.keys(EQUIPOS);
+  document.getElementById('dash-equipos').innerHTML=(eqs||[]).filter(Boolean).map(k=>{
+    const vEq=visitas.filter(v=>v.equipo===k);
+    const tot=vEq.reduce((a,v)=>a+(v.encuestadores_visita||[]).reduce((s,e)=>s+(e.total||0),0),0);
+    return`<div class="mb-3">
+      <div class="flex justify-between text-sm mb-1"><span>${EQUIPOS[k]?.nombre||k}</span><span class="font-bold" style="color:var(--accent2)">${tot.toLocaleString()}</span></div>
+      <div class="text-xs text-muted">${vEq.length} capturas · ${EQUIPOS[k]?.secciones.length||0} secciones</div>
+    </div>`;
+  }).join('');
+  document.getElementById('dash-actividades').innerHTML=acts.length
+    ?acts.map(a=>`<div class="flex justify-between items-center mb-3">
+      <div>${tipoBadge(a.tipo)}<div class="text-sm mt-1">${a.nombre}</div><div class="text-xs text-muted">${fmt(a.fecha)}</div></div>
+      <span class="badge badge-gray">${(a.asistencia||[]).length}</span>
+    </div>`).join('')
+    :'<div class="empty-state"><div class="empty-icon">📅</div><p>sin actividades aún</p></div>';
+}
+
+// ══════ VISITAS ══════
+async function renderVisitas(){
+  const eq=getEquipo();
+  const q=sb.from('visitas').select('*,encuestadores_visita(*)').order('created_at',{ascending:false});
+  if(eq) q.eq('equipo',eq);
+  if(currentUser.rol==='lider') q.eq('lider',currentUser.user_login);
+  const{data}=await q;
+  const visitas=data||[];
+  const el=document.getElementById('lista-visitas');
+  if(!visitas.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🏠</div><p>sin capturas aún</p></div>';return;}
+  el.innerHTML=visitas.map(v=>{
+    const encs=v.encuestadores_visita||[];
+    const tot=encs.reduce((a,e)=>a+(e.total||0),0);
+    return`<div class="card mb-3">
+      <div class="flex justify-between items-center mb-2">
+        <div class="flex gap-2 items-center flex-wrap">
+          <span class="badge badge-blue">sec. ${v.seccion}</span>
+          <span class="text-xs text-muted">${LIDERES[v.seccion]||v.lider}</span>
+          <span class="text-xs text-muted">· ${fmt(v.created_at)}</span>
+          ${v.calle?`<span class="calle-tag">📍 ${v.calle}</span>`:''}
+        </div>
+        <span class="badge badge-green" style="font-size:13px;padding:4px 12px">${tot} visitas</span>
+      </div>
+      ${v.foto_url?`<img src="${v.foto_url}" style="width:100%;max-height:180px;object-fit:contain;border-radius:6px;background:var(--bg3);margin-bottom:10px"/>`:''}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px">
+        ${encs.map(e=>`<div style="background:var(--bg3);border-radius:6px;padding:7px 10px">
+          <div style="font-size:12px;font-weight:500">${e.nombre}</div>
+          <div class="flex justify-between items-center mt-1">${rolBadge(e.rol||'encuestador')}<span style="color:var(--accent2);font-weight:700">${e.total}</span></div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showNuevaVisita(){
+  const sec=currentUser.seccion;
+  const sel=document.getElementById('v-seccion');
+  if(currentUser.rol==='lider'){
+    sel.innerHTML=`<option value="${sec}">sección ${sec} — ${LIDERES[sec]||''}</option>`;
+    sel.disabled=true;
+    document.getElementById('v-sec-note').textContent='tu sección asignada por el administrador';
+  } else {
+    const secs=getSeccionesUser();
+    sel.innerHTML=secs.map(s=>`<option value="${s}">sección ${s} — ${LIDERES[s]||''}</option>`).join('');
+    sel.disabled=false;
+    document.getElementById('v-sec-note').textContent='';
+  }
+  visitaFoto={url:null,public_id:null,uploading:false};
+  renderVisitaFotoGrid();
+  document.getElementById('enc-lista').innerHTML='';
+  document.getElementById('enc-total').textContent='total: 0 visitas';
+  addPersona();
+  getGPS(document.getElementById('v-gps-status'));
+  document.getElementById('modal-visita').classList.remove('hidden');
+}
+
+function renderVisitaFotoGrid(){
+  const g=document.getElementById('v-foto-grid');
+  if(visitaFoto.uploading) g.innerHTML='<div class="foto-thumb uploading" style="font-size:20px">⏳</div>';
+  else if(visitaFoto.url) g.innerHTML=`<div class="foto-thumb"><img src="${visitaFoto.url}"/><button class="foto-del" onclick="visitaFoto={url:null,public_id:null,uploading:false};renderVisitaFotoGrid()">✕</button></div>`;
+  else g.innerHTML='<div class="foto-thumb" onclick="document.getElementById(\'v-inp-gal\').click()"><span class="add-foto">+</span></div>';
+}
+
+async function handleVisitaFoto(inp){
+  const file=inp.files[0];if(!file)return;
+  visitaFoto={url:null,public_id:null,uploading:true};renderVisitaFotoGrid();
+  document.getElementById('v-upload-status').textContent='subiendo...';
+  const r=await uploadCld(file,'visitas');
+  visitaFoto=r?{url:r.url,public_id:r.public_id,uploading:false}:{url:null,public_id:null,uploading:false};
+  renderVisitaFotoGrid();
+  document.getElementById('v-upload-status').textContent=r?'✓ foto subida':'error';
+  inp.value='';
+}
+
+function addPersona(){
+  const div=document.createElement('div');
+  div.className='persona-row';
+  div.innerHTML=`
+    <input type="text" placeholder="nombre de la persona" oninput="updateTotal()"/>
+    <select class="rol-sel">${ROLES_CAMPO.map(r=>`<option value="${r}">${r}</option>`).join('')}</select>
+    <input type="number" class="vis-inp" min="0" placeholder="0" oninput="updateTotal()"/>
+    <button class="btn btn-danger btn-xs" onclick="this.closest('.persona-row').remove();updateTotal()">✕</button>`;
+  document.getElementById('enc-lista').appendChild(div);
+}
+
+function updateTotal(){
+  const inputs=document.querySelectorAll('#enc-lista .vis-inp');
+  const total=Array.from(inputs).reduce((a,i)=>a+(parseInt(i.value)||0),0);
+  document.getElementById('enc-total').textContent=`total: ${total.toLocaleString()} visitas`;
+}
+
+async function saveVisita(){
+  const sec=document.getElementById('v-seccion').value;
+  const eq=getEq(sec)?.[0]||currentUser.equipo||'admin';
+  const rows=document.querySelectorAll('#enc-lista .persona-row');
+  const personas=Array.from(rows).map(r=>{
+    const ins=r.querySelectorAll('input');const sel=r.querySelector('select');
+    return{nombre:ins[0].value.trim(),rol:sel?.value||'encuestador',total:parseInt(ins[1]?.value)||0};
+  }).filter(e=>e.nombre);
+  if(!personas.length){toast('agrega al menos una persona','#d29922');return;}
+  const btn=document.getElementById('btn-save-visita');
+  btn.textContent='guardando...';btn.disabled=true;
+  const total=personas.reduce((a,e)=>a+e.total,0);
+  const calle=gpsCoords.lat?await getCalleName(gpsCoords.lat,gpsCoords.lng):null;
+  const{data:visita,error}=await sb.from('visitas').insert({
+    seccion:sec,equipo:eq,lider:currentUser.user_login,
+    foto_url:visitaFoto.url,foto_public_id:visitaFoto.public_id,
+    total_visitas:total,lat:gpsCoords.lat,lng:gpsCoords.lng,calle,
+    fecha:new Date().toISOString().split('T')[0],
+  }).select().single();
+  if(!error&&visita){
+    await sb.from('encuestadores_visita').insert(personas.map(p=>({visita_id:visita.id,nombre:p.nombre,rol:p.rol,total:p.total})));
+    if(gpsCoords.lat&&calle){
+      await sb.from('calles_visitadas').insert({seccion:sec,equipo:eq,lider:currentUser.user_login,calle,lat:gpsCoords.lat,lng:gpsCoords.lng,tipo:'visita'});
+    }
+    closeModal('modal-visita');toast('✓ captura guardada');renderVisitas();
+  } else toast('error al guardar: '+(error?.message||''),'#da3633');
+  btn.textContent='💾 guardar';btn.disabled=false;
+}
+
+// ══════ ASISTENCIA ══════
+async function renderAsistencia(){
+  const eq=getEquipo();
+  const q=sb.from('actividades').select('*,asistencia(*),fotos_actividad(id)').order('fecha',{ascending:false});
+  if(eq) q.eq('equipo',eq);
+  if(currentUser.rol==='lider') q.eq('lider',currentUser.user_login);
+  const{data}=await q;
+  const acts=data||[];
+  const el=document.getElementById('lista-actividades');
+  if(!acts.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">✅</div><p>sin actividades registradas</p></div>';return;}
+  const byMonth={};
+  acts.forEach(a=>{const k=(a.fecha||'').substring(0,7);if(!byMonth[k])byMonth[k]=[];byMonth[k].push(a);});
+  el.innerHTML=Object.entries(byMonth).map(([m,items])=>`
+    <div class="mb-4">
+      <div class="text-xs text-muted font-bold mb-2" style="text-transform:uppercase;letter-spacing:.06em">${m}</div>
+      ${items.map(a=>{
+        const pres=(a.asistencia||[]).filter(x=>x.asistio).length;
+        const fotos=(a.fotos_actividad||[]).length;
+        return`<div class="act-card" onclick="verActividad('${a.id}')">
+          <div class="flex justify-between items-start">
+            <div>
+              ${tipoBadge(a.tipo)}
+              <div style="font-size:14px;font-weight:600;margin-top:5px">${a.nombre}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">
+                <span>📅 ${fmt(a.fecha)}</span>
+                <span>✅ ${pres} personas</span>
+                ${fotos?`<span>📷 ${fotos} fotos</span>`:''}
+                ${a.calle?`<span>📍 ${a.calle}</span>`:''}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function showNuevaActividad(){
+  document.getElementById('a-tipo').value='barrido';
+  document.getElementById('a-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('a-nombre').value='';
+  document.getElementById('a-lista').innerHTML='';
+  actFotos=[];actUploadingCount=0;renderActFotos();
+  onTipoChange();
+  getGPS(document.getElementById('a-gps-status'));
+  document.getElementById('a-resumen').style.display='none';
+  document.getElementById('modal-actividad').classList.remove('hidden');
+}
+
+// Cambia el formulario según tipo de actividad
+function onTipoChange(){
+  const tipo=document.getElementById('a-tipo').value;
+  document.getElementById('a-lista').innerHTML='';
+  addAsistente();addAsistente();
+  updateResumen();
+}
+
+function addAsistente(){
+  const tipo=document.getElementById('a-tipo').value;
+  const div=document.createElement('div');
+  div.className='asist-row-wrap';
+  div.style.cssText='background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:8px';
+
+  let campos='';
+  if(tipo==='redes'){
+    campos=`
+      <div style="display:grid;grid-template-columns:1fr auto auto auto auto;gap:8px;align-items:center">
+        <input type="text" placeholder="nombre de quien participó" oninput="updateResumen()" style="background:transparent;border:none;font-size:13px;color:var(--text)"/>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap"><input type="checkbox" class="chk-mgusta" checked onchange="updateResumen()" style="width:auto;accent-color:var(--accent)"/> ❤️ me gusta</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap"><input type="checkbox" class="chk-comento" onchange="updateResumen()" style="width:auto;accent-color:var(--accent)"/> 💬 comentó</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap"><input type="checkbox" class="chk-compartio" onchange="updateResumen()" style="width:auto;accent-color:var(--accent)"/> 🔁 compartió</label>
+        <button class="btn btn-danger btn-xs" onclick="this.closest('.asist-row-wrap').remove();updateResumen()">✕</button>
+      </div>`;
+  } else if(tipo==='barrido'){
+    campos=`
+      <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center">
+        <input type="text" placeholder="nombre del encuestador" oninput="updateResumen()" style="background:transparent;border:none;font-size:13px;color:var(--text)"/>
+        <label style="font-size:12px;color:var(--muted);white-space:nowrap">enviados:</label>
+        <input type="number" class="vis-inp" min="0" placeholder="0" oninput="updateResumen()" style="width:70px;text-align:center"/>
+        <button class="btn btn-danger btn-xs" onclick="this.closest('.asist-row-wrap').remove();updateResumen()">✕</button>
+      </div>`;
+  } else {
+    campos=`
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center">
+        <input type="text" placeholder="nombre de quien participó" oninput="updateResumen()" style="background:transparent;border:none;font-size:13px;color:var(--text)"/>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);cursor:pointer"><input type="checkbox" class="asist-check" checked onchange="updateResumen()" style="width:auto;accent-color:var(--accent)"/> participó</label>
+        <button class="btn btn-danger btn-xs" onclick="this.closest('.asist-row-wrap').remove();updateResumen()">✕</button>
+      </div>`;
+  }
+  div.innerHTML=campos;
+  document.getElementById('a-lista').appendChild(div);
+}
+
+function updateResumen(){
+  const tipo=document.getElementById('a-tipo').value;
+  const rows=document.querySelectorAll('#a-lista .asist-row-wrap');
+  let total=0;let resumen='';
+
+  if(tipo==='redes'){
+    let mgusta=0,comento=0,compartio=0;
+    rows.forEach(r=>{
+      const n=r.querySelector('input[type=text]').value.trim();
+      if(!n)return;
+      if(r.querySelector('.chk-mgusta')?.checked)mgusta++;
+      if(r.querySelector('.chk-comento')?.checked)comento++;
+      if(r.querySelector('.chk-compartio')?.checked)compartio++;
+      total++;
+    });
+    resumen=`${total} personas · ❤️ ${mgusta} · 💬 ${comento} · 🔁 ${compartio}`;
+  } else if(tipo==='barrido'){
+    let enviados=0;
+    rows.forEach(r=>{
+      const n=r.querySelector('input[type=text]').value.trim();
+      if(!n)return;
+      enviados+=(parseInt(r.querySelector('.vis-inp')?.value)||0);
+      total++;
+    });
+    resumen=`${total} encuestadores · ${enviados} enviados total`;
+  } else {
+    rows.forEach(r=>{
+      const n=r.querySelector('input[type=text]').value.trim();
+      const ok=r.querySelector('input[type=checkbox]')?.checked;
+      if(n&&ok)total++;
+    });
+    resumen=`${total} participantes`;
+  }
+
+  const box=document.getElementById('a-resumen');
+  if(total>0){box.style.display='';box.textContent=`✅ ${resumen}`;}
+  else box.style.display='none';
+}
+
+
+async function handleActFotos(inp){
+  const files=Array.from(inp.files);
+  actUploadingCount+=files.length;renderActFotos();
+  document.getElementById('a-upload-status').textContent=`subiendo ${files.length}...`;
+  const results=await Promise.allSettled(files.map(f=>uploadCld(f,'actividades')));
+  results.forEach(r=>{actUploadingCount--;if(r.status==='fulfilled'&&r.value)actFotos.push(r.value);});
+  renderActFotos();
+  document.getElementById('a-upload-status').textContent=`✓ ${actFotos.length} foto(s)`;
+  inp.value='';
+}
+
+function renderActFotos(){
+  const g=document.getElementById('a-foto-grid');
+  let html=actFotos.map((f,i)=>`<div class="foto-thumb"><img src="${f.url}"/><button class="foto-del" onclick="actFotos.splice(${i},1);renderActFotos()">✕</button></div>`).join('');
+  for(let u=0;u<actUploadingCount;u++) html+=`<div class="foto-thumb uploading" style="font-size:18px">⏳</div>`;
+  html+=`<div class="foto-thumb" onclick="document.getElementById('a-inp-gal').click()"><span class="add-foto">+</span></div>`;
+  g.innerHTML=html;
+}
+
+async function saveActividad(){
+  const nombre=document.getElementById('a-nombre').value.trim();
+  if(!nombre){toast('escribe el nombre de la actividad','#d29922');return;}
+  const tipo=document.getElementById('a-tipo').value;
+  const rows=document.querySelectorAll('#a-lista .asist-row-wrap');
+
+  // Construir asistentes según tipo
+  const asistentes=[];
+  rows.forEach(r=>{
+    const n=r.querySelector('input[type=text]').value.trim();
+    if(!n)return;
+    if(tipo==='redes'){
+      asistentes.push({
+        nombre:n,
+        rol:'redes',
+        asistio:true,
+        me_gusta:r.querySelector('.chk-mgusta')?.checked||false,
+        comento:r.querySelector('.chk-comento')?.checked||false,
+        compartio:r.querySelector('.chk-compartio')?.checked||false,
+        total:0
+      });
+    } else if(tipo==='barrido'){
+      asistentes.push({
+        nombre:n,
+        rol:'encuestador',
+        asistio:true,
+        total:parseInt(r.querySelector('.vis-inp')?.value)||0
+      });
+    } else {
+      const ok=r.querySelector('input[type=checkbox]')?.checked||false;
+      asistentes.push({nombre:n,rol:tipo,asistio:ok,total:0});
+    }
+  });
+
+  const btn=document.getElementById('btn-save-act');
+  btn.textContent='guardando...';btn.disabled=true;
+  const equipo=currentUser.equipo||'admin';
+  const calle=gpsCoords.lat?await getCalleName(gpsCoords.lat,gpsCoords.lng):null;
+  const{data:act,error}=await sb.from('actividades').insert({
+    equipo,lider:currentUser.user_login,
+    tipo,nombre,fecha:document.getElementById('a-fecha').value,
+    lat:gpsCoords.lat,lng:gpsCoords.lng,calle,
+  }).select().single();
+  if(!error&&act){
+    if(asistentes.length){
+      // Guardar con campos extra en rol como JSON para redes
+      const rows_db=asistentes.map(a=>({
+        actividad_id:act.id,
+        nombre:a.nombre,
+        rol:a.rol,
+        asistio:a.asistio,
+        // Guardamos detalles de redes en campo rol como string enriquecido
+        ...(tipo==='redes'?{rol:`redes|mgusta:${a.me_gusta?1:0}|comento:${a.comento?1:0}|compartio:${a.compartio?1:0}`}:{}),
+        ...(tipo==='barrido'?{rol:`encuestador|enviados:${a.total}`}:{})
+      }));
+      await sb.from('asistencia').insert(rows_db);
+    }
+    if(actFotos.length) await sb.from('fotos_actividad').insert(actFotos.map(f=>({actividad_id:act.id,url:f.url,public_id:f.public_id})));
+    if(gpsCoords.lat&&calle){
+      await sb.from('calles_visitadas').insert({seccion:currentUser.seccion||'',equipo,lider:currentUser.user_login,calle,lat:gpsCoords.lat,lng:gpsCoords.lng,tipo});
+    }
+    closeModal('modal-actividad');toast('✓ actividad guardada 💪');renderAsistencia();
+  } else toast('error: '+(error?.message||''),'#da3633');
+  btn.textContent='💾 guardar actividad';btn.disabled=false;
+}
+
+async function verActividad(id){
+  const{data:act}=await sb.from('actividades').select('*,asistencia(*),fotos_actividad(*)').eq('id',id).single();
+  if(!act)return;
+  document.getElementById('ver-act-titulo').textContent=act.nombre;
+  const asist=act.asistencia||[];
+  const fotos=act.fotos_actividad||[];
+
+  let desglose='';
+  if(act.tipo==='redes'){
+    let mgusta=0,comento=0,compartio=0;
+    asist.forEach(a=>{
+      if(a.rol?.includes('mgusta:1'))mgusta++;
+      if(a.rol?.includes('comento:1'))comento++;
+      if(a.rol?.includes('compartio:1'))compartio++;
+    });
+    desglose=`<div class="grid3 mb-3" style="gap:8px">
+      <div class="stat"><div class="stat-label">❤️ me gusta</div><div class="stat-val" style="color:#f87171">${mgusta}</div></div>
+      <div class="stat"><div class="stat-label">💬 comentó</div><div class="stat-val" style="color:var(--blue2)">${comento}</div></div>
+      <div class="stat"><div class="stat-label">🔁 compartió</div><div class="stat-val" style="color:var(--accent2)">${compartio}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+      ${asist.map(a=>{
+        const mg=a.rol?.includes('mgusta:1');
+        const co=a.rol?.includes('comento:1');
+        const cp=a.rol?.includes('compartio:1');
+        return`<div style="background:var(--bg3);border-radius:6px;padding:8px 10px">
+          <div style="font-size:12px;font-weight:500;margin-bottom:4px">${a.nombre}</div>
+          <div style="display:flex;gap:6px;font-size:11px">
+            <span style="color:${mg?'#f87171':'var(--muted)'}">${mg?'❤️':'○'} me gusta</span>
+            <span style="color:${co?'var(--blue2)':'var(--muted)'}">${co?'💬':'○'} comentó</span>
+            <span style="color:${cp?'var(--accent2)':'var(--muted)'}">${cp?'🔁':'○'} compartió</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else if(act.tipo==='barrido'){
+    const totalEnv=asist.reduce((a,x)=>{
+      const m=x.rol?.match(/enviados:(\d+)/);
+      return a+(m?parseInt(m[1]):0);
+    },0);
+    desglose=`<div class="total-box mb-3">🏠 total enviados: ${totalEnv.toLocaleString()}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+      ${asist.map(a=>{
+        const m=a.rol?.match(/enviados:(\d+)/);
+        const env=m?parseInt(m[1]):0;
+        return`<div style="background:var(--bg3);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;font-weight:500">${a.nombre}</span>
+          <span style="color:var(--accent2);font-weight:700">${env}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else {
+    const pres=asist.filter(a=>a.asistio);
+    desglose=`<div class="total-box mb-3">✅ ${pres.length} / ${asist.length} participaron</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+      ${asist.map(a=>`<div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border-radius:6px;padding:7px 10px">
+        <span>${a.asistio?'✅':'❌'}</span><span style="font-size:12px;font-weight:500">${a.nombre}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  document.getElementById('ver-act-body').innerHTML=`
+    <div class="flex gap-2 mb-3 flex-wrap">${tipoBadge(act.tipo)}<span class="badge badge-gray">📅 ${fmt(act.fecha)}</span><span class="badge badge-gray">👤 ${EQUIPOS[act.equipo]?.nombre||act.equipo}</span></div>
+    ${act.calle?`<div class="gps-badge mb-3">📍 ${act.calle}</div>`:''}
+    ${desglose}
+    ${fotos.length?`<div class="card-title mb-2">📷 fotos (${fotos.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">
+      ${fotos.map(f=>`<img src="${f.url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px"/>`).join('')}
+    </div>`:''}`;
+  document.getElementById('modal-ver-act').classList.remove('hidden');
+}
+
+// ══════ MAPA ══════
+async function renderMapa(){
+  const secFiltro=document.getElementById('mapa-filtro-sec')?.value||'';
+  const eq=getEquipo();
+  const q=sb.from('calles_visitadas').select('*').order('created_at',{ascending:false});
+  if(eq) q.eq('equipo',eq);
+  if(currentUser.rol==='lider') q.eq('lider',currentUser.user_login);
+  if(secFiltro) q.eq('seccion',secFiltro);
+  const{data}=await q;
+  const calles=data||[];
+  const calleFiltro=secFiltro?calles.filter(c=>c.seccion===secFiltro):calles;
+
+  // Inicializar mapa
+  const mapaDiv=document.getElementById('mapa-div');
+  if(mapaLeaflet){mapaLeaflet.remove();mapaLeaflet=null;}
+  const centro=calleFiltro.length&&calleFiltro[0].lat?[calleFiltro[0].lat,calleFiltro[0].lng]:[28.6353,-106.0889];
+  mapaLeaflet=L.map('mapa-div').setView(centro,14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(mapaLeaflet);
+
+  const greenIcon=L.divIcon({html:'<div style="width:12px;height:12px;background:#3fb950;border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',iconSize:[12,12],className:''});
+
+  calleFiltro.forEach(c=>{
+    if(c.lat&&c.lng){
+      L.marker([c.lat,c.lng],{icon:greenIcon})
+        .bindPopup(`<b>${c.calle||'sin nombre'}</b><br>sec. ${c.seccion}<br>${fmt(c.created_at)}<br>${c.lider}`)
+        .addTo(mapaLeaflet);
+    }
+  });
+
+  // Lista de calles únicas
+  const unicas=[...new Set(calleFiltro.filter(c=>c.calle).map(c=>c.calle))];
+  const listEl=document.getElementById('lista-calles');
+  if(!unicas.length){listEl.innerHTML='<p class="text-sm text-muted">sin calles registradas aún. las calles aparecen automáticamente al guardar capturas con gps activo.</p>';return;}
+  listEl.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:4px">${unicas.map(c=>`<span class="calle-tag">📍 ${c}</span>`).join('')}</div>`;
+}
+
+// ══════ REPORTES ══════
+async function renderReportes(){
+  const eq=getEquipo();
+  document.getElementById('rpt-sub').textContent=`generado por octavio irigoyen · ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`;
+  const vQ=sb.from('visitas').select('*,encuestadores_visita(*)').order('created_at',{ascending:false});
+  const aQ=sb.from('actividades').select('*,asistencia(*)').order('fecha',{ascending:false});
+  if(eq){vQ.eq('equipo',eq);aQ.eq('equipo',eq);}
+  const[vRes,aRes]=await Promise.all([vQ,aQ]);
+  const visitas=vRes.data||[];const acts=aRes.data||[];
+
+  // Nombre legible del registrador
+  function nombreRegistrador(login){
+    const u=usuariosCache.find(x=>x.user_login===login);
+    return u?u.nombre:login;
+  }
+
+  document.getElementById('rpt-visitas').innerHTML=visitas.map(v=>{
+    const tot=(v.encuestadores_visita||[]).reduce((a,e)=>a+(e.total||0),0);
+    return`<tr>
+      <td>sec. <strong>${v.seccion}</strong></td>
+      <td>${LIDERES[v.seccion]||v.lider}</td>
+      <td>${EQUIPOS[v.equipo]?.nombre||v.equipo}</td>
+      <td class="text-xs text-muted">${nombreRegistrador(v.lider)}</td>
+      <td>${fmt(v.created_at)}</td>
+      <td><strong style="color:var(--accent2)">${tot}</strong></td>
+      <td class="text-xs text-muted">${v.calle||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Detalle por persona con tipo de acción
+  const personas=visitas.flatMap(v=>(v.encuestadores_visita||[]).map(e=>({...e,seccion:v.seccion,lider:v.lider,fecha:v.created_at,tipo:'barrido'})));
+  document.getElementById('rpt-personas').innerHTML=personas.map(p=>`<tr>
+    <td>${p.nombre}</td>
+    <td><span class="badge badge-green">🚶 barrido</span></td>
+    <td><strong style="color:var(--accent2)">${p.total}</strong> enviados</td>
+    <td>sec. ${p.seccion}</td>
+    <td class="text-xs text-muted">${nombreRegistrador(p.lider)}</td>
+    <td>${fmt(p.fecha)}</td>
+  </tr>`).join('');
+
+  document.getElementById('rpt-actividades').innerHTML=acts.map(a=>{
+    const asist=a.asistencia||[];
+    let resumen='';
+    if(a.tipo==='redes'){
+      const mg=asist.filter(x=>x.rol?.includes('mgusta:1')).length;
+      const co=asist.filter(x=>x.rol?.includes('comento:1')).length;
+      const cp=asist.filter(x=>x.rol?.includes('compartio:1')).length;
+      resumen=`❤️${mg} 💬${co} 🔁${cp}`;
+    } else if(a.tipo==='barrido'){
+      const tot=asist.reduce((s,x)=>{const m=x.rol?.match(/enviados:(\d+)/);return s+(m?parseInt(m[1]):0);},0);
+      resumen=`${tot} enviados`;
+    } else {
+      resumen=`${asist.filter(x=>x.asistio).length}/${asist.length}`;
+    }
+    return`<tr>
+      <td>${a.nombre}</td>
+      <td>${tipoBadge(a.tipo)}</td>
+      <td class="text-xs text-muted">${nombreRegistrador(a.lider)}</td>
+      <td>${EQUIPOS[a.equipo]?.nombre||a.equipo}</td>
+      <td>${fmt(a.fecha)}</td>
+      <td class="font-bold" style="color:var(--accent2)">${resumen}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function generarReporteEjecutivo(){
+  const tipo=document.getElementById('rpt-tipo-filtro').value;
+  const periodo=document.getElementById('rpt-periodo').value;
+  const eq=getEquipo();
+  const q=sb.from('actividades').select('*,asistencia(*)').order('fecha',{ascending:false});
+  if(eq) q.eq('equipo',eq);
+  if(tipo) q.eq('tipo',tipo);
+  const hoy=new Date();
+  if(periodo==='hoy') q.gte('fecha',hoy.toISOString().split('T')[0]);
+  else if(periodo==='semana'){const l=new Date(hoy);l.setDate(hoy.getDate()-hoy.getDay()+1);q.gte('fecha',l.toISOString().split('T')[0]);}
+  else if(periodo==='mes') q.gte('fecha',`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-01`);
+  const{data:acts}=await q;
+  if(!acts?.length){toast('sin actividades para ese filtro','#d29922');return;}
+  const tipoLabel=tipo?TIPO_ACT[tipo]?.label||tipo:'todas las actividades';
+  const periodoLabel={hoy:'hoy',semana:'esta semana',mes:'este mes',todo:'historial completo'}[periodo];
+  let contenido=`GEMACUU — REPORTE EJECUTIVO\nPara: Lic. Armando Ruiz\nGenerado por: Octavio Irigoyen\nFecha: ${hoy.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}\nActividad: ${tipoLabel} · Período: ${periodoLabel}\n${'─'.repeat(50)}\n\nTOTAL DE ACTIVIDADES: ${acts.length}\n\n`;
+  acts.forEach((a,i)=>{
+    const asist=a.asistencia||[];
+    contenido+=`${i+1}. ${a.nombre.toUpperCase()}\n   Tipo: ${TIPO_ACT[a.tipo]?.label||a.tipo}\n   Fecha: ${fmt(a.fecha)}\n   Equipo: ${EQUIPOS[a.equipo]?.nombre||a.equipo}\n`;
+    if(a.calle) contenido+=`   Lugar: ${a.calle}\n`;
+    if(a.tipo==='redes'){
+      const mg=asist.filter(x=>x.rol?.includes('mgusta:1')).length;
+      const co=asist.filter(x=>x.rol?.includes('comento:1')).length;
+      const cp=asist.filter(x=>x.rol?.includes('compartio:1')).length;
+      contenido+=`   Participantes: ${asist.length}\n   ❤️ Me gusta: ${mg}  💬 Comentaron: ${co}  🔁 Compartieron: ${cp}\n`;
+      asist.forEach(x=>{contenido+=`   • ${x.nombre}: ${x.rol?.includes('mgusta:1')?'❤️':'○'} ${x.rol?.includes('comento:1')?'💬':'○'} ${x.rol?.includes('compartio:1')?'🔁':'○'}\n`;});
+    } else if(a.tipo==='barrido'){
+      const tot=asist.reduce((s,x)=>{const m=x.rol?.match(/enviados:(\d+)/);return s+(m?parseInt(m[1]):0);},0);
+      contenido+=`   Total enviados: ${tot}\n`;
+      asist.forEach(x=>{const m=x.rol?.match(/enviados:(\d+)/);contenido+=`   • ${x.nombre}: ${m?m[1]:0} enviados\n`;});
+    } else {
+      const pres=asist.filter(x=>x.asistio);
+      contenido+=`   Participantes: ${pres.length}/${asist.length}\n`;
+      pres.forEach(x=>contenido+=`   • ${x.nombre}\n`);
+    }
+    contenido+='\n';
+  });
+  const blob=new Blob([contenido],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`GEMACUU_reporte_${tipo||'general'}_${hoy.toISOString().split('T')[0]}.txt`;a.click();
+  toast('✓ reporte txt descargado');
+}
+
+// ── GENERAR PDF VIA VENTANA HTML (compatible todos los navegadores) ──────────
+async function generarReportePDF(ampliado=false, openInTab=false){
+  toast('⏳ preparando reporte...','#1f6feb');
+  const tipo=document.getElementById('rpt-tipo-filtro').value;
+  const periodo=document.getElementById('rpt-periodo').value;
+  const horaCorte=document.getElementById('rpt-hora-corte')?.value||'21:00';
+  const hoy=new Date();
+  const eq=getEquipo();
+
+  const q=sb.from('actividades').select('*,asistencia(*)').order('fecha',{ascending:false});
+  if(eq) q.eq('equipo',eq);
+  if(tipo) q.eq('tipo',tipo);
+  if(periodo==='hoy') q.gte('fecha',hoy.toISOString().split('T')[0]);
+  else if(periodo==='semana'){const l=new Date(hoy);l.setDate(hoy.getDate()-hoy.getDay()+1);q.gte('fecha',l.toISOString().split('T')[0]);}
+  else if(periodo==='mes') q.gte('fecha',`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-01`);
+  const{data:acts}=await q;
+  if(!acts?.length){toast('sin actividades para ese filtro','#d29922');return;}
+
+  const{data:padron}=await sb.from('personal').select('nombre,area,padrino,seccion');
+  const totalPadron=padron?.length||0;
+
+  const PADRINOS=['rene','fernando','martin'];
+  const nomPadrino={rene:'Rene Espinoza',fernando:'Fernando Amezcua',martin:'Martin Yáñez'};
+  const estructuras={};
+  PADRINOS.forEach(p=>{
+    const mios=(padron||[]).filter(x=>x.padrino===p);
+    const seccMap={};
+    mios.forEach(x=>{const s=x.seccion||'sin sección';if(!seccMap[s])seccMap[s]={padron:0};seccMap[s].padron++;});
+    estructuras[p]={total:mios.length,secciones:seccMap};
+  });
+
+  const partPadrino={rene:new Set(),fernando:new Set(),martin:new Set()};
+  const partSeccion={};
+  (acts||[]).forEach(a=>{
+    (a.asistencia||[]).forEach(x=>{
+      const p=(padron||[]).find(per=>per.nombre?.toLowerCase()===x.nombre?.toLowerCase());
+      const pad=p?.padrino||a.equipo;
+      if(partPadrino[pad]) partPadrino[pad].add(x.nombre);
+      const sec=p?.seccion||'sin sección';
+      if(!partSeccion[sec])partSeccion[sec]={count:new Set(),padrino:pad};
+      partSeccion[sec].count.add(x.nombre);
+    });
+  });
+
+  const totalPart=(acts||[]).reduce((s,a)=>s+(a.asistencia?.length||0),0);
+  const pct=totalPadron>0?Math.round(totalPart/totalPadron*100):0;
+  const fechaStr=hoy.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+  const periodoLabel={hoy:'Hoy',semana:'Esta semana',mes:'Este mes',todo:'Historial'}[periodo]||'Hoy';
+  const tipoLabel=tipo?TIPO_ACT[tipo]?.label||tipo:'Todas las actividades';
+  const nombreGen=usuarioActual?.nombre||'Octavio Irigoyen';
+
+  let filasEst='';
+  PADRINOS.forEach(p=>{
+    const part=partPadrino[p]?.size||0;
+    const tot=estructuras[p]?.total||0;
+    const falt=Math.max(0,tot-part);
+    const pc=tot>0?Math.round(part/tot*100):0;
+    const colorFalt=falt===0?'#27ae60':'#e67e22';
+    filasEst+=`<tr><td>${nomPadrino[p]}</td><td class="num" style="color:#27ae60">${part}</td><td class="num">${tot}</td><td class="num" style="color:${colorFalt}">${falt}</td><td class="num">${pc}%</td></tr>`;
+  });
+
+  let seccionesHtml='';
+  if(ampliado){
+    let filasSec='';
+    PADRINOS.forEach(p=>{
+      const secs=estructuras[p]?.secciones||{};
+      Object.entries(secs).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([sec,info])=>{
+        const lidNom=LIDERES[sec]||sec;
+        const part=partSeccion[sec]?.count?.size||0;
+        const falt=Math.max(0,info.padron-part);
+        const pc=info.padron>0?Math.round(part/info.padron*100):0;
+        const colorFalt=falt===0?'#27ae60':'#e67e22';
+        filasSec+=`<tr><td>${nomPadrino[p]}</td><td>${sec} — ${lidNom}</td><td class="num" style="color:#27ae60">${part}</td><td class="num">${info.padron}</td><td class="num" style="color:${colorFalt}">${falt}</td><td class="num">${pc}%</td></tr>`;
+      });
+    });
+    seccionesHtml=`<h2>Detalle Ampliado por Sección</h2>
+    <table><thead><tr><th>Estructura</th><th>Sección / Líder</th><th>Part.</th><th>Padrón</th><th>Faltaron</th><th>%</th></tr></thead>
+    <tbody>${filasSec}</tbody></table>`;
+  }
+
+  let filasAct='';
+  (acts||[]).forEach(a=>{
+    const asist=a.asistencia||[];
+    let det='';
+    if(a.tipo==='redes'){
+      const mg=asist.filter(x=>x.rol?.includes('mgusta:1')).length;
+      const co=asist.filter(x=>x.rol?.includes('comento:1')).length;
+      const cp=asist.filter(x=>x.rol?.includes('compartio:1')).length;
+      det=`Me gusta:${mg} / Comentaron:${co} / Compartieron:${cp}`;
+    } else if(a.tipo==='barrido'){
+      const tot=asist.reduce((s,x)=>{const m=x.rol?.match(/enviados:(\d+)/);return s+(m?+m[1]:0);},0);
+      det=`Enviados: ${tot}`;
+    } else { det=`Presentes: ${asist.filter(x=>x.asistio).length}`; }
+    filasAct+=`<tr><td><b>${(a.nombre||'').toUpperCase()}</b></td><td>${TIPO_ACT[a.tipo]?.label||a.tipo}</td><td>${fmt(a.fecha)}</td><td>${EQUIPOS[a.equipo]?.nombre||a.equipo}</td><td class="num">${asist.length}</td><td>${det}</td><td>${a.calle||'—'}</td></tr>`;
+  });
+
+  const html=`<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<title>GEMACUU Reporte ${fechaStr}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a2e;background:#fff;padding:20px}
+.topbar{background:#195aa0;color:#fff;padding:10px 16px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.topbar span{font-weight:700;font-size:13px}
+.topbar button{background:#fff;color:#195aa0;border:none;padding:9px 22px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px}
+.header{background:#195aa0;color:#fff;padding:14px 20px;border-radius:8px;margin-bottom:14px;display:flex;justify-content:space-between}
+.header h1{font-size:26px;font-weight:700;letter-spacing:2px}
+.header .sub{font-size:10px;opacity:.8;margin-top:2px}
+.header .right{text-align:right;font-size:10px;opacity:.85;line-height:1.7}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;background:#f0f4ff;border:1px solid #c8d8f5;border-radius:6px;padding:10px 14px}
+.meta-item{font-size:10px;display:flex;gap:5px}.meta-item b{color:#555}
+.resumen{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.res-card{background:#195aa0;border-radius:8px;padding:12px;text-align:center;color:#fff}
+.res-card .lbl{font-size:9px;opacity:.8;text-transform:uppercase;letter-spacing:1px}
+.res-card .val{font-size:24px;font-weight:700;margin-top:4px}
+h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;background:#1e2837;padding:7px 10px;border-radius:4px;margin:14px 0 6px}
+table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:4px}
+th{background:#e8eef8;color:#333;font-size:9px;text-transform:uppercase;padding:7px 8px;text-align:left;border:1px solid #d0daf0}
+td{padding:6px 8px;border:1px solid #eee;vertical-align:middle}
+tr:nth-child(even) td{background:#f7f9ff}
+.num{text-align:center;font-weight:700}
+.footer{margin-top:20px;border-top:1px solid #ddd;padding-top:8px;font-size:9px;color:#888;text-align:center}
+@media print{.topbar{display:none!important}body{padding:8px}@page{margin:8mm;size:letter}}
+</style></head><body>
+<div class="topbar">
+  <span>📄 GEMACUU — ${fechaStr} — Corte ${horaCorte}</span>
+  <button onclick="window.print()">🖨️ Guardar como PDF</button>
+</div>
+<div class="header">
+  <div><div class="sub">REPORTE EJECUTIVO${ampliado?' — AMPLIADO':''}</div><h1>GEMACUU</h1></div>
+  <div class="right">Corte: <b>${horaCorte} hrs</b><br>${fechaStr}<br>${periodoLabel}</div>
+</div>
+<div class="meta">
+  <div class="meta-item"><b>Para:</b> Lic. Armando Ruiz</div>
+  <div class="meta-item"><b>Generado por:</b> ${nombreGen}</div>
+  <div class="meta-item"><b>Actividad:</b> ${tipoLabel}</div>
+  <div class="meta-item"><b>Período:</b> ${periodoLabel}</div>
+</div>
+<div class="resumen">
+  <div class="res-card"><div class="lbl">Actividades</div><div class="val">${acts.length}</div></div>
+  <div class="res-card"><div class="lbl">Participaron</div><div class="val">${totalPart}</div></div>
+  <div class="res-card"><div class="lbl">Padrón Total</div><div class="val">${totalPadron}</div></div>
+  <div class="res-card"><div class="lbl">% Asistencia</div><div class="val">${pct}%</div></div>
+</div>
+<h2>Desglose por Estructura</h2>
+<table><thead><tr><th>Encargado</th><th>Participaron</th><th>Padrón</th><th>Faltaron</th><th>%</th></tr></thead>
+<tbody>${filasEst}</tbody></table>
+${seccionesHtml}
+<h2>Detalle de Actividades</h2>
+<table><thead><tr><th>Actividad</th><th>Tipo</th><th>Fecha</th><th>Equipo</th><th>Part.</th><th>Resultado</th><th>Lugar</th></tr></thead>
+<tbody>${filasAct}</tbody></table>
+<div class="footer">GEMACUU · ${nombreGen} · Corte ${horaCorte} hrs · ${fechaStr}</div>
+</body></html>`;
+
+  // Guardar en sessionStorage (funciona en incógnito también)
+  try {
+    sessionStorage.setItem('gemacuu_reporte_html', html);
+    window.open('reporte-viewer.html','_blank');
+    toast('✓ Reporte listo — presiona Guardar como PDF en la nueva pestaña');
+  } catch(e) {
+    // Fallback si sessionStorage también falla: imprimir directo
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:none;z-index:99999;background:#fff';
+    iframe.srcdoc = html;
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(()=>document.body.removeChild(iframe), 2000);
+    };
+    toast('✓ Reporte listo para imprimir');
+  }
+}
+
+async function abrirReportePDF(ampliado=false){ await generarReportePDF(ampliado, true); }
+
+async function abrirReportePDF(ampliado=false){ await generarReportePDF(ampliado, true); }
+
+async function abrirReportePDF(ampliado=false){ await generarReportePDF(ampliado, true); }
+async function abrirReportePDF(ampliado=false){ await generarReportePDF(ampliado, true); }
+
+async function exportCSV(){
+  const{data:visitas}=await sb.from('visitas').select('*,encuestadores_visita(*)').order('created_at',{ascending:false});
+  let csv='seccion,encargado,equipo,registrado_por,fecha,persona,visitas_enviadas,calle\n';
+  (visitas||[]).forEach(v=>{
+    (v.encuestadores_visita||[]).forEach(e=>{
+      csv+=`${v.seccion},${LIDERES[v.seccion]||v.lider},${EQUIPOS[v.equipo]?.nombre||v.equipo},${v.lider},${v.fecha||''},${e.nombre},${e.total},${v.calle||''}\n`;
+    });
+  });
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`gemacuu_visitas_${new Date().toISOString().split('T')[0]}.csv`;a.click();
+  toast('✓ csv descargado');
+}
+
+function exportPersonalCSV(){
+  let csv='nombre,area,padrino,seccion,num_empleado\n';
+  personalCache.forEach(p=>{
+    csv+=`"${p.nombre}","${p.area||''}",${p.padrino||''},${p.seccion||''},${p.num_empleado||''}\n`;
+  });
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`gemacuu_personal_${new Date().toISOString().split('T')[0]}.csv`;a.click();
+  toast('✓ personal csv descargado');
+}
+
+async function exportPersonalExcel(){
+  toast('⏳ cargando personal...','#1f6feb');
+  // Siempre jalar datos frescos de Supabase
+  const{data:personal}=await sb.from('personal').select('*').order('padrino').order('nombre');
+  if(!personal?.length){toast('sin datos de personal','#d29922');return;}
+  let html=`<html><head><meta charset="utf-8"><style>
+    body{font-family:Arial,sans-serif}
+    h2{background:#195aa0;color:white;padding:10px;margin:0}
+    p{padding:6px 10px;background:#e8eef8;font-size:12px}
+    th{background:#195aa0;color:white;padding:8px;font-size:11px}
+    td{padding:6px 8px;border:1px solid #ddd;font-size:11px}
+    tr:nth-child(even) td{background:#f0f4ff}
+  </style></head><body>`;
+  html+=`<h2>GEMACUU — Directorio Personal</h2>`;
+  html+=`<p>Generado: ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} · Total: ${personal.length} personas</p>`;
+  html+=`<table border="1" cellspacing="0"><thead><tr><th>#</th><th>Nombre</th><th>Área</th><th>Estructura</th><th>Sección</th><th>Núm. Empleado</th></tr></thead><tbody>`;
+  personal.forEach((p,i)=>{
+    const pad={rene:'Rene Espinoza',fernando:'Fernando Amezcua',martin:'Martin Yáñez'}[p.padrino]||p.padrino||'—';
+    html+=`<tr><td>${i+1}</td><td><b>${p.nombre}</b></td><td>${p.area||'—'}</td><td>${pad}</td><td>${p.seccion||'—'}</td><td>${p.num_empleado||'—'}</td></tr>`;
+  });
+  html+=`</tbody></table></body></html>`;
+  const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`gemacuu_personal_${new Date().toISOString().split('T')[0]}.xls`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},3000);
+  toast(`✓ excel descargado — ${personal.length} personas`);
+}
+
+
+// ══════════════════════════════════════════════
+// DENUNCIAS CIUDADANAS
+// ══════════════════════════════════════════════
+
+const DEN_SUBCATS = {
+  vialidad:       ['Bache / pavimento dañado','Señalamiento vial faltante o dañado','Semáforo descompuesto','Banqueta dañada','Tope en mal estado'],
+  alumbrado:      ['Lámpara apagada','Poste caído o dañado','Cableado en mal estado'],
+  areas_verdes:   ['Poda de árbol necesaria','Árbol caído o peligroso','Parque en mal estado','Camellón descuidado','Juegos infantiles dañados'],
+  agua_drenaje:   ['Fuga de agua','Coladera tapada o sin tapa','Inundación'],
+  limpieza:       ['Acumulación de basura','Escombro en vía pública','Grafiti'],
+  infraestructura:['Obra abandonada','Muro o barda en riesgo','Puente o paso dañado'],
+  seguridad:      ['Zona oscura / sin alumbrado','Predio baldío con riesgo'],
+  otro:           ['Otro']
+};
+
+const DEN_CAT_LABEL = {
+  vialidad:'🚧 Vialidad', alumbrado:'💡 Alumbrado', areas_verdes:'🌳 Áreas Verdes',
+  agua_drenaje:'💧 Agua y Drenaje', limpieza:'🗑️ Limpieza', infraestructura:'🏚️ Infraestructura',
+  seguridad:'🚨 Seguridad', otro:'➕ Otro'
+};
+
+const DEN_ESTADO_LABEL = {
+  nueva:'🟡 Nueva', canalizada:'🔵 Canalizada', seguimiento:'🟠 En seguimiento',
+  resuelta:'✅ Resuelta', no_corresponde:'❌ No corresponde'
+};
+
+function updateSubcat(){
+  const cat = document.getElementById('den-categoria').value;
+  const sel = document.getElementById('den-subcategoria');
+  const opts = DEN_SUBCATS[cat] || [];
+  sel.innerHTML = opts.length
+    ? opts.map(o=>`<option value="${o}">${o}</option>`).join('')
+    : '<option value="">— sin subcategoría —</option>';
+}
+
+function getDenGPS(){
+  if(!navigator.geolocation){toast('GPS no disponible','#d29922');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('den-lat').value = pos.coords.latitude;
+    document.getElementById('den-lng').value  = pos.coords.longitude;
+    toast('📍 ubicación capturada');
+  }, ()=> toast('No se pudo obtener GPS','#d29922'));
+}
+
+let folioContador = 0;
+function genFolio(){
+  const d = new Date();
+  const yy = d.getFullYear().toString().slice(-2);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  folioContador++;
+  return `DEN-${yy}${mm}${dd}-${String(folioContador).padStart(4,'0')}`;
+}
+
+async function guardarDenuncia(){
+  const cat  = document.getElementById('den-categoria').value;
+  const calle= document.getElementById('den-calle').value.trim();
+  if(!cat){toast('Selecciona una categoría','#d29922');return;}
+  if(!calle){toast('Escribe la calle o ubicación','#d29922');return;}
+
+  const subcat = document.getElementById('den-subcategoria').value;
+  const desc   = document.getElementById('den-descripcion').value.trim();
+  const colonia= document.getElementById('den-colonia').value.trim();
+  const lat    = document.getElementById('den-lat').value||null;
+  const lng    = document.getElementById('den-lng').value||null;
+  const folio  = genFolio();
+
+  const payload = {
+    folio, categoria:cat, subcategoria:subcat||null,
+    calle: colonia ? `${calle}, ${colonia}` : calle,
+    descripcion:desc||null, lat:lat?+lat:null, lng:lng?+lng:null,
+    registrado_por: currentUser?.nombre||currentUser?.user_login||'',
+    equipo: currentUser?.equipo||null,
+    seccion: currentUser?.seccion||null,
+    estado:'nueva'
+  };
+
+  const {error} = await sb.from('denuncias').insert([payload]);
+  if(error){toast('Error al guardar: '+error.message,'#da3633');return;}
+
+  // Limpiar form
+  ['den-categoria','den-subcategoria','den-calle','den-colonia','den-descripcion','den-lat','den-lng'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value='';
+  });
+  document.getElementById('den-foto').value='';
+  toast(`✓ Denuncia ${folio} registrada`);
+  renderDenuncias();
+}
+
+async function renderDenuncias(){
+  const catF    = document.getElementById('den-filtro-cat')?.value||'';
+  const estadoF = document.getElementById('den-filtro-estado')?.value||'';
+
+  let q = sb.from('denuncias').select('*').order('created_at',{ascending:false});
+  if(catF)    q = q.eq('categoria',catF);
+  if(estadoF) q = q.eq('estado',estadoF);
+  // Líderes solo ven las de su equipo
+  if(currentUser.rol==='lider') q = q.eq('registrado_por', currentUser.nombre||currentUser.user_login);
+
+  const {data,error} = await q;
+  if(error){console.error(error);return;}
+  const rows = data||[];
+
+  // Stats
+  const stats = {nueva:0,canalizada:0,seguimiento:0,resuelta:0,no_corresponde:0};
+  rows.forEach(d=>{ if(stats[d.estado]!==undefined) stats[d.estado]++; });
+  document.getElementById('den-stats').innerHTML = Object.entries(stats)
+    .map(([k,v])=>`<span class="badge badge-gray">${DEN_ESTADO_LABEL[k]||k}: <strong>${v}</strong></span>`).join('');
+
+  // Tabla
+  document.getElementById('den-tbody').innerHTML = rows.length ? rows.map(d=>`
+    <tr>
+      <td><span class="badge badge-blue" style="font-size:10px">${d.folio||'—'}</span></td>
+      <td><span class="text-xs">${DEN_CAT_LABEL[d.categoria]||d.categoria}</span><br><span class="text-xs text-muted">${d.subcategoria||''}</span></td>
+      <td style="max-width:160px"><span class="text-xs">${d.calle||'—'}</span></td>
+      <td style="max-width:180px"><span class="text-xs text-muted">${d.descripcion||'—'}</span></td>
+      <td class="text-xs">${d.registrado_por||'—'}</td>
+      <td class="text-xs">${fmt(d.created_at?.split('T')[0])}</td>
+      <td>
+        ${currentUser.rol==='admin'
+          ? `<select onchange="cambiarEstadoDen('${d.id}',this.value)" style="font-size:11px;padding:3px 6px">
+              ${Object.entries(DEN_ESTADO_LABEL).map(([k,v])=>`<option value="${k}"${d.estado===k?' selected':''}>${v}</option>`).join('')}
+            </select>`
+          : `<span class="badge badge-gray">${DEN_ESTADO_LABEL[d.estado]||d.estado}</span>`
+        }
+      </td>
+      <td>
+        ${d.lat&&d.lng?`<a href="https://maps.google.com/?q=${d.lat},${d.lng}" target="_blank" class="btn btn-xs btn-secondary">🗺️</a>`:''}
+      </td>
+    </tr>`).join('')
+  : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">sin denuncias registradas</td></tr>';
+}
+
+async function cambiarEstadoDen(id, estado){
+  const {error} = await sb.from('denuncias').update({estado}).eq('id',id);
+  if(error) toast('Error: '+error.message,'#da3633');
+  else toast('✓ estado actualizado');
+}
+
+async function exportDenunciasExcel(){
+  toast('⏳ generando excel...','#1f6feb');
+  const {data} = await sb.from('denuncias').select('*').order('created_at',{ascending:false});
+  if(!data?.length){toast('sin denuncias para exportar','#d29922');return;}
+
+  const hoy = new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+  let xls = `<html><head><meta charset="utf-8"><style>
+    body{font-family:Arial,sans-serif}
+    h2{background:#195aa0;color:white;padding:10px;margin:0}
+    p{padding:6px 10px;background:#e8eef8;font-size:11px}
+    th{background:#195aa0;color:white;padding:7px 10px;font-size:11px;text-align:left}
+    td{padding:6px 10px;border:1px solid #ddd;font-size:11px;vertical-align:top}
+    tr:nth-child(even) td{background:#f0f4ff}
+  </style></head><body>`;
+  xls += `<h2>GEMACUU — Denuncias Ciudadanas</h2>`;
+  xls += `<p>Generado: ${hoy} · Total: ${data.length} denuncias · Por: ${currentUser?.nombre||'Admin'}</p>`;
+  xls += `<table border="1" cellspacing="0"><thead><tr>
+    <th>Folio</th><th>Categoría</th><th>Subcategoría</th><th>Calle / Ubicación</th>
+    <th>Descripción</th><th>Registrado por</th><th>Sección</th><th>Fecha</th><th>Estado</th><th>Mapa</th>
+  </tr></thead><tbody>`;
+
+  data.forEach(d=>{
+    const mapaLink = d.lat&&d.lng ? `https://maps.google.com/?q=${d.lat},${d.lng}` : '';
+    xls += `<tr>
+      <td><b>${d.folio||'—'}</b></td>
+      <td>${DEN_CAT_LABEL[d.categoria]||d.categoria}</td>
+      <td>${d.subcategoria||'—'}</td>
+      <td>${d.calle||'—'}</td>
+      <td>${d.descripcion||'—'}</td>
+      <td>${d.registrado_por||'—'}</td>
+      <td>${d.seccion||'—'}</td>
+      <td>${d.created_at?.split('T')[0]||'—'}</td>
+      <td>${DEN_ESTADO_LABEL[d.estado]||d.estado}</td>
+      <td>${mapaLink?`<a href="${mapaLink}">Ver mapa</a>`:''}</td>
+    </tr>`;
+  });
+
+  xls += `</tbody></table></body></html>`;
+  const blob = new Blob([xls],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`gemacuu_denuncias_${new Date().toISOString().split('T')[0]}.xls`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},3000);
+  toast(`✓ Excel descargado — ${data.length} denuncias`);
+}
+
+// ══════ USUARIOS ══════
+async function renderUsuarios(){
+  const{data}=await sb.from('usuarios').select('*').order('rol').order('nombre');
+  const users=data||[];
+  document.getElementById('usr-count').textContent=users.length;
+  document.getElementById('usr-tbody').innerHTML=users.map(u=>`<tr>
+    <td><strong>${u.nombre}</strong></td>
+    <td class="text-xs text-muted">@${u.user_login}</td>
+    <td><span class="badge ${u.rol==='admin'?'badge-purple':u.rol==='responsable'?'badge-blue':'badge-gray'}">${{admin:'admin',responsable:'responsable',lider:'encargado'}[u.rol]}</span></td>
+    <td class="text-xs text-muted">${u.seccion?`sec. ${u.seccion}`:u.equipo?EQUIPOS[u.equipo]?.nombre||u.equipo:'—'}</td>
+    <td><span class="badge ${u.activo?'badge-green':'badge-red'}">${u.activo?'activo':'inactivo'}</span></td>
+    <td>
+      <button class="btn btn-sm ${u.activo?'btn-danger':'btn-secondary'} mb-1" onclick="toggleUser('${u.id}',${u.activo})">${u.activo?'desactivar':'activar'}</button>
+      <button class="btn btn-sm btn-secondary" onclick="cambiarPwd('${u.id}','${u.nombre}')">🔑 pwd</button>
+    </td>
+  </tr>`).join('');
+}
+
+async function toggleUser(id,activo){
+  await sb.from('usuarios').update({activo:!activo}).eq('id',id);
+  renderUsuarios();toast(!activo?'✓ activado':'✓ desactivado');
+}
+
+async function cambiarPwd(id,nombre){
+  const nueva=prompt(`nueva contraseña (número de empleado) para ${nombre}:`);
+  if(!nueva||isNaN(nueva)){toast('contraseña debe ser solo números','#d29922');return;}
+  const{error}=await sb.from('usuarios').update({password:nueva}).eq('id',id);
+  if(!error) toast(`✓ contraseña actualizada para ${nombre}`);
+  else toast('error al actualizar','#da3633');
+}
+
+function showAddUser(){document.getElementById('modal-user').classList.remove('hidden');}
+function toggleRolFields(){
+  const r=document.getElementById('nu-rol').value;
+  document.getElementById('nu-equipo-wrap').classList.toggle('hidden',r!=='responsable');
+  document.getElementById('nu-sec-wrap').classList.toggle('hidden',r!=='lider');
+}
+async function addUser(){
+  const n=document.getElementById('nu-nombre').value.trim();
+  const u=document.getElementById('nu-user').value.trim().toLowerCase();
+  const p=document.getElementById('nu-pass').value.trim();
+  const r=document.getElementById('nu-rol').value;
+  if(!n||!u||!p){toast('completa todos los campos','#d29922');return;}
+  if(isNaN(p)){toast('la contraseña debe ser solo números','#d29922');return;}
+  const sec=r==='lider'?document.getElementById('nu-seccion').value:null;
+  const eq=r==='responsable'?document.getElementById('nu-equipo').value:sec?getEq(sec)?.[0]:null;
+  const{error}=await sb.from('usuarios').insert({user_login:u,password:p,nombre:n,rol:r,equipo:eq,seccion:sec,activo:true});
+  if(!error){closeModal('modal-user');renderUsuarios();toast(`✓ usuario ${n} creado`);}
+  else toast('error: usuario ya existe','#da3633');
+}
+
+// ══════ PERSONAL ══════
+let personalCache=[];
+
+async function renderPersonal(){
+  const{data}=await sb.from('personal').select('*').order('nombre');
+  personalCache=data||[];
+  // poblar filtro secciones
+  const secs=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))].sort();
+  const sel=document.getElementById('p-filtro-sec');
+  sel.innerHTML='<option value="">todas</option><option value="sin_seccion">sin sección</option>'+secs.map(s=>`<option value="${s}">sección ${s}</option>`).join('');
+  filtrarPersonal();
+}
+
+function filtrarPersonal(){
+  const buscar=document.getElementById('p-buscar').value.toLowerCase();
+  const padrino=document.getElementById('p-filtro-padrino').value;
+  const sec=document.getElementById('p-filtro-sec').value;
+  let lista=personalCache;
+  if(buscar) lista=lista.filter(p=>p.nombre.toLowerCase().includes(buscar)||p.area?.toLowerCase().includes(buscar));
+  if(padrino) lista=lista.filter(p=>p.padrino===padrino);
+  if(sec==='sin_seccion') lista=lista.filter(p=>!p.seccion);
+  else if(sec) lista=lista.filter(p=>p.seccion===sec);
+  document.getElementById('p-count').textContent=`${lista.length} persona${lista.length!==1?'s':''}`;
+  const padBadge={rene:'badge-blue',fernando:'badge-green',martin:'badge-yellow'};
+  document.getElementById('personal-tbody').innerHTML=lista.map(p=>`<tr>
+    <td style="font-weight:500">${p.nombre}</td>
+    <td class="text-xs text-muted">${p.area||'—'}</td>
+    <td><span class="badge ${padBadge[p.padrino]||'badge-gray'}">${p.padrino||'—'}</span></td>
+    <td>${p.seccion?`<span class="badge badge-blue">sec. ${p.seccion}</span>`:'<span class="text-xs text-muted">sin sección</span>'}</td>
+    <td class="text-xs text-muted">${p.num_empleado||'—'}</td>
+    <td><button class="btn btn-secondary btn-xs" onclick="editarPersona('${p.id}')">✏️</button></td>
+  </tr>`).join('');
+}
+
+function editarPersona(id){
+  const p=personalCache.find(x=>x.id===id);if(!p)return;
+  document.getElementById('ep-id').value=p.id;
+  document.getElementById('ep-nombre').value=p.nombre;
+  document.getElementById('ep-area').value=p.area||'';
+  document.getElementById('ep-padrino').value=p.padrino||'rene';
+  document.getElementById('ep-seccion').value=p.seccion||'';
+  document.getElementById('ep-empleado').value=p.num_empleado||'';
+  document.getElementById('modal-persona').classList.remove('hidden');
+}
+
+async function guardarPersona(){
+  const id=document.getElementById('ep-id').value;
+  const padrino=document.getElementById('ep-padrino').value;
+  const seccion=document.getElementById('ep-seccion').value||null;
+  const num_empleado=document.getElementById('ep-empleado').value.trim()||null;
+  const{error}=await sb.from('personal').update({padrino,seccion,num_empleado}).eq('id',id);
+  if(!error){
+    closeModal('modal-persona');
+    toast('✓ persona actualizada');
+    renderPersonal();
+  } else toast('error al guardar','#da3633');
+}
+
+// ══════ CLOUDINARY ══════
+async function uploadCld(file,folder){
+  const fd=new FormData();
+  fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);
+  fd.append('folder',`barrido_electoral/${folder}`);
+  try{
+    const res=await fetch(CLD_URL,{method:'POST',body:fd});
+    const data=await res.json();
+    return{url:data.secure_url,public_id:data.public_id};
+  }catch(e){return null;}
+}
+
+init();
+</script>
+</body>
+</html>

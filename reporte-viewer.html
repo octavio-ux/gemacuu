@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>GEMACUU — Reporte</title>
+<style>
+  body { margin: 0; background: #0d1117; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; }
+  #msg { color: #fff; text-align: center; }
+  #msg h2 { font-size: 20px; margin-bottom: 8px; }
+  #msg p { font-size: 13px; color: #8b949e; }
+  a { color: #58a6ff; }
+</style>
+</head>
+<body>
+<div id="msg"><h2>⏳ Cargando reporte...</h2><p>Un momento por favor.</p></div>
+<script>
+  // Intentar sessionStorage primero, luego localStorage
+  let html = null;
+  try { html = sessionStorage.getItem('gemacuu_reporte_html'); if(html) sessionStorage.removeItem('gemacuu_reporte_html'); } catch(e){}
+  if(!html) { try { html = localStorage.getItem('gemacuu_reporte_html'); if(html) localStorage.removeItem('gemacuu_reporte_html'); } catch(e){} }
+  
+  if (html) {
+    document.open();
+    document.write(html);
+    document.close();
+  } else {
+    document.getElementById('msg').innerHTML = '<h2>⚠️ Sin datos de reporte</h2><p>Genera el reporte desde GEMACUU primero.</p><br><br><a href="/">← Volver a GEMACUU</a>';
+  }
+</script>
+</body>
+</html>
