@@ -1,34 +1,53 @@
-# GEMACUU Portal
+# GEMACUU Portal — Event Manager
 
-Sistema de Gestión Estratégica de Mantenimiento y Atención Chihuahua — Vialidades y Espacios Públicos.
+Sistema de Gestión Estratégica de Mantenimiento y Atención Chihuahua — Módulo de Eventos
 
 ## Emergent App Builder
 
 - **Project:** gemacuu-portal
-- **Job ID:** 3c916131-1397-4e1e-b87b-d20f9755b3b2
-- **Preview:** https://gemacuu-portal.preview.emergentagent.com
-- **Active Build:** 6abeb81d-e491-46f3-b87b-c44b4705852f
+- **Latest Build:** 1c0b5641-e5ee-434f-8581-d3cfd8dd130a
+- **Track:** https://app.emergent.sh/home?job_id=1c0b5641-e5ee-434f-8581-d3cfd8dd130a
 
-## Evento 30 de Mayo — Formulario Minimalista
+## Features
 
-- Campos: Nombre Completo, Número Celular, Subir Fotos
-- Geofencing: 300-500m del Centro de Convenciones Chihuahua
-- Cloudinary: `gemacuu/evento30mayo/[Nombre]/`
+### Public Registration Form (`/registro?actividad=evento30mayo`)
+- Nombre Completo, Número Celular, Subir Fotos
+- Geofencing: 400m del Centro de Convenciones Chihuahua (28.6353, -106.0889)
+- Fuera de rango → blocked. Dentro → submit allowed
 - Post-submit: "Gracias" + "Guardado"
-- Sin branding, sin logos, mobile-first
+- Mobile-first, sin branding, alto contraste
 
-## Configuración
+### Admin Dashboard (`/admin`) — Dark Theme
+- TOTAL OPERANDO: registrados
+- AVANCE ACTIVIDAD: X / 164
+- SUMA DE TOTALES: registros con fotos
+- Pendientes por Padrino (no registrados, agrupados)
+- Registrados por Padrino (conteo)
+- Gestión de Actividades con "Compartir Link" (copy to clipboard)
+- Excel export con columna Padrino
 
-Variables de entorno requeridas (NO hardcodear):
+### Sponsor Cross-Reference (RapidFuzz)
+- 164 personas, 3 padrinos: Fernando Amezcua, Martin Yáñez, Rene Espinoza
+- Fuzzy matching: `fuzz.token_sort_ratio()`, threshold >= 75
+- Auto-asigna padrino al registrarse
+
+## Configuration (Environment Variables)
 
 ```
-SUPABASE_URL=https://hhqauklluvlfqbweipxa.supabase.co
-SUPABASE_KEY=<use environment secrets>
-CLOUDINARY_CLOUD_NAME=<configured in environment>
+SUPABASE_URL=<set in environment>
+SUPABASE_KEY=<set in environment>
+CLOUDINARY_CLOUD_NAME=<set in environment>
+CLOUDINARY_API_KEY=<set in environment>
+CLOUDINARY_API_SECRET=<set in environment>
 ```
 
-## Archivos
+## Database Tables (Supabase)
+- `activities` — id, nombre, tipo, lat, lng, radio, is_active, created_at
+- `personnel_list` — id, nombre_completo, padrino
+- `event_registrations` — id, activity_name, nombre_completo, celular, padrino, photo_urls, geolocation, created_at
 
-- `index.html` — App principal (contiene credenciales hardcodeadas que deben migrarse a env vars)
-- `reporte-viewer.html` — Visor de reportes
-- `.emergent.json` — Configuración de enlace con Emergent App Builder
+## Stack
+- Backend: Python FastAPI + RapidFuzz
+- Frontend: React
+- Storage: Cloudinary (`gemacuu/{actividad}/{nombre}/`)
+- Database: Supabase
