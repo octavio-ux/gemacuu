@@ -1,0 +1,19 @@
+{
+  "project": "gemacuu-portal",
+  "job_id": "3c916131-1397-4e1e-b87b-d20f9755b3b2",
+  "emergent_url": "https://app.emergentagent.com/apps/gemacuu-portal",
+  "preview_url": "https://gemacuu-portal.preview.emergentagent.com",
+  "active_build": "6abeb81d-e491-46f3-b87b-c44b4705852f",
+  "features": [
+    "minimalist-event-form-may30",
+    "geofencing-300-500m-centro-convenciones",
+    "cloudinary-gemacuu-evento30mayo",
+    "supabase-attendance-records"
+  ],
+  "environment": {
+    "SUPABASE_URL": "env:SUPABASE_URL",
+    "SUPABASE_KEY": "env:SUPABASE_KEY",
+    "CLOUDINARY_CLOUD_NAME": "env:CLOUDINARY_CLOUD_NAME"
+  },
+  "notes": "Credentials must be moved to environment variables. Do not hardcode in source files."
+}
