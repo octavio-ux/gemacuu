@@ -662,6 +662,35 @@ tr:hover td{background:#f8faff}
         <div id="cambio-resultado"></div>
       </div>
     </div>
+
+    <!-- ENLACES TEMPORALES DE ASISTENCIA POR SECCIÓN -->
+    <div class="card">
+      <div class="card-title">🔗 Enlaces temporales de asistencia por sección</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Genera un enlace para que un líder de sección o una editora capture asistencia desde su celular, sin iniciar sesión.
+        No caduca hasta que alguien lo abre por primera vez — a partir de ahí tiene 15 horas de vigencia.
+      </div>
+      <div class="fg">
+        <label>Etiqueta (para identificarlo en la lista de abajo)</label>
+        <input type="text" id="enl-etiqueta" placeholder="ej. Lluvia Aceves — secciones de Rene">
+      </div>
+      <div class="fg">
+        <label>Secciones incluidas</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('Fernando Amezcua')">Todas — Fernando</button>
+          <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('Martin Yáñez')">Todas — Martin</button>
+          <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('Rene Espinoza')">Todas — Rene</button>
+          <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('')">Limpiar selección</button>
+        </div>
+        <div id="enl-secciones-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
+      <div id="enl-resultado" style="margin-top:10px"></div>
+
+      <div style="border-top:1px solid var(--border);margin:16px 0"></div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
+      <div id="enl-lista"></div>
+    </div>
   </div>
 
   <!-- PANEL: BAJAS -->
@@ -1353,6 +1382,12 @@ async function renderControl(){
   // Cambio rápido
   document.getElementById('cambio-buscar').value='';
   document.getElementById('cambio-resultado').innerHTML='';
+  // Enlaces temporales
+  document.getElementById('enl-etiqueta').value='';
+  document.getElementById('enl-resultado').innerHTML='';
+  seccionesSeleccionadas=new Set();
+  renderEnlaceSeccionesChips();
+  await cargarEnlaces();
 }
 function filtrarPendientes(){
   const q=(document.getElementById('pend-buscar').value||'').toLowerCase();
@@ -1447,6 +1482,107 @@ async function cambiarSeccion(id,seccion){
   await sbPatch('personal',`?id=eq.${id}`,{seccion:seccion||null});
   showToast('✓ Sección actualizada');
   await cargarPersonal();
+}
+
+// ── ENLACES TEMPORALES (asistencia por sección sin login) ──
+let seccionesSeleccionadas=new Set();
+let enlacesCache=[];
+
+function renderEnlaceSeccionesChips(){
+  const cont=document.getElementById('enl-secciones-chips');
+  if(!cont) return;
+  cont.innerHTML=SECCIONES.map(s=>`
+    <button type="button" class="evento-chip ${seccionesSeleccionadas.has(s.num)?'sel':''}" onclick="toggleSeccionEnlace('${s.num}')">
+      ${s.num} · ${s.encargado}
+    </button>`).join('');
+}
+
+function toggleSeccionEnlace(num){
+  if(seccionesSeleccionadas.has(num)) seccionesSeleccionadas.delete(num);
+  else seccionesSeleccionadas.add(num);
+  renderEnlaceSeccionesChips();
+}
+
+function seleccionarSeccionesPadrino(padrino){
+  if(!padrino){ seccionesSeleccionadas=new Set(); renderEnlaceSeccionesChips(); return; }
+  SECCIONES.filter(s=>s.padrino===padrino).forEach(s=>seccionesSeleccionadas.add(s.num));
+  renderEnlaceSeccionesChips();
+}
+
+function urlEnlaceSeccion(token){
+  return `${location.origin}${location.pathname.replace(/index\.html$/,'')}asistencia-seccion.html?token=${token}`;
+}
+
+function copiarEnlaceGenerado(url){
+  navigator.clipboard.writeText(url).then(()=>showToast('📋 enlace copiado')).catch(()=>showToast('⚠️ no se pudo copiar'));
+}
+
+async function generarEnlace(){
+  if(!seccionesSeleccionadas.size){showToast('⚠️ Selecciona al menos una sección');return;}
+  const etiqueta=document.getElementById('enl-etiqueta').value.trim();
+  const token=(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2)));
+  const r=await sbPost('enlaces_temporales',{
+    token,
+    secciones:Array.from(seccionesSeleccionadas),
+    etiqueta:etiqueta||null,
+    creado_por:currentUser
+  });
+  if(!r.ok){ showToast('⚠️ Error al generar el enlace'); return; }
+  const url=urlEnlaceSeccion(token);
+  document.getElementById('enl-resultado').innerHTML=`
+    <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
+      ✅ Enlace generado:<br><b>${url}</b>
+      <div style="margin-top:6px"><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋 copiar enlace</button></div>
+    </div>`;
+  document.getElementById('enl-etiqueta').value='';
+  seccionesSeleccionadas=new Set();
+  renderEnlaceSeccionesChips();
+  showToast('✓ Enlace generado');
+  await cargarEnlaces();
+}
+
+async function cargarEnlaces(){
+  const data=await sbGet('enlaces_temporales','?order=creado_en.desc&limit=30');
+  enlacesCache=Array.isArray(data)?data:[];
+  renderListaEnlaces();
+}
+
+function renderListaEnlaces(){
+  const el=document.getElementById('enl-lista');
+  if(!el) return;
+  if(!enlacesCache.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted)">Aún no se han generado enlaces.</div>'; return; }
+  el.innerHTML=enlacesCache.map(en=>{
+    let estadoHtml;
+    if(en.revocado){
+      estadoHtml=`<span class="badge badge-red">🚫 revocado</span>`;
+    } else if(!en.primera_apertura){
+      estadoHtml=`<span class="badge badge-gray">⏳ sin abrir — disponible</span>`;
+    } else {
+      const expira=new Date(new Date(en.primera_apertura).getTime()+15*60*60*1000);
+      estadoHtml = new Date()>expira
+        ? `<span class="badge badge-red">⏱ caducado</span>`
+        : `<span class="badge badge-green">🟢 activo — caduca ${expira.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>`;
+    }
+    const url=urlEnlaceSeccion(en.token);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:13px;font-weight:700">${en.etiqueta||'(sin etiqueta)'}</div>
+        <div style="font-size:11px;color:var(--muted)">${(en.secciones||[]).length} sección(es) · por ${en.creado_por} · ${new Date(en.creado_en).toLocaleDateString('es-MX')}</div>
+      </div>
+      ${estadoHtml}
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋</button>
+        ${!en.revocado?`<button class="btn btn-danger btn-xs" onclick="revocarEnlace('${en.id}')">🚫 revocar</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function revocarEnlace(id){
+  if(!confirm('¿Revocar este enlace? Dejará de funcionar de inmediato.')) return;
+  await sbPatch('enlaces_temporales',`?id=eq.${id}`,{revocado:true});
+  showToast('🚫 enlace revocado');
+  await cargarEnlaces();
 }
 
 // ── INEs ──
