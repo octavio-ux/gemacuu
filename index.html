@@ -1504,8 +1504,10 @@ function toggleSeccionEnlace(num){
 }
 
 function seleccionarSeccionesPadrino(padrino){
-  if(!padrino){ seccionesSeleccionadas=new Set(); renderEnlaceSeccionesChips(); return; }
-  SECCIONES.filter(s=>s.padrino===padrino).forEach(s=>seccionesSeleccionadas.add(s.num));
+  // Reemplaza la selección por completo (no se acumula con lo que ya estaba marcado)
+  seccionesSeleccionadas=padrino
+    ? new Set(SECCIONES.filter(s=>s.padrino===padrino).map(s=>s.num))
+    : new Set();
   renderEnlaceSeccionesChips();
 }
 
