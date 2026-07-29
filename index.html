@@ -2,498 +2,2521 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>GEMACUU — gemacuu.org</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-<link rel="stylesheet" href="style.css"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEMACUU · Sistema Operativo 2026</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pan:#003399;--pan2:#1a4fc4;--pan3:#4a7fe0;--pan-light:#e6eeff;
+  --red:#cc0000;--red2:#e63333;
+  --bg:#f0f4ff;--white:#fff;
+  --text:#1a1a2e;--muted:#6b7280;
+  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --radius:14px;--radius-sm:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ── */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#001a66 0%,#003399 60%,#cc0000 100%)}
+.lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,51,.35)}
+.lhead{text-align:center;margin-bottom:1.75rem}
+.llogo{width:64px;height:64px;background:var(--pan);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
+.ltitle{font-size:22px;font-weight:800;color:var(--pan);letter-spacing:.04em}
+.lsub{font-size:12px;color:var(--muted);margin-top:3px}
+.lusers{display:flex;flex-direction:column;gap:7px;margin-bottom:1.25rem}
+.luser{display:flex;align-items:center;gap:11px;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;background:#fff}
+.luser:hover{border-color:var(--pan);background:var(--pan-light)}
+.luser.sel{border-color:var(--pan);background:var(--pan-light)}
+.lav{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;color:#fff}
+.lav-o{background:#1a1a2e}.lav-f{background:#003399}.lav-m{background:#2d6a4f}.lav-r{background:#854f0b}
+.lav-k{background:#993556}.lav-l{background:#0f6e56}.lav-v{background:#534ab7}
+.lname{font-size:13px;font-weight:700;color:var(--text)}
+.lrole{font-size:11px;color:var(--muted)}
+.lpass-row{display:flex;gap:8px}
+.lpass-row input{flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;letter-spacing:.2em;outline:none;color:var(--text)}
+.lpass-row input:focus{border-color:var(--pan)}
+.lbtn{padding:11px 18px;background:var(--pan);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.lbtn:hover{background:var(--pan2)}
+.lerr{font-size:12px;color:var(--red);margin-top:6px;min-height:16px;text-align:center}
+
+/* ── APP ── */
+#app{display:none}
+.topbar{background:var(--pan);color:#fff;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,102,.2)}
+.tl{display:flex;align-items:center;gap:12px}
+.tlogo{font-size:17px;font-weight:800;letter-spacing:.06em}
+.tdot{width:6px;height:6px;background:var(--red);border-radius:50%}
+.tuser{font-size:12px;color:rgba(255,255,255,.7)}
+.tuser b{color:#fff}
+.tbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+.tbtn:hover{background:rgba(255,255,255,.25)}
+
+/* ── RESUMEN BAR ── */
+.rbar{background:#001a66;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
+.rblock{padding:6px 20px;border-right:1px solid rgba(255,255,255,.12);flex-shrink:0}
+.rblock:last-child{border-right:none}
+.rnum{font-size:18px;font-weight:800;color:#fff;line-height:1}
+.rlbl{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.rtag{font-size:11px;color:#7aabf7;font-weight:600}
+
+/* ── NAV TABS ── */
+.nav{background:#fff;border-bottom:2px solid var(--border);display:flex;padding:0 1.5rem;overflow-x:auto;gap:0}
+.ntab{padding:13px 18px;color:var(--muted);font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:.15s;white-space:nowrap;margin-bottom:-2px}
+.ntab:hover{color:var(--pan)}
+.ntab.on{color:var(--pan);border-bottom-color:var(--pan)}
+
+/* ── PANELS ── */
+.panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
+.panel.on{display:block}
+
+/* ── CARDS ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow)}
+.card-title{font-size:14px;font-weight:700;margin-bottom:1rem;color:var(--pan);display:flex;align-items:center;gap:8px}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
+.stat{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat-n{font-size:26px;font-weight:800;line-height:1;color:var(--pan)}
+.stat-l{font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow:auto;border-radius:var(--radius);border:1px solid var(--border);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f0f4ff;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;white-space:nowrap}
+td{padding:10px 14px;border-top:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:#f8faff}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-pan{background:#e6eeff;color:#003399}
+.badge-red{background:#fce8e8;color:#cc0000}
+.badge-gray{background:#f0f0f0;color:#555}
+.badge-green{background:#eaf3de;color:#2d6a4f}
+.badge-amber{background:#fef3c7;color:#854f0b}
+
+/* ── FORM ── */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text);outline:none;background:#fff;transition:.15s}
+.fg input:focus,.fg select:focus{border-color:var(--pan)}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--pan);color:#fff}
+.btn-primary:hover{background:var(--pan2)}
+.btn-secondary{background:#f0f4ff;color:var(--pan);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--pan-light)}
+.btn-danger{background:#fce8e8;color:var(--red);border:1px solid #f5c2c2}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+.w-full{width:100%}
+
+/* ── PERSONA CHIP ── */
+.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:#f0f4ff;color:var(--pan);border:1px solid var(--border);margin:2px}
+
+/* ── SECCION CARD ── */
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.sec-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow)}
+.sec-num{font-size:20px;font-weight:800;color:var(--pan)}
+.sec-enc{font-size:13px;font-weight:600;margin-top:2px;color:var(--text)}
+.sec-pad{font-size:11px;color:var(--muted);margin-top:2px}
+.sec-chips{margin-top:8px;display:flex;flex-wrap:wrap;gap:3px}
+
+/* ── ORG ── */
+.org-tree{display:flex;flex-direction:column;align-items:center;gap:0}
+.org-root{background:var(--pan);color:#fff;border-radius:12px;padding:14px 28px;text-align:center;font-weight:700;font-size:15px;box-shadow:var(--shadow)}
+.org-line{width:2px;height:28px;background:var(--pan3);margin:0 auto}
+.org-branches{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
+.org-branch{display:flex;flex-direction:column;align-items:center}
+.org-pad{border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;font-size:14px;box-shadow:var(--shadow);width:100%}
+.org-f{background:#003399;color:#fff}
+.org-m{background:#2d6a4f;color:#fff}
+.org-r{background:#854f0b;color:#fff}
+.org-pad-sub{font-size:11px;opacity:.75;font-weight:400;margin-top:3px}
+.org-line-h{height:2px;width:100%;background:var(--border);margin:12px 0}
+
+/* ── INE ── */
+.ine-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+.ine-thumb{aspect-ratio:1;background:#f0f4ff;border:1px solid var(--border);border-radius:8px;cursor:pointer;position:relative;overflow:hidden}
+.ine-thumb img{width:100%;height:100%;object-fit:cover}
+.ine-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,51,153,.8);color:#fff;font-size:9px;text-align:center;padding:2px}
+
+/* ── BAJAS ── */
+.baja-row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:10px;background:#fff;border:1px solid var(--border);margin-bottom:8px}
+.baja-ico{width:36px;height:36px;background:#fce8e8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.baja-name{font-size:14px;font-weight:700}
+.baja-motivo{font-size:11px;color:var(--red);font-weight:600;margin-top:2px}
+.baja-meta{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+.modal-hdr h3{font-size:15px;font-weight:700;color:var(--pan)}
+.close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+.modal-persona-card{max-width:760px;max-height:calc(100vh - 2rem);overflow-y:auto}
+.persona-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
+.persona-form-grid .fg{min-width:0}
+.persona-lider{display:flex;align-items:center;gap:9px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#f8faff}
+.persona-lider input{width:17px;height:17px;accent-color:var(--pan)}
+.persona-lider span{font-size:13px;font-weight:700}
+.persona-actions{display:flex;gap:8px;margin-top:1rem}
+.persona-baja{margin-top:8px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,51,153,.3)}
+#toast.show{opacity:1}
+
+/* ── RED AMIGOS ── */
+.red-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow);margin-bottom:10px}
+.red-persona-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.red-persona-name{font-size:15px;font-weight:800;color:var(--pan)}
+.red-persona-meta{font-size:11px;color:var(--muted)}
+.amigo-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:#fff;transition:.15s}
+.amigo-row.activo{border-color:#a3d977;background:#f2fae8}
+.amigo-row.sustituido{border-color:#f5c2c2;background:#fce8e8;opacity:.85}
+.amigo-num{width:24px;height:24px;border-radius:50%;background:var(--pan);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.amigo-num.sustituido{background:#cc0000}
+.amigo-nombre{flex:1;font-size:13px;font-weight:600}
+.amigo-badge-activo{font-size:10px;font-weight:700;color:#2d6a4f;background:#eaf3de;padding:2px 7px;border-radius:20px}
+.amigo-badge-sustituido{font-size:10px;font-weight:700;color:#cc0000;background:#fce8e8;padding:2px 7px;border-radius:20px}
+.amigo-badge-nuevo{font-size:10px;font-weight:700;color:#2d6a4f;background:#d1fae5;padding:2px 7px;border-radius:20px;border:1px solid #6ee7b7}
+
+.inc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:10px;box-shadow:var(--shadow)}
+.inc-card-name{font-size:14px;font-weight:800;color:var(--pan)}
+.inc-card-meta{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:6px}
+.inc-foto{width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border)}
+.inc-search-item{padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)}
+.inc-search-item:hover{background:var(--bg2)}
+.inc-search-item:last-child{border-bottom:none}
+.evento-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)}
+.evento-chip.sel{background:#e6f1fb;border-color:#185fa5;color:#0c447c;font-weight:700}
+.asis-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.asis-row:last-child{border-bottom:none}
+.asis-num{width:22px;height:22px;border-radius:50%;background:#e6f1fb;color:#0c447c;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.toggle-asis{width:38px;height:22px;border-radius:20px;border:none;cursor:pointer;position:relative;flex-shrink:0;transition:.2s}
+.toggle-asis.presente{background:#2d6a4f}
+.toggle-asis.ausente{background:var(--border)}
+.toggle-asis::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;transition:.2s}
+.toggle-asis.presente::after{left:19px}
+.toggle-asis.ausente::after{left:3px}
+.badge-nuevo-reg{background:#e6f1fb;color:#185fa5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-reingreso-reg{background:#faeeda;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-pendiente{background:#fef3c7;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-aprobado{background:#d1fae5;color:#065f46;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-enviado{background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.nuevo-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:10px;box-shadow:var(--shadow)}
+.nuevo-card-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.nuevo-card-name{font-size:14px;font-weight:800;color:var(--pan)}
+.nuevo-card-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.amigo-mini{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--bg2);border-radius:6px;margin-bottom:4px;font-size:12px}
+.amigo-mini-num{width:18px;height:18px;border-radius:50%;background:var(--pan);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .panel{padding:1rem}
+  .org-branches{grid-template-columns:1fr}
+  .rbar{gap:0}
+  .rblock{padding:6px 12px}
+  .persona-form-grid{grid-template-columns:1fr}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-<div id="page-loading" class="loading-wrap">
-  <div class="spinner"></div>
-  <p style="color:var(--muted);font-size:13px">cargando gemacuu...</p>
-</div>
 
-<div id="page-login" class="login-wrap hidden">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="login-icon">🧹</div>
-      <h1>GEMACUU</h1>
-      
-      
+<!-- LOGIN -->
+<div id="login">
+  <div class="lcard">
+    <div class="lhead">
+      <div class="llogo">G</div>
+      <div class="ltitle">GEMACUU</div>
+      <div class="lsub">Sistema Operativo · 2026</div>
     </div>
-    <div id="login-err" class="login-err hidden">usuario o contraseña incorrectos</div>
-    <div class="form-group"><label>usuario</label><input id="inp-user" type="text" placeholder="tu usuario" autocomplete="username"/></div>
-    <div class="form-group"><label>contraseña (número de empleado)</label><input id="inp-pass" type="password" placeholder="••••••" autocomplete="current-password" inputmode="numeric"/></div>
-    <button class="btn btn-primary w-full" id="btn-login" onclick="doLogin()">entrar al sistema</button>
+    <div class="lusers" id="lusers">
+      <div class="luser" onclick="selUser('Octavio','o','lav-o','Administrador')">
+        <div class="lav lav-o">OI</div>
+        <div><div class="lname">Octavio Irigoyen</div><div class="lrole">Administrador</div></div>
+      </div>
+      <div class="luser" onclick="selUser('Fernando Amezcua','f','lav-f','Responsable')">
+        <div class="lav lav-f">FA</div>
+        <div><div class="lname">Fernando Amezcua</div><div class="lrole">Responsable</div></div>
+      </div>
+      <div class="luser" onclick="selUser('Martin Yáñez','m','lav-m','Responsable')">
+        <div class="lav lav-m">MY</div>
+        <div><div class="lname">Martin Yáñez</div><div class="lrole">Responsable</div></div>
+      </div>
+      <div class="luser" onclick="selUser('Rene Espinoza','r','lav-r','Responsable')">
+        <div class="lav lav-r">RE</div>
+        <div><div class="lname">Rene Espinoza</div><div class="lrole">Responsable</div></div>
+      </div>
+      <div class="luser" onclick="selUser('Karen Alarcón','k','lav-k','Editora')">
+        <div class="lav lav-k">KA</div>
+        <div><div class="lname">Karen Alarcón</div><div class="lrole">Editora</div></div>
+      </div>
+      <div class="luser" onclick="selUser('Lluvia Aceves','l','lav-l','Editora')">
+        <div class="lav lav-l">LA</div>
+        <div><div class="lname">Lluvia Aceves</div><div class="lrole">Editora</div></div>
+      </div>
+      <div class="luser" onclick="selUser('Vianey','v','lav-v','Editora')">
+        <div class="lav lav-v">VI</div>
+        <div><div class="lname">Vianey</div><div class="lrole">Editora</div></div>
+      </div>
+    </div>
+    <div class="lpass-row">
+      <input type="password" id="lpwd" placeholder="Contraseña" maxlength="12" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="lbtn" onclick="doLogin()">Entrar →</button>
+    </div>
+    <div class="lerr" id="lerr"></div>
   </div>
 </div>
 
-<div id="banner-demo" style="display:none;background:#d97706;color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:600;position:fixed;top:0;left:0;width:100%;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.3)">
-  📱 Vista previa — gemacuu.org disponible el lunes &nbsp;·&nbsp; <span style="opacity:.85;font-weight:400">Usa tu usuario y contraseña normales</span>
-</div>
-<div id="page-app" class="app hidden">
-  <div class="sidebar">
-    <div class="logo">
-      <div class="logo-top">
-        <div class="logo-icon">🧹</div>
-        <div><h1>GEMACUU</h1></div>
-      </div>
-      
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="tl">
+      <span class="tlogo">GEMACUU</span>
+      <div class="tdot"></div>
+      <span class="tuser">Sesión: <b id="tname">—</b></span>
     </div>
-    <nav class="nav" id="sidebar-nav"></nav>
-    <div class="user-box">
-      <div class="flex items-center gap-2 mb-2">
-        <div class="user-avatar" id="ui-avatar">O</div>
-        <div><div class="user-name" id="ui-username">—</div><div class="user-role" id="ui-role">—</div></div>
-      </div>
-      <button class="logout-btn" onclick="doLogout()">cerrar sesión</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="tbtn" id="btn-export" onclick="exportarContextual()" style="display:none">↓ Excel</button>
+      <button class="tbtn" onclick="doLogout()">Salir</button>
     </div>
   </div>
 
-  <div class="main">
-
-    <!-- DASHBOARD -->
-    <div id="view-dashboard" class="hidden">
-      <div class="page-header"><h2>dashboard</h2><p id="dash-sub">resumen general</p></div>
-      <div class="content">
-        <div id="welcome-box"></div>
-        <div class="grid4 mb-4" id="dash-stats"></div>
-        <div class="grid2">
-          <div class="card"><div class="card-title">📊 visitas por equipo</div><div id="dash-equipos"></div></div>
-          <div class="card"><div class="card-title">📅 últimas actividades</div><div id="dash-actividades"></div></div>
-        </div>
-      </div>
+  <!-- RESUMEN BAR -->
+  <div class="rbar" id="rbar">
+    <div class="rblock"><div class="rnum" id="rb-total">135</div><div class="rlbl">Total</div></div>
+    <div class="rblock">
+      <div class="rtag">Fernando Amezcua</div>
+      <div class="rlbl" id="rb-f">39 personas · 8 secciones</div>
     </div>
-
-    <!-- VISITAS -->
-    <div id="view-visitas" class="hidden">
-      <div class="page-header"><h2>captura de visitas</h2><p>registra el reporte de tu equipo</p></div>
-      <div class="content">
-        <button class="btn btn-primary mb-4" onclick="showNuevaVisita()">+ nueva captura</button>
-        <div id="lista-visitas"></div>
-      </div>
+    <div class="rblock">
+      <div class="rtag">Martin Yáñez</div>
+      <div class="rlbl" id="rb-m">57 personas · 9 secciones</div>
     </div>
-
-    <!-- ASISTENCIA -->
-    <div id="view-asistencia" class="hidden">
-      <div class="page-header"><h2>actividades</h2><p>registro de barridos, eventos, redes y más</p></div>
-      <div class="content">
-        <button class="btn btn-primary mb-4" onclick="showNuevaActividad()">+ nueva actividad</button>
-        <div id="lista-actividades"></div>
-      </div>
-    </div>
-
-    <!-- MAPA -->
-    <div id="view-mapa" class="hidden">
-      <div class="page-header"><h2>mapa de recorridos</h2><p>calles visitadas por sección</p></div>
-      <div class="content">
-        <div class="card mb-3">
-          <div class="form-group" style="margin-bottom:0">
-            <label>filtrar por sección</label>
-            <select id="mapa-filtro-sec" onchange="renderMapa()">
-              <option value="">todas las secciones</option>
-            </select>
-          </div>
-        </div>
-        <div class="map-container" id="mapa-div"></div>
-        <div class="card mt-3">
-          <div class="card-title">📍 calles registradas</div>
-          <div id="lista-calles"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PERSONAL -->
-    <div id="view-personal" class="hidden">
-      <div class="page-header"><h2>personal</h2><p>164 colaboradores — gestión de padrinos y secciones</p></div>
-      <div class="content">
-        <div class="card mb-3">
-          <div class="grid3" style="gap:10px">
-            <div class="form-group" style="margin-bottom:0">
-              <label>buscar</label>
-              <input type="text" id="p-buscar" placeholder="nombre o área..." oninput="filtrarPersonal()"/>
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label>padrino</label>
-              <select id="p-filtro-padrino" onchange="filtrarPersonal()">
-                <option value="">todos</option>
-                <option value="rene">rene espinoza</option>
-                <option value="fernando">fernando amezcua</option>
-                <option value="martin">martin yañez</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label>sección asignada</label>
-              <select id="p-filtro-sec" onchange="filtrarPersonal()">
-                <option value="">todas</option>
-                <option value="sin_seccion">sin sección</option>
-              </select>
-            </div>
-          </div>
-          <div class="flex gap-2 mt-3">
-            <button class="btn btn-secondary btn-sm" onclick="exportPersonalCSV()">📋 exportar csv</button>
-            <button class="btn btn-secondary btn-sm" onclick="exportPersonalExcel()">📊 descargar excel</button>
-          </div>
-        </div>
-        <div class="text-xs text-muted mb-2" id="p-count"></div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <table id="tabla-personal">
-            <thead><tr><th>nombre</th><th>área</th><th>padrino</th><th>sección</th><th>núm. empleado</th><th></th></tr></thead>
-            <tbody id="personal-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- REPORTES -->
-    <div id="view-reportes" class="hidden">
-      <div class="page-header"><h2>reportes</h2><p id="rpt-sub">generado por octavio irigoyen</p></div>
-      <div class="content">
-        <!-- REPORTE EJECUTIVO -->
-        <div class="card mb-4" style="border:1px solid rgba(59,130,246,.3)">
-          <div class="card-title" style="color:var(--blue2)">📄 reporte ejecutivo para lic. armando ruiz</div>
-          <p class="text-xs text-muted mb-3">genera un reporte limpio por tipo de actividad</p>
-          <div class="grid2" style="gap:10px;margin-bottom:12px">
-            <div class="form-group" style="margin-bottom:0">
-              <label>tipo de actividad</label>
-              <select id="rpt-tipo-filtro">
-                <option value="">todos los tipos</option>
-                <option value="redes">📱 redes sociales</option>
-                <option value="barrido">🚶 barrido / recorrido</option>
-                <option value="crucero">🚦 crucero</option>
-                <option value="volanteo">✉️ volanteo</option>
-                <option value="evento">🎪 evento</option>
-                <option value="otro">➕ otro</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label>período</label>
-              <select id="rpt-periodo">
-                <option value="hoy">hoy</option>
-                <option value="semana">esta semana</option>
-                <option value="mes">este mes</option>
-                <option value="todo">todo</option>
-              </select>
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <button class="btn btn-primary btn-sm" onclick="generarReportePDF(false)">📄 PDF ejecutivo</button>
-            <button class="btn btn-secondary btn-sm" onclick="abrirReportePDF(false)">🔗 abrir PDF</button>
-            <button class="btn btn-primary btn-sm" style="background:#1f6feb" onclick="generarReportePDF(true)">🔍 PDF ampliado</button>
-            <button class="btn btn-blue btn-sm" onclick="generarReporteEjecutivo()">📝 txt</button>
-            <button class="btn btn-secondary btn-sm" onclick="renderReportes()">🔄 actualizar</button>
-            <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📋 csv</button>
-          </div>
-          <div class="form-group" style="margin-top:10px;margin-bottom:0">
-            <label>hora de corte para el reporte</label>
-            <input type="time" id="rpt-hora-corte" value="21:00" style="max-width:160px"/>
-          </div>
-        </div>
-
-        <div class="card mb-4">
-          <div class="card-title">🏠 visitas por encargado</div>
-          <table><thead><tr><th>sección</th><th>encargado</th><th>equipo</th><th>registrado por</th><th>fecha</th><th>total</th><th>calle</th></tr></thead>
-          <tbody id="rpt-visitas"></tbody></table>
-        </div>
-        <div class="card mb-4">
-          <div class="card-title">👥 detalle por persona</div>
-          <table><thead><tr><th>nombre</th><th>acción</th><th>detalle</th><th>sección</th><th>registrado por</th><th>fecha</th></tr></thead>
-          <tbody id="rpt-personas"></tbody></table>
-        </div>
-        <div class="card">
-          <div class="card-title">📅 actividades</div>
-          <table><thead><tr><th>actividad</th><th>tipo</th><th>registrado por</th><th>equipo</th><th>fecha</th><th>participantes</th></tr></thead>
-          <tbody id="rpt-actividades"></tbody></table>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- ══════ DENUNCIAS ══════ -->
-    <div id="view-denuncias" class="hidden">
-      <div class="page-header">
-        <h2>📣 denuncias ciudadanas</h2>
-        <p>registro y seguimiento de reportes de mantenimiento urbano</p>
-      </div>
-      <div class="content">
-
-        <!-- FORMULARIO NUEVA DENUNCIA -->
-        <div class="card mb-4" id="form-denuncia-card">
-          <div class="card-title">➕ nueva denuncia</div>
-          <div class="grid2" style="gap:10px;margin-bottom:12px">
-            <div class="form-group" style="margin-bottom:0">
-              <label>categoría *</label>
-              <select id="den-categoria" onchange="updateSubcat()">
-                <option value="">— selecciona —</option>
-                <option value="vialidad">🚧 Vialidad</option>
-                <option value="alumbrado">💡 Alumbrado</option>
-                <option value="areas_verdes">🌳 Áreas Verdes</option>
-                <option value="agua_drenaje">💧 Agua y Drenaje</option>
-                <option value="limpieza">🗑️ Limpieza</option>
-                <option value="infraestructura">🏚️ Infraestructura</option>
-                <option value="seguridad">🚨 Seguridad Urbana</option>
-                <option value="otro">➕ Otro</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label>subcategoría</label>
-              <select id="den-subcategoria">
-                <option value="">— primero elige categoría —</option>
-              </select>
-            </div>
-          </div>
-          <div class="grid2" style="gap:10px;margin-bottom:12px">
-            <div class="form-group" style="margin-bottom:0">
-              <label>calle / ubicación *</label>
-              <div style="display:flex;gap:6px">
-                <input id="den-calle" type="text" placeholder="ej. Av. Universidad y Calle 5a"/>
-                <button class="btn btn-secondary btn-sm" onclick="getDenGPS()" title="usar GPS">📍</button>
-              </div>
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label>colonia / fraccionamiento</label>
-              <input id="den-colonia" type="text" placeholder="ej. Parque Industrial"/>
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom:12px">
-            <label>descripción del problema</label>
-            <textarea id="den-descripcion" rows="2" placeholder="describe brevemente el problema..."></textarea>
-          </div>
-          <div class="form-group" style="margin-bottom:12px">
-            <label>foto (opcional)</label>
-            <input id="den-foto" type="file" accept="image/*" capture="environment"/>
-          </div>
-          <input type="hidden" id="den-lat"/>
-          <input type="hidden" id="den-lng"/>
-          <button class="btn btn-primary w-full" onclick="guardarDenuncia()">📣 registrar denuncia</button>
-        </div>
-
-        <!-- FILTROS Y LISTA -->
-        <div class="card">
-          <div class="flex justify-between items-center mb-3" style="flex-wrap:wrap;gap:8px">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <select id="den-filtro-cat" onchange="renderDenuncias()" style="font-size:12px;padding:5px 8px">
-                <option value="">todas las categorías</option>
-                <option value="vialidad">🚧 Vialidad</option>
-                <option value="alumbrado">💡 Alumbrado</option>
-                <option value="areas_verdes">🌳 Áreas Verdes</option>
-                <option value="agua_drenaje">💧 Agua y Drenaje</option>
-                <option value="limpieza">🗑️ Limpieza</option>
-                <option value="infraestructura">🏚️ Infraestructura</option>
-                <option value="seguridad">🚨 Seguridad</option>
-                <option value="otro">➕ Otro</option>
-              </select>
-              <select id="den-filtro-estado" onchange="renderDenuncias()" style="font-size:12px;padding:5px 8px">
-                <option value="">todos los estados</option>
-                <option value="nueva">🟡 Nueva</option>
-                <option value="canalizada">🔵 Canalizada</option>
-                <option value="seguimiento">🟠 En seguimiento</option>
-                <option value="resuelta">✅ Resuelta</option>
-                <option value="no_corresponde">❌ No corresponde</option>
-              </select>
-            </div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-secondary btn-sm" onclick="renderDenuncias()">🔄 actualizar</button>
-              <button class="btn btn-primary btn-sm" onclick="exportDenunciasExcel()">📊 exportar excel</button>
-            </div>
-          </div>
-          <div id="den-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
-          <table><thead><tr>
-            <th>folio</th><th>categoría</th><th>calle</th><th>descripción</th>
-            <th>registrado por</th><th>fecha</th><th>estado</th><th>acciones</th>
-          </tr></thead>
-          <tbody id="den-tbody"></tbody></table>
-        </div>
-      </div>
-    </div>
-
-    <!-- USUARIOS -->
-    <div id="view-usuarios" class="hidden">
-      <div class="page-header"><h2>usuarios</h2><p>solo el administrador puede modificar</p></div>
-      <div class="content">
-        <div class="card">
-          <div class="flex justify-between items-center mb-3">
-            <span class="text-sm text-muted"><span id="usr-count">0</span> usuarios</span>
-            <button class="btn btn-primary btn-sm" onclick="showAddUser()">+ agregar</button>
-          </div>
-          <table><thead><tr><th>nombre</th><th>usuario</th><th>rol</th><th>sección</th><th>estado</th><th></th></tr></thead>
-          <tbody id="usr-tbody"></tbody></table>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<div class="bottom-nav" id="bottom-nav"></div>
-
-<!-- MODAL NUEVA VISITA -->
-<!-- MODAL EDITAR PERSONA -->
-<div id="modal-persona" class="modal-bg hidden">
-  <div class="modal">
-    <div class="modal-header"><h3>✏️ editar persona</h3><button class="close-btn" onclick="closeModal('modal-persona')">✕</button></div>
-    <input type="hidden" id="ep-id"/>
-    <div class="form-group"><label>nombre</label><input id="ep-nombre" type="text" disabled style="opacity:.6"/></div>
-    <div class="form-group"><label>área</label><input id="ep-area" type="text" disabled style="opacity:.6"/></div>
-    <div class="form-group">
-      <label>padrino</label>
-      <select id="ep-padrino">
-        <option value="rene">rene espinoza</option>
-        <option value="fernando">fernando amezcua</option>
-        <option value="martin">martin yañez</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>sección electoral asignada</label>
-      <select id="ep-seccion">
-        <option value="">— sin sección —</option>
-        <option>3228</option><option>3234</option><option>3235</option><option>3236</option>
-        <option>3237</option><option>3238</option><option>3239</option><option>3245</option>
-        <option>855</option><option>856</option><option>908</option><option>3227</option>
-        <option>3231</option><option>3232</option><option>3233</option>
-        <option>909</option><option>3244</option><option>3246</option><option>3255</option>
-        <option>3256</option><option>3259</option><option>3261</option><option>3263</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>número de empleado</label>
-      <input id="ep-empleado" type="text" inputmode="numeric" placeholder="número de empleado"/>
-    </div>
-    <div class="flex gap-2 mt-3">
-      <button class="btn btn-secondary w-full" onclick="closeModal('modal-persona')">cancelar</button>
-      <button class="btn btn-primary w-full" onclick="guardarPersona()">💾 guardar</button>
+    <div class="rblock">
+      <div class="rtag">Rene Espinoza</div>
+      <div class="rlbl" id="rb-r">39 personas · 7 secciones</div>
     </div>
   </div>
-</div>
 
-<div id="modal-visita" class="modal-bg hidden">
-  <div class="modal">
-    <div class="modal-header"><h3>🧹 nueva captura de visitas</h3><button class="close-btn" onclick="closeModal('modal-visita')">✕</button></div>
-    <div class="form-group">
-      <label>sección</label>
-      <select id="v-seccion" disabled style="opacity:.7"></select>
-      <p class="text-xs text-muted mt-2" id="v-sec-note"></p>
-    </div>
-    <div class="form-group">
-      <label>captura de pantalla (opcional)</label>
-      <div id="v-foto-grid" class="foto-grid"></div>
-      <div class="flex gap-2">
-        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('v-inp-cam').click()">📷 cámara</button>
-        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('v-inp-gal').click()">🖼️ galería</button>
-        <span id="v-upload-status" class="text-xs text-muted" style="align-self:center"></span>
+  <!-- NAV -->
+  <div class="nav" id="nav-bar">
+    <button class="ntab on" onclick="goTab('operativa',this)">👥 Base Operativa</button>
+    <button class="ntab" onclick="goTab('organigrama',this)">🏛 Organigrama</button>
+    <button class="ntab" onclick="goTab('secciones',this)">🗳 Secciones</button>
+    <button class="ntab" onclick="goTab('ines',this)">🪪 INEs</button>
+    <button class="ntab" id="tab-red" onclick="goTab('red',this)">🤝 Red de Amigos</button>
+    <button class="ntab" id="tab-eventos" onclick="goTab('eventos',this)">📅 Eventos</button>
+    <button class="ntab" id="tab-nuevos" onclick="goTab('nuevos',this)">➕ Nuevos Amigos</button>
+    <button class="ntab" id="tab-incidencias" onclick="goTab('incidencias',this)">⚠️ Incidencias</button>
+    <button class="ntab" id="tab-control" onclick="goTab('control',this)">⚙️ Control</button>
+    <button class="ntab" id="tab-bajas" onclick="goTab('bajas',this)">🚫 Bajas (30)</button>
+  </div>
+
+  <!-- PANEL: BASE OPERATIVA -->
+  <div id="panel-operativa" class="panel on">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="fg" style="flex:1;min-width:180px;margin-bottom:0">
+          <label>Buscar</label>
+          <input type="text" id="p-buscar" placeholder="nombre o área..." oninput="filtrarPersonal()">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Padrino</label>
+          <select id="p-padrino" onchange="filtrarPersonal()">
+            <option value="">todos</option>
+            <option value="Fernando Amezcua">Fernando Amezcua</option>
+            <option value="Martin Yáñez">Martin Yáñez</option>
+            <option value="Rene Espinoza">Rene Espinoza</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Sección</label>
+          <select id="p-sec" onchange="filtrarPersonal()">
+            <option value="">todas</option>
+            <option value="sin">sin sección</option>
+          </select>
+        </div>
+        <button id="btn-nueva-persona" class="btn btn-primary btn-sm" style="display:none" onclick="abrirNuevaPersona()">+ Nueva persona</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportarExcel()">↓ Excel</button>
       </div>
-      <input type="file" id="v-inp-cam" accept="image/*" capture="environment" class="hidden" onchange="handleVisitaFoto(this)"/>
-      <input type="file" id="v-inp-gal" accept="image/*" class="hidden" onchange="handleVisitaFoto(this)"/>
     </div>
-    <div class="sep"></div>
-    <div class="card-title">👥 personas y visitas del día</div>
-    <p class="text-xs text-muted mb-3">agrega a cada persona con su rol y cuántas visitas hizo hoy</p>
-    <div id="enc-lista"></div>
-    <button class="btn btn-secondary btn-sm mt-2" onclick="addPersona()">+ agregar persona</button>
-    <div class="total-box mt-3" id="enc-total">total: 0 visitas</div>
-    <div class="sep"></div>
-    <div id="v-gps-status" class="gps-badge">📍 obteniendo ubicación...</div>
-    <div class="flex gap-2">
-      <button class="btn btn-secondary w-full" onclick="closeModal('modal-visita')">cancelar</button>
-      <button class="btn btn-primary w-full" id="btn-save-visita" onclick="saveVisita()">💾 guardar</button>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Nombre</th><th>Área</th><th>Padrino</th><th>Sección</th><th>Núm. Empleado</th><th>Usuario</th><th>🪪 INEs</th><th></th>
+        </tr></thead>
+        <tbody id="personal-tbody"></tbody>
+      </table>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px" id="p-count"></div>
+  </div>
+
+  <!-- PANEL: ORGANIGRAMA -->
+  <div id="panel-organigrama" class="panel">
+    <div class="card">
+      <div class="org-tree">
+        <div class="org-root">🧹 GEMACUU · Áreas Verdes D17</div>
+        <div class="org-line"></div>
+        <div style="background:var(--pan-light);border:1px solid var(--border);border-radius:10px;padding:10px 20px;text-align:center;font-weight:700;font-size:14px;color:var(--pan)">Lic. Armando Ruiz Ponce · Director</div>
+        <div class="org-line"></div>
+        <div style="background:#f0f4ff;border:1px solid var(--border);border-radius:10px;padding:8px 20px;text-align:center;font-size:13px;font-weight:700;color:var(--pan)">Octavio Irigoyen · Coordinador</div>
+        <div class="org-line"></div>
+        <div class="org-branches">
+          <div class="org-branch">
+            <div class="org-pad org-f">Fernando Amezcua<div class="org-pad-sub">39 personas · 8 secciones</div></div>
+            <div class="org-line" style="background:#003399"></div>
+            <div style="background:#e6eeff;border:1px solid #b3c6ff;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#003399;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Vianey</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2">855 · Karen Alarcón<br>856 · Jorge Lom<br>908 · Ernesto Ruiz<br>3227 · Rubí Jurado<br>3231 · Mayela Chavira<br>3232 · Sofía Mejía<br>3233 · Luis R. Vargas</div>
+          </div>
+          <div class="org-branch">
+            <div class="org-pad org-m">Martin Yáñez<div class="org-pad-sub">57 personas · 9 secciones</div></div>
+            <div class="org-line" style="background:#2d6a4f"></div>
+            <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#2d6a4f;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Karen</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2">909 · Saúl Bustillo<br>3244 · Carlos D. Pérez<br>3246 · Sergio Carreón<br>3255 · Félix Vázquez<br>3256 · José L. Sánchez<br>3259 · Jesús Borruel<br>3261 · Yesenia Aróstegui<br>3263 · Pedro Hernández</div>
+          </div>
+          <div class="org-branch">
+            <div class="org-pad org-r">Rene Espinoza<div class="org-pad-sub">39 personas · 7 secciones</div></div>
+            <div class="org-line" style="background:#854f0b"></div>
+            <div style="background:#fef3c7;border:1px solid #fac775;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#854f0b;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Lluvia</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2">3228 · Lluvia Aceves<br>3234 · Alberto Favela<br>3235 · Fabián González<br>3236 · Noé Morales<br>3237 · Víctor TG<br>3238 · Ana Payán<br>3245 · Jesús González</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- MODAL NUEVA ACTIVIDAD -->
-<div id="modal-actividad" class="modal-bg hidden">
-  <div class="modal">
-    <div class="modal-header"><h3>📋 nueva actividad</h3><button class="close-btn" onclick="closeModal('modal-actividad')">✕</button></div>
-    <div class="grid2">
-      <div class="form-group">
-        <label>tipo de actividad</label>
-        <select id="a-tipo" onchange="onTipoChange()">
-          <option value="barrido">🚶 barrido / recorrido</option>
-          <option value="crucero">🚦 crucero</option>
-          <option value="redes">📱 redes sociales</option>
-          <option value="volanteo">✉️ volanteo</option>
-          <option value="evento">🎪 evento</option>
-          <option value="otro">➕ otro</option>
+  <!-- PANEL: SECCIONES -->
+  <div id="panel-secciones" class="panel">
+    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="filtroSec('')" id="sf-todos">Todos</button>
+      <button class="btn btn-secondary btn-sm" onclick="filtroSec('Fernando Amezcua')" id="sf-f">Fernando</button>
+      <button class="btn btn-secondary btn-sm" onclick="filtroSec('Martin Yáñez')" id="sf-m">Martin</button>
+      <button class="btn btn-secondary btn-sm" onclick="filtroSec('Rene Espinoza')" id="sf-r">Rene</button>
+    </div>
+    <div class="sec-grid" id="sec-grid"></div>
+  </div>
+
+  <!-- PANEL: INEs -->
+  <div id="panel-ines" class="panel">
+    <!-- STATUS INDICATOR -->
+    <div id="ine-status-banner" style="border-radius:12px;padding:16px 20px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:36px" id="ine-status-icon">⚪</div>
+        <div>
+          <div style="font-size:18px;font-weight:800" id="ine-status-text">Sin red asignada</div>
+          <div style="font-size:13px;opacity:.8" id="ine-status-sub"></div>
+        </div>
+      </div>
+      <a id="ine-cloudinary-link" href="#" target="_blank" 
+        style="display:none;padding:8px 16px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-size:12px;font-weight:700;text-decoration:none">
+        📁 Ver carpeta →
+      </a>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem">
+      <div class="stat"><div class="stat-n" id="ine-total">—</div><div class="stat-l">Red Total</div></div>
+      <div class="stat"><div class="stat-n" style="color:#2d6a4f" id="ine-cap">—</div><div class="stat-l">Capturadas</div></div>
+      <div class="stat"><div class="stat-n" style="color:#854f0b" id="ine-pend">—</div><div class="stat-l">Pendientes</div></div>
+    </div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">📤 Subir INE</div>
+      <div style="display:flex;gap:16px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;color:var(--pan)">
+          <input type="radio" name="inelado" value="frente" checked> FRENTE
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;color:#854f0b">
+          <input type="radio" name="inelado" value="reverso"> REVERSO
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="document.getElementById('ine-cam').click()">📷 Cámara</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('ine-gal').click()">🖼️ Galería</button>
+        <span id="ine-status" style="font-size:12px;color:var(--muted);align-self:center"></span>
+      </div>
+      <input type="file" id="ine-cam" accept="image/*" capture="environment" style="display:none" onchange="subirIne(this)">
+      <input type="file" id="ine-gal" accept="image/*" style="display:none" onchange="subirIne(this)">
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="card-title" style="margin-bottom:0">📁 Mis INEs subidas</div>
+        <button class="btn btn-secondary btn-sm" onclick="renderInes()">🔄</button>
+      </div>
+      <div class="ine-grid" id="ine-grid"></div>
+      <div id="ine-info" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: RED DE AMIGOS -->
+  <div id="panel-red" class="panel">
+    <!-- BUSCADOR -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">🤝 Red de Amigos</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="fg" style="flex:1;min-width:200px;margin-bottom:0">
+          <label>Buscar persona</label>
+          <input type="text" id="red-buscar" placeholder="nombre o área..." oninput="filtrarRed()">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Padrino</label>
+          <select id="red-padrino" onchange="filtrarRed()">
+            <option value="">todos</option>
+            <option value="Fernando Amezcua">Fernando Amezcua</option>
+            <option value="Martin Yáñez">Martin Yáñez</option>
+            <option value="Rene Espinoza">Rene Espinoza</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <!-- LISTA -->
+    <div id="red-lista"></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px" id="red-count"></div>
+  </div>
+
+  <!-- PANEL: EVENTOS -->
+  <div id="panel-eventos" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title">📅 Eventos</div>
+          <div style="font-size:12px;color:var(--muted)">Selecciona un evento para tomar asistencia.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="exportarEventos()">↓ Excel</button>
+          <button class="btn btn-primary btn-sm" id="btn-nuevo-evento" onclick="abrirFormEvento()" style="display:none">➕ Nuevo evento</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chips de eventos -->
+    <div class="card" style="margin-bottom:1rem">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Eventos registrados</div>
+      <div id="eventos-chips" style="display:flex;flex-wrap:wrap;gap:6px">
+        <div style="font-size:13px;color:var(--muted)">Sin eventos registrados aún.</div>
+      </div>
+    </div>
+
+    <!-- Panel asistencia del evento seleccionado -->
+    <div id="panel-asistencia" style="display:none">
+      <div class="card" style="margin-bottom:1rem">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          <div>
+            <div id="ev-nombre-display" style="font-size:15px;font-weight:800;color:var(--pan)"></div>
+            <div id="ev-meta-display" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="btn-editar-evento" class="btn btn-secondary btn-sm" onclick="editarEvento()" style="display:none">✏️</button>
+            <button id="btn-eliminar-evento" class="btn btn-danger btn-sm" onclick="eliminarEvento()" style="display:none">🗑</button>
+          </div>
+        </div>
+        <!-- Métricas -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+          <div style="background:var(--bg2);border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-total" style="font-size:22px;font-weight:800;color:var(--pan)">0</div>
+            <div style="font-size:10px;color:var(--muted)">Total</div>
+          </div>
+          <div style="background:#d1fae5;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-presentes" style="font-size:22px;font-weight:800;color:#065f46">0</div>
+            <div style="font-size:10px;color:#065f46">Presentes</div>
+          </div>
+          <div style="background:#fce8e8;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-ausentes" style="font-size:22px;font-weight:800;color:#cc0000">0</div>
+            <div style="font-size:10px;color:#cc0000">Ausentes</div>
+          </div>
+        </div>
+        <!-- Filtros -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <div style="position:relative;flex:1;min-width:180px">
+            <input type="text" id="ev-buscar" placeholder="Escribe nombre para buscar..." oninput="filtrarAsistencia()">
+          </div>
+          <select id="ev-pad-filter" onchange="filtrarAsistencia()" style="min-width:140px">
+            <option value="">Todos los padrinos</option>
+            <option>Fernando Amezcua</option>
+            <option>Martin Yáñez</option>
+            <option>Rene Espinoza</option>
+          </select>
+          <select id="ev-asis-filter" onchange="filtrarAsistencia()" style="min-width:120px">
+            <option value="">Todos</option>
+            <option value="1">Presentes</option>
+            <option value="0">Ausentes</option>
+          </select>
+        </div>
+        <!-- Lista asistencia -->
+        <div id="ev-lista-asis" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button class="btn btn-primary" onclick="guardarAsistencia()">💾 Guardar asistencia</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: INCIDENCIAS -->
+  <div id="panel-incidencias" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title">⚠️ Incidencias</div>
+          <div style="font-size:12px;color:var(--muted)">Registra incidencias del personal. Solo visible para Octavio y editoras.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="exportarIncidencias()">↓ Excel</button>
+          <button class="btn btn-primary btn-sm" onclick="abrirFormIncidencia()">➕ Nueva incidencia</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="fg" style="flex:1;min-width:180px;margin-bottom:0">
+          <label>Buscar persona</label>
+          <input type="text" id="inc-buscar" placeholder="nombre o número de empleado..." oninput="filtrarIncidencias()">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Padrino</label>
+          <select id="inc-padrino" onchange="filtrarIncidencias()">
+            <option value="">todos</option>
+            <option>Fernando Amezcua</option>
+            <option>Martin Yáñez</option>
+            <option>Rene Espinoza</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="inc-lista"></div>
+    <div id="inc-count" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+  </div>
+
+  <!-- PANEL: NUEVOS AMIGOS -->
+  <div id="panel-nuevos" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title">➕ Nuevos Amigos</div>
+          <div style="font-size:12px;color:var(--muted)">Registra personas nuevas o reingresos. Al aprobar, pasan a Red de Amigos.</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="exportarNuevos()">↓ Excel</button>
+          <button class="btn btn-primary btn-sm" onclick="abrirFormNuevo()">➕ Nuevo registro</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="fg" style="flex:1;min-width:180px;margin-bottom:0">
+          <label>Buscar</label>
+          <input type="text" id="nuevos-buscar" placeholder="nombre o número de empleado..." oninput="filtrarNuevos()">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Padrino</label>
+          <select id="nuevos-padrino" onchange="filtrarNuevos()">
+            <option value="">todos</option>
+            <option>Fernando Amezcua</option>
+            <option>Martin Yáñez</option>
+            <option>Rene Espinoza</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Estado</label>
+          <select id="nuevos-estado" onchange="filtrarNuevos()">
+            <option value="">todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="aprobado">Aprobado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="nuevos-lista"></div>
+    <div id="nuevos-count" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+  </div>
+
+  <!-- PANEL: CONTROL -->
+
+  <div id="panel-control" class="panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem" class="two-col">
+      <!-- PENDIENTES -->
+      <div class="card">
+        <div class="card-title">⏳ Pendientes de confirmar</div>
+        <div style="font-size:12px;color:#854f0b;background:#fef3c7;padding:8px 12px;border-radius:8px;margin-bottom:12px">
+          ⚠️ Preguntar si van a apoyar. Si dice SÍ → asignar padrino y sección. Si dice NO → pasa a bajas.
+        </div>
+        <input type="text" id="pend-buscar" placeholder="buscar..." oninput="filtrarPendientes()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;outline:none">
+        <div id="pend-lista"></div>
+      </div>
+      <!-- CAMBIOS RÁPIDOS -->
+      <div class="card">
+        <div class="card-title">✏️ Cambio rápido de padrino / sección</div>
+        <div class="fg">
+          <label>Buscar persona</label>
+          <input type="text" id="cambio-buscar" placeholder="nombre..." oninput="buscarParaCambio()">
+        </div>
+        <div id="cambio-resultado"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: BAJAS -->
+  <div id="panel-bajas" class="panel">
+    <div class="stats-grid" id="bajas-stats"></div>
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="bajas-buscar" placeholder="buscar nombre..." oninput="filtrarBajas()" style="flex:1;min-width:180px;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none">
+        <select id="bajas-motivo" onchange="filtrarBajas()" style="padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:#fff">
+          <option value="">todos los motivos</option>
+          <option value="TRABAJA">ya no trabaja</option>
+          <option value="BAJA">baja</option>
+          <option value="SINDICALIZADO">sindicalizado</option>
+          <option value="FALLECIO">fallecido</option>
+          <option value="INCAPACITADO">incapacitado</option>
         </select>
       </div>
-      <div class="form-group"><label>fecha</label><input type="date" id="a-fecha"/></div>
     </div>
-    <div class="form-group"><label>nombre de la actividad</label><input type="text" id="a-nombre" placeholder="ej: barrido sección 3228 — tarde"/></div>
-    <div class="sep"></div>
-    <div class="card-title">✅ lista de asistencia</div>
-    <p class="text-xs text-muted mb-3">cada registro queda guardado como evidencia de participación</p>
-    <div id="a-lista"></div>
-    <button class="btn btn-secondary btn-sm mt-2" onclick="addAsistente()">+ agregar persona</button>
-    <div id="a-resumen" class="total-box mt-3" style="display:none"></div>
-    <div class="sep"></div>
-    <div class="card-title">📷 fotos del evento</div>
-    <div id="a-foto-grid" class="foto-grid"></div>
-    <div class="flex gap-2 mb-3">
-      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('a-inp-cam').click()">📷 cámara</button>
-      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('a-inp-gal').click()">🖼️ múltiples fotos</button>
-      <span id="a-upload-status" class="text-xs text-muted" style="align-self:center"></span>
+    <div id="bajas-lista"></div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- MODAL EDITAR PERSONA -->
+<div id="modal-persona" class="modal-bg" style="display:none">
+  <div class="modal modal-persona-card">
+    <div class="modal-hdr">
+      <h3 id="modal-persona-titulo">✏️ Editar persona</h3>
+      <button class="close-btn" onclick="closeModal('modal-persona')">✕</button>
     </div>
-    <input type="file" id="a-inp-cam" accept="image/*" capture="environment" class="hidden" onchange="handleActFotos(this)"/>
-    <input type="file" id="a-inp-gal" accept="image/*" multiple class="hidden" onchange="handleActFotos(this)"/>
-    <div id="a-gps-status" class="gps-badge">📍 obteniendo ubicación...</div>
-    <div class="flex gap-2">
-      <button class="btn btn-secondary w-full" onclick="closeModal('modal-actividad')">cancelar</button>
-      <button class="btn btn-primary w-full" id="btn-save-act" onclick="saveActividad()">💾 guardar actividad</button>
+    <input type="hidden" id="ep-id">
+    <div class="persona-form-grid">
+      <div class="fg"><label>Nombre</label><input id="ep-nombre" disabled style="opacity:.6"></div>
+      <div class="fg">
+        <label>Área</label>
+        <select id="ep-area">
+          <option value="">— sin área —</option>
+          <option value="AREAS VERDES">AREAS VERDES</option>
+          <option value="DERRIBOS">DERRIBOS</option>
+          <option value="VIVERO">VIVERO</option>
+          <option value="PIPAS">PIPAS</option>
+          <option value="VIALIDADES">VIALIDADES</option>
+          <option value="PLACEROS">PLACEROS</option>
+          <option value="MAQUINARIA">MAQUINARIA</option>
+          <option value="FONTANERÍA">FONTANERÍA</option>
+          <option value="CENTRO HISTORICO">CENTRO HISTORICO</option>
+          <option value="POLIDEPORTIVO">POLIDEPORTIVO</option>
+          <option value="ESPACIOS PUBLICOS">ESPACIOS PUBLICOS</option>
+          <option value="TRABAJOS ESPECIALES / HERRERÍA">TRABAJOS ESPECIALES / HERRERÍA</option>
+          <option value="EVENTUAL PRESUPUESTADO">EVENTUAL PRESUPUESTADO</option>
+          <option value="OBRAS">OBRAS</option>
+          <option value="OTRO">OTRO</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Padrino</label>
+        <select id="ep-padrino">
+          <option value="Fernando Amezcua">Fernando Amezcua</option>
+          <option value="Martin Yáñez">Martin Yáñez</option>
+          <option value="Rene Espinoza">Rene Espinoza</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Sección</label>
+        <select id="ep-sec">
+          <option value="">— sin sección —</option>
+          <option>855</option><option>856</option><option>908</option>
+          <option>3227</option><option>3231</option><option>3232</option><option>3233</option>
+          <option>3228</option><option>3234</option><option>3235</option><option>3236</option>
+          <option>3237</option><option>3238</option><option>3245</option>
+          <option>909</option><option>3244</option><option>3246</option><option>3255</option>
+          <option>3256</option><option>3259</option><option>3261</option><option>3263</option>
+        </select>
+      </div>
+      <div class="fg"><label>Núm. Empleado</label><input id="ep-emp" type="text" inputmode="numeric"></div>
+      <div class="fg"><label>Usuario</label><input id="ep-usuario" type="text" placeholder="ej: adania"></div>
+      <div class="fg"><label>Contraseña</label><input id="ep-pass" type="text" placeholder="dejar vacío si no tiene aún"></div>
+      <div class="fg">
+        <label>🪪 INEs capturadas</label>
+        <input id="ep-ines" type="number" min="0" max="999" placeholder="0" inputmode="numeric">
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Número de INEs que ya reportó la persona</div>
+      </div>
+      <label class="persona-lider">
+        <input id="ep-lider-seccion" type="checkbox">
+        <span>Es líder de sección</span>
+      </label>
+    </div>
+    <div class="persona-actions">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-persona')">Cancelar</button>
+      <button class="btn btn-primary w-full" onclick="guardarPersona()">💾 Guardar</button>
+    </div>
+    <div id="ep-baja-wrap" class="persona-baja">
+      <button class="btn btn-danger w-full" onclick="abrirModalBaja(document.getElementById('ep-id').value, document.getElementById('ep-nombre').value)">🚫 Dar de baja</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL VER ACTIVIDAD -->
-<div id="modal-ver-act" class="modal-bg hidden">
+<!-- MODAL BAJA -->
+<div id="modal-baja" class="modal-bg" style="display:none">
   <div class="modal">
-    <div class="modal-header"><h3 id="ver-act-titulo">actividad</h3><button class="close-btn" onclick="closeModal('modal-ver-act')">✕</button></div>
-    <div id="ver-act-body"></div>
+    <div class="modal-hdr">
+      <h3>🚫 Registrar baja</h3>
+      <button class="close-btn" onclick="closeModal('modal-baja')">✕</button>
+    </div>
+    <input type="hidden" id="baja-id">
+    <div class="fg"><label>Persona</label><input id="baja-nombre" disabled style="opacity:.6"></div>
+    <div class="fg">
+      <label>Motivo</label>
+      <select id="baja-motivo-sel">
+        <option value="YA NO TRABAJA EN EL MUNICIPIO">Ya no trabaja en el municipio</option>
+        <option value="BAJA EN EL SISTEMA">Baja en el sistema</option>
+        <option value="SINDICALIZADO">Sindicalizado</option>
+        <option value="FALLECIDO">Fallecido</option>
+        <option value="INCAPACITADO">Incapacitado</option>
+        <option value="ADULTO MAYOR">Adulto mayor</option>
+        <option value="NO QUIERE PARTICIPAR">No quiere participar</option>
+        <option value="CAMBIO DE ÁREA">Cambio de área</option>
+        <option value="PERTENECE A OTRA ESTRUCTURA">Pertenece a otra estructura</option>
+        <option value="OTRO">Otro</option>
+      </select>
+    </div>
+    <div class="fg"><label>Comentario (opcional)</label><textarea id="baja-coment" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-baja')">Cancelar</button>
+      <button class="btn btn-danger w-full" onclick="confirmarBaja()">🚫 Confirmar baja</button>
+    </div>
   </div>
 </div>
 
-<!-- MODAL USUARIO -->
-<div id="modal-user" class="modal-bg hidden">
-  <div class="modal">
-    <div class="modal-header"><h3>👤 agregar usuario</h3><button class="close-btn" onclick="closeModal('modal-user')">✕</button></div>
-    <div class="form-group"><label>nombre completo</label><input id="nu-nombre" type="text"/></div>
-    <div class="form-group"><label>usuario (login)</label><input id="nu-user" type="text" placeholder="minúsculas sin espacios"/></div>
-    <div class="form-group"><label>contraseña (número de empleado)</label><input id="nu-pass" type="text" inputmode="numeric" placeholder="solo números"/></div>
-    <div class="form-group"><label>rol</label>
-      <select id="nu-rol" onchange="toggleRolFields()">
-        <option value="lider">encargado de sección</option>
-        <option value="responsable">responsable de equipo</option>
-      </select>
+<!-- MODAL RED DE AMIGOS -->
+<div id="modal-red" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-hdr">
+      <h3>🤝 Red de Amigos</h3>
+      <button class="close-btn" onclick="closeModal('modal-red')">✕</button>
     </div>
-    <div class="form-group hidden" id="nu-equipo-wrap"><label>equipo</label>
-      <select id="nu-equipo">
-        <option value="rene">rene espinoza</option>
-        <option value="fernando">fernando amezcua</option>
-        <option value="martin">martin yañez</option>
-      </select>
+    <div id="modal-red-nombre" style="font-size:15px;font-weight:800;color:var(--pan);margin-bottom:4px"></div>
+    <div id="modal-red-meta" style="font-size:12px;color:var(--muted);margin-bottom:1rem"></div>
+
+    <!-- Lista amigos -->
+    <div id="modal-amigos-lista" style="margin-bottom:1rem"></div>
+
+    <!-- Agregar amigo -->
+    <div id="modal-red-agregar" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">➕ Agregar amigo</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="nuevo-amigo-nombre" placeholder="Nombre completo (opcional)..."
+          style="flex:1;min-width:180px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;color:var(--text)">
+        <button class="btn btn-primary" onclick="agregarAmigo()">➕ Agregar</button>
+      </div>
     </div>
-    <div class="form-group" id="nu-sec-wrap"><label>sección asignada</label>
-      <select id="nu-seccion">
-        <option value="">— selecciona —</option>
-        <option>3228</option><option>3234</option><option>3235</option><option>3236</option>
-        <option>3237</option><option>3238</option><option>3239</option><option>3245</option>
-        <option>855</option><option>856</option><option>908</option><option>3227</option>
-        <option>3231</option><option>3232</option><option>3233</option>
-        <option>909</option><option>3244</option><option>3246</option><option>3255</option>
-        <option>3256</option><option>3259</option><option>3261</option><option>3263</option>
-      </select>
+  </div>
+</div>
+
+<!-- MODAL SUSTITUTO -->
+<div id="modal-sustituto" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hdr">
+      <h3>🔄 Registrar Sustituto</h3>
+      <button class="close-btn" onclick="closeModal('modal-sustituto')">✕</button>
     </div>
-    <div class="flex gap-2 mt-3">
-      <button class="btn btn-secondary w-full" onclick="closeModal('modal-user')">cancelar</button>
-      <button class="btn btn-primary w-full" id="btn-add-user" onclick="addUser()">guardar usuario</button>
+    <input type="hidden" id="sust-amigo-id">
+    <div style="background:#fce8e8;border:1px solid #f5c2c2;border-radius:8px;padding:10px 14px;margin-bottom:1rem">
+      <div style="font-size:11px;font-weight:700;color:#cc0000;text-transform:uppercase;margin-bottom:2px">🔴 Quedará fuera (disponible para otros apoyos):</div>
+      <div id="sust-sale-nombre" style="font-size:14px;font-weight:800;color:#cc0000"></div>
+    </div>
+    <div class="fg">
+      <label>✅ Nuevo integrante que entra</label>
+      <input type="text" id="sust-entra-nombre" placeholder="Nombre completo del sustituto...">
+    </div>
+    <div class="fg">
+      <label>Motivo del cambio (opcional)</label>
+      <input type="text" id="sust-motivo" placeholder="ej: no pudo asistir, enfermedad...">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-sustituto')">Cancelar</button>
+      <button class="btn btn-primary w-full" onclick="confirmarSustituto()" style="background:#2d6a4f">✅ Confirmar cambio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EVENTO -->
+<div id="modal-evento" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-hdr">
+      <h3 id="modal-ev-titulo">📅 Nuevo Evento</h3>
+      <button class="close-btn" onclick="closeModal('modal-evento')">✕</button>
+    </div>
+    <input type="hidden" id="ev-edit-id">
+    <div class="fg">
+      <label>Nombre del evento *</label>
+      <input type="text" id="ev-nombre" placeholder="Ej. Reunión Seccional 17 Jun...">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="fg" style="margin-bottom:0">
+        <label>Fecha *</label>
+        <input type="date" id="ev-fecha">
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Padrino responsable</label>
+        <select id="ev-padrino">
+          <option value="">— seleccionar —</option>
+          <option>Fernando Amezcua</option>
+          <option>Martin Yáñez</option>
+          <option>Rene Espinoza</option>
+          <option>Todos</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Lugar</label>
+      <input type="text" id="ev-lugar" placeholder="Ej. Sala 3 Oficinas Centrales...">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-evento')">Cancelar</button>
+      <button class="btn btn-primary w-full" onclick="guardarEvento()">💾 Guardar evento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INCIDENCIA -->
+<div id="modal-incidencia" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-hdr">
+      <h3 id="modal-inc-titulo">⚠️ Nueva Incidencia</h3>
+      <button class="close-btn" onclick="closeModal('modal-incidencia')">✕</button>
+    </div>
+    <input type="hidden" id="inc-edit-id">
+
+    <!-- Búsqueda de persona -->
+    <div class="fg">
+      <label>Buscar persona en base de datos *</label>
+      <input type="text" id="inc-search-persona" placeholder="Escribe nombre o número de empleado..."
+        oninput="buscarPersonaInc()" autocomplete="off">
+      <div id="inc-search-results" style="border:1px solid var(--border);border-radius:8px;max-height:160px;overflow-y:auto;display:none;background:#fff;margin-top:4px"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="fg" style="margin-bottom:0">
+        <label>Nombre completo</label>
+        <input type="text" id="inc-nombre" placeholder="Nombre completo..." style="text-transform:uppercase">
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Número de empleado</label>
+        <input type="text" id="inc-num-emp" placeholder="Ej. 22063">
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Comentario / descripción de la incidencia *</label>
+      <textarea id="inc-comentario" placeholder="Describe brevemente la incidencia..."
+        style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;min-height:80px;resize:vertical;font-family:inherit"></textarea>
+    </div>
+
+    <!-- Subir imágenes -->
+    <div class="fg">
+      <label>Imágenes (opcional)</label>
+      <input type="file" id="inc-fotos" accept="image/*" multiple
+        style="padding:8px;border:1.5px dashed var(--border);border-radius:8px;width:100%;font-size:13px;cursor:pointer">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Puedes seleccionar varias imágenes. Se subirán a Cloudinary.</div>
+    </div>
+    <div id="inc-fotos-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+    <div id="inc-upload-progress" style="font-size:12px;color:var(--muted);display:none">⏳ Subiendo imágenes...</div>
+
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-incidencia')">Cancelar</button>
+      <button class="btn btn-primary w-full" onclick="guardarIncidencia()">💾 Guardar incidencia</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO AMIGO -->
+<div id="modal-nuevo-amigo" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-hdr">
+      <h3 id="modal-nuevo-titulo">➕ Nuevo Registro</h3>
+      <button class="close-btn" onclick="closeModal('modal-nuevo-amigo')">✕</button>
+    </div>
+    <input type="hidden" id="nuevo-id">
+
+    <!-- Tipo de registro -->
+    <div style="display:flex;gap:8px;margin-bottom:1rem">
+      <button id="btn-tipo-nuevo" class="btn btn-primary" style="flex:1;font-size:13px" onclick="setTipo('nuevo')">✨ Registro nuevo</button>
+      <button id="btn-tipo-reingreso" class="btn btn-secondary" style="flex:1;font-size:13px" onclick="setTipo('reingreso')">🔄 Reingreso</button>
+    </div>
+    <input type="hidden" id="nuevo-tipo" value="nuevo">
+
+    <!-- Datos personales -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="fg" style="margin-bottom:0">
+        <label>Nombre completo *</label>
+        <input type="text" id="nuevo-nombre" placeholder="Nombre completo..." style="text-transform:uppercase">
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Número de empleado</label>
+        <input type="text" id="nuevo-num-emp" placeholder="Ej. 22063">
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Celular</label>
+        <input type="text" id="nuevo-celular" placeholder="614...">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="fg" style="margin-bottom:0">
+        <label>Padrino *</label>
+        <select id="nuevo-padrino-form">
+          <option value="">— seleccionar —</option>
+          <option>Fernando Amezcua</option>
+          <option>Martin Yáñez</option>
+          <option>Rene Espinoza</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Total de amigos en su red</label>
+        <input type="number" id="nuevo-total-amigos" placeholder="0" min="0" max="15">
+      </div>
+    </div>
+
+    <!-- Lista de amigos -->
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Amigos en la red</div>
+        <div id="nuevo-amigos-contador" style="font-size:12px;color:var(--muted)">0 registrados</div>
+      </div>
+      <div id="nuevo-amigos-lista" style="margin-bottom:8px"></div>
+
+      <!-- Agregar amigo -->
+      <div style="border:1px dashed var(--border);border-radius:8px;padding:10px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">➕ Agregar amigo</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <input type="text" id="na-nombre" placeholder="Nombre completo..." style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;text-transform:uppercase">
+          <input type="text" id="na-cel" placeholder="Celular..." style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+        </div>
+        <button class="btn btn-primary w-full" onclick="agregarAmigoNuevo()">➕ Agregar a la red</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-nuevo-amigo')">Cancelar</button>
+      <button class="btn btn-primary w-full" onclick="guardarNuevo()">💾 Guardar registro</button>
     </div>
   </div>
 </div>
 
 <div id="toast"></div>
-<script src="app-core.js"></script>
-<script src="app-features.js"></script>
-<script src="gemacuu-patch-v2.js"></script>
+
+<script>
+const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+const CLOUD='da7m6y3kk';
+const PRESET='barrido_electoral';
+const PASSWORDS={'Fernando Amezcua':'24617','Martin Yáñez':'18132','Rene Espinoza':'24181','Octavio':'chelo1942','Karen Alarcón':'25068','Lluvia Aceves':'25872','Vianey':'5936'};
+const EDITORAS=['Karen Alarcón','Lluvia Aceves','Vianey'];
+const SECCIONES=[
+  {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
+  {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
+  {num:'908',encargado:'Ernesto Alonso Ruiz',padrino:'Fernando Amezcua'},
+  {num:'3227',encargado:'Rubí Jurado',padrino:'Fernando Amezcua'},
+  {num:'3231',encargado:'Mayela Chavira',padrino:'Fernando Amezcua'},
+  {num:'3232',encargado:'Sofia Mejia',padrino:'Fernando Amezcua'},
+  {num:'3233',encargado:'Luis Raúl Vargas Ortega',padrino:'Fernando Amezcua'},
+  {num:'3228',encargado:'Lluvia Aceves',padrino:'Rene Espinoza'},
+  {num:'3234',encargado:'Alberto Yahir Favela',padrino:'Rene Espinoza'},
+  {num:'3235',encargado:'Fabián González',padrino:'Rene Espinoza'},
+  {num:'3236',encargado:'Noé Morales',padrino:'Rene Espinoza'},
+  {num:'3237',encargado:'Víctor TG',padrino:'Rene Espinoza'},
+  {num:'3238',encargado:'Ana Payán',padrino:'Rene Espinoza'},
+  {num:'3245',encargado:'Jesús González',padrino:'Rene Espinoza'},
+  {num:'3239',encargado:'Elizabeth Chalaca',padrino:'Rene Espinoza'},
+  {num:'909',encargado:'Saúl Bustillo',padrino:'Martin Yáñez'},
+  {num:'3244',encargado:'Carlos Daniel Pérez',padrino:'Martin Yáñez'},
+  {num:'3246',encargado:'Sergio Carreón',padrino:'Martin Yáñez'},
+  {num:'3255',encargado:'Félix Vázquez',padrino:'Martin Yáñez'},
+  {num:'3256',encargado:'José Luis Sánchez',padrino:'Martin Yáñez'},
+  {num:'3259',encargado:'Jesús Borruel',padrino:'Martin Yáñez'},
+  {num:'3261',encargado:'Yesenia Aróstegui',padrino:'Martin Yáñez'},
+  {num:'3263',encargado:'Pedro Hernández',padrino:'Martin Yáñez'},
+];
+const BAJAS=[
+  {nombre:'Manjarrez Marquez Angel Alejandro',estructura:'Fernando Amezcua',motivo:'BORRAR DEL SISTEMA'},
+  {nombre:'Bustamante Gonzalez Edmundo',estructura:'Martin Yáñez',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Dominguez Pineda Raul',estructura:'Martin Yáñez',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Fernandez Burciaga Jaime',estructura:'Martin Yáñez',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Hernandez Vazquez Joan Alejandro',estructura:'Martin Yáñez',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Molina Ramos Javier',estructura:'',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Ortiz Castillo Axel Emmanuel',estructura:'Martin Yáñez',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Palomino Castillo Hilario',estructura:'Martin Yáñez',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Parra Rojas Zahir Giovanni',estructura:'Martin Yáñez',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Salcedo Romero Yahel Alejandro',estructura:'Martin Yáñez',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Vargas Fuentes Miguel Angel',estructura:'',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Gonzalez Perez Rita',estructura:'Rene Espinoza',motivo:'YA NO TRABAJA EN EL MUNICIPIO'},
+  {nombre:'Perez Portillo Rodolfo Armando',estructura:'Rene Espinoza',motivo:'CAMBIO A SERVICIOS PÚBLICOS'},
+  {nombre:'Ponce De Leon Jaime',estructura:'Rene Espinoza',motivo:'BAJA'},
+  {nombre:'Lazos Venegas Ramona Irma',estructura:'Rene Espinoza',motivo:'BAJA EN EL SISTEMA'},
+  {nombre:'Molina Botello Manuela',estructura:'Rene Espinoza',motivo:'BAJA EN EL SISTEMA'},
+  {nombre:'Sandoval Mendoza Iliana Merced',estructura:'Rene Espinoza',motivo:'BAJA EN EL SISTEMA'},
+  {nombre:'X Montañez Ramona',estructura:'Rene Espinoza',motivo:'BAJA EN EL SISTEMA'},
+  {nombre:'Rodriguez Gonzalez Alondra Celene',estructura:'Rene Espinoza',motivo:'NO QUIERE PARTICIPAR'},
+  {nombre:'Canela Guerra Enrique',estructura:'Rene Espinoza',motivo:'BAJA — FALLECIO'},
+  {nombre:'Moran Vazquez Guillermo',estructura:'Fernando Amezcua',motivo:'BAJA DE NUESTRA RED'},
+  {nombre:'Nieto Alarcon Jose Alberto',estructura:'Fernando Amezcua',motivo:'BAJA'},
+  {nombre:'Ramirez Balderrama Luis Enrique',estructura:'Rene Espinoza',motivo:'BAJA'},
+  {nombre:'Terrazas Nuñez Miguel Ivan',estructura:'Rene Espinoza',motivo:'BAJA'},
+  {nombre:'Torres Mendoza Yadira',estructura:'',motivo:'PERTENECE AL 60 — BAJA'},
+  {nombre:'Espinoza Bustillos Oscar Rene',estructura:'Martin Yáñez',motivo:'BAJA'},
+  {nombre:'Cuellar Cervantes Roberto',estructura:'Rene Espinoza',motivo:'NO TIENE CELULAR'},
+  {nombre:'Eusebio Ramos Daniel Eli',estructura:'Rene Espinoza',motivo:'INCAPACITADO'},
+  {nombre:'Gamboa Cardona Maria De Jesus',estructura:'Rene Espinoza',motivo:'BAJA ADULTO MAYOR'},
+  {nombre:'Mendez Hernandez Inocente',estructura:'Martin Yáñez',motivo:'SINDICALIZADO'},
+];
+
+let currentUser=null;
+let selectedUser=null;
+let personalCache=[];
+let pendientesCache=[];
+let inePersona=null;
+
+// ── LOGIN ──
+function selUser(name,code,avClass,rol){
+  selectedUser={name,code,avClass,rol};
+  document.querySelectorAll('.luser').forEach(u=>u.classList.remove('sel'));
+  event.currentTarget.classList.add('sel');
+  document.getElementById('lpwd').focus();
+  document.getElementById('lerr').textContent='';
+}
+async function doLogin(){
+  if(!selectedUser){document.getElementById('lerr').textContent='Selecciona tu nombre primero.';return;}
+  const pwd=document.getElementById('lpwd').value.trim();
+  if(!pwd){document.getElementById('lerr').textContent='Ingresa tu contraseña.';return;}
+  if(PASSWORDS[selectedUser.name]!==pwd){document.getElementById('lerr').textContent='Contraseña incorrecta.';return;}
+  currentUser=selectedUser.name;
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('tname').textContent=currentUser;
+  const isAdmin=currentUser==='Octavio';
+  const isEditor=EDITORAS.includes(currentUser);
+  document.getElementById('btn-export').style.display=(isAdmin||isEditor)?'inline-flex':'none';
+  document.getElementById('btn-nueva-persona').style.display=(isAdmin||isEditor)?'inline-flex':'none';
+  document.getElementById('tab-red').style.display='block';
+  document.getElementById('tab-eventos').style.display='block';
+  document.getElementById('tab-incidencias').style.display=(isAdmin||isEditor)?'block':'none';
+  document.getElementById('tab-nuevos').style.display=(isAdmin||isEditor)?'block':'none';
+  document.getElementById('tab-control').style.display=(isAdmin||isEditor)?'block':'none';
+  document.getElementById('tab-bajas').style.display=(isAdmin||isEditor)?'block':'none';
+  await cargarPersonal();
+  renderStats();
+  renderPersonal();
+  renderSecciones();
+}
+function doLogout(){
+  currentUser=null;selectedUser=null;
+  document.getElementById('lpwd').value='';
+  document.getElementById('lerr').textContent='';
+  document.querySelectorAll('.luser').forEach(u=>u.classList.remove('sel'));
+  document.getElementById('login').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+// ── SUPABASE ──
+async function sbGet(table,params=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  return r.json();
+}
+async function sbPatch(table,params,body){
+  return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+}
+async function sbPost(table,body){
+  return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
+}
+
+// ── CARGAR PERSONAL ──
+async function cargarPersonal(){
+  try{
+    const data=await sbGet('personal','?status=eq.activo&order=nombre.asc&limit=200');
+    personalCache=Array.isArray(data)?data.filter(p=>p.status==='activo'):[];
+    // Normalizar padrino
+    personalCache=personalCache.map(p=>{
+      let pad=p.padrino||'';
+      if(pad.toLowerCase().includes('fernando')) pad='Fernando Amezcua';
+      else if(pad.toLowerCase().includes('martin')||pad.toLowerCase().includes('yañez')) pad='Martin Yáñez';
+      else if(pad.toLowerCase().includes('rene')||pad.toLowerCase().includes('espinoza')) pad='Rene Espinoza';
+      return {...p, padrino:pad};
+    });
+    const secs=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))].sort();
+    const sel=document.getElementById('p-sec');
+    sel.innerHTML='<option value="">todas</option><option value="sin">sin sección</option>'+secs.map(s=>`<option value="${s}">Sec. ${s}</option>`).join('');
+  }catch(e){personalCache=[];console.error(e);}
+}
+
+// ── STATS ──
+function renderStats(){
+  const f=personalCache.filter(p=>(p.padrino||'').includes('Fernando')).length;
+  const m=personalCache.filter(p=>(p.padrino||'').includes('Martin')).length;
+  const r=personalCache.filter(p=>(p.padrino||'').includes('Rene')).length;
+  const total=personalCache.length;
+  document.getElementById('rb-total').textContent=total;
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Total activos</div></div>
+    <div class="stat"><div class="stat-n" style="color:#003399">${f}</div><div class="stat-l">Fernando</div></div>
+    <div class="stat"><div class="stat-n" style="color:#2d6a4f">${m}</div><div class="stat-l">Martin</div></div>
+    <div class="stat"><div class="stat-n" style="color:#854f0b">${r}</div><div class="stat-l">Rene</div></div>
+    <div class="stat"><div class="stat-n" style="color:#cc0000">${BAJAS.length}</div><div class="stat-l">Bajas</div></div>
+  `;
+}
+
+// ── PERSONAL ──
+function filtrarPersonal(){
+  const q=(document.getElementById('p-buscar').value||'').toLowerCase();
+  const pad=document.getElementById('p-padrino').value;
+  const sec=document.getElementById('p-sec').value;
+  let lista=personalCache;
+  if(q) lista=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q)||(p.area||'').toLowerCase().includes(q));
+  if(pad) lista=lista.filter(p=>(p.padrino||'').includes(pad));
+  if(sec==='sin') lista=lista.filter(p=>!p.seccion);
+  else if(sec) lista=lista.filter(p=>p.seccion===sec);
+  document.getElementById('p-count').textContent=`${lista.length} personas`;
+  const canEdit=currentUser==='Octavio'||EDITORAS.includes(currentUser);
+  const PAD_COL={'Fernando Amezcua':'badge-pan','Martin Yáñez':'badge-green','Rene Espinoza':'badge-amber'};
+  document.getElementById('personal-tbody').innerHTML=lista.map(p=>{
+    const red=parseInt(p.red_total)||0;
+    const cap=parseInt(p.ine_capturadas)||0;
+    let ineIcon='';
+    if(red===0&&cap===0){
+      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#f0f0f0;color:#888;padding:3px 8px;border-radius:20px;font-size:11px">⚪ sin red</span>`;
+    } else if(red===0&&cap>0){
+      // Tiene INEs capturadas pero sin red_total definido
+      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#854f0b;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟡 ${cap}/—</span>`;
+    } else if(cap>=red){
+      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#eaf3de;color:#2d6a4f;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟢 ${cap}/${red}</span>`;
+    } else {
+      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#854f0b;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟡 ${cap}/${red}</span>`;
+    }
+    return `<tr>
+    <td style="font-weight:600">${p.nombre||'—'}</td>
+    <td style="font-size:12px;color:var(--muted)">${p.area||'—'}</td>
+    <td><span class="badge ${PAD_COL[p.padrino]||'badge-gray'}">${p.padrino||'—'}</span></td>
+    <td>${p.seccion?`<span class="badge badge-pan">Sec. ${p.seccion}</span>`:'<span style="color:var(--muted);font-size:12px">sin sección</span>'}</td>
+    <td style="font-size:12px;color:var(--muted)">${p.num_empleado||'—'}</td>
+    <td style="font-size:12px;font-family:monospace;color:var(--pan)">${p.usuario||'<span style="color:var(--muted)">sin usuario</span>'}</td>
+    <td>${ineIcon}</td>
+    <td>${canEdit?`<button class="btn btn-secondary btn-xs" onclick="editarPersona('${p.id}')">✏️</button>`:''}</td>
+  </tr>`;
+  }).join('');
+}
+function renderPersonal(){filtrarPersonal();}
+
+function editarPersona(id){
+  const p=personalCache.find(x=>x.id===id);if(!p)return;
+  document.getElementById('modal-persona-titulo').textContent='✏️ Editar persona';
+  document.getElementById('ep-id').value=p.id;
+  document.getElementById('ep-nombre').value=p.nombre||'';
+  document.getElementById('ep-nombre').disabled=true;
+  document.getElementById('ep-nombre').style.opacity='.6';
+  document.getElementById('ep-area').value=p.area||'';
+  document.getElementById('ep-padrino').value=p.padrino||'Rene Espinoza';
+  document.getElementById('ep-sec').value=p.seccion||'';
+  document.getElementById('ep-lider-seccion').checked=Boolean(p.es_lider_seccion??p.lider_seccion??p.es_lider);
+  document.getElementById('ep-emp').value=p.num_empleado||'';
+  document.getElementById('ep-usuario').value=p.usuario||'';
+  document.getElementById('ep-pass').value=p.password||'';
+  document.getElementById('ep-ines').value=p.ine_capturadas||0;
+  document.getElementById('ep-baja-wrap').style.display='block';
+  document.getElementById('modal-persona').style.display='flex';
+}
+function abrirNuevaPersona(){
+  const canEdit=currentUser==='Octavio'||EDITORAS.includes(currentUser);
+  if(!canEdit)return;
+  document.getElementById('modal-persona-titulo').textContent='+ Nueva persona';
+  document.getElementById('ep-id').value='';
+  document.getElementById('ep-nombre').value='';
+  document.getElementById('ep-nombre').disabled=false;
+  document.getElementById('ep-nombre').style.opacity='1';
+  document.getElementById('ep-area').value='';
+  document.getElementById('ep-padrino').value='Rene Espinoza';
+  document.getElementById('ep-sec').value='';
+  document.getElementById('ep-lider-seccion').checked=false;
+  document.getElementById('ep-emp').value='';
+  document.getElementById('ep-usuario').value='';
+  document.getElementById('ep-pass').value='';
+  document.getElementById('ep-ines').value='0';
+  document.getElementById('ep-baja-wrap').style.display='none';
+  document.getElementById('modal-persona').style.display='flex';
+  document.getElementById('ep-nombre').focus();
+}
+async function guardarPersona(){
+  const id=document.getElementById('ep-id').value;
+  const nombre=document.getElementById('ep-nombre').value.trim();
+  if(!nombre){showToast('Escribe el nombre de la persona');return;}
+  const area=document.getElementById('ep-area').value||null;
+  const padrino=document.getElementById('ep-padrino').value;
+  const seccion=document.getElementById('ep-sec').value||null;
+  const es_lider_seccion=document.getElementById('ep-lider-seccion').checked;
+  const num_empleado=document.getElementById('ep-emp').value.trim()||null;
+  const usuario=document.getElementById('ep-usuario').value.trim()||null;
+  const password=document.getElementById('ep-pass').value.trim()||null;
+  const ine_capturadas=parseInt(document.getElementById('ep-ines').value)||0;
+  const payload={area,padrino,seccion,es_lider_seccion,num_empleado,usuario,password,ine_capturadas};
+  const response=id
+    ?await sbPatch('personal',`?id=eq.${id}`,payload)
+    :await sbPost('personal',{...payload,nombre:nombre.toUpperCase(),status:'activo',registrado_por:currentUser});
+  if(!response.ok){showToast('No se pudo guardar la persona');return;}
+  closeModal('modal-persona');
+  showToast(id?'✓ Persona actualizada':'✓ Persona agregada');
+  await cargarPersonal();
+  renderPersonal();
+  renderStats();
+}
+
+// ── SECCIONES ──
+let secFiltro='';
+function filtroSec(pad){
+  secFiltro=pad;
+  document.querySelectorAll('[id^="sf-"]').forEach(b=>{b.className='btn btn-secondary btn-sm';});
+  const key=pad?'sf-'+pad[0].toLowerCase():'sf-todos';
+  document.getElementById(key).className='btn btn-primary btn-sm';
+  renderSecciones();
+}
+function renderSecciones(){
+  const lista=secFiltro?SECCIONES.filter(s=>s.padrino===secFiltro):SECCIONES;
+  const PAD_COLOR={'Fernando Amezcua':'#003399','Martin Yáñez':'#2d6a4f','Rene Espinoza':'#854f0b'};
+  document.getElementById('sec-grid').innerHTML=lista.map(s=>{
+    const personas=personalCache.filter(p=>p.seccion===s.num);
+    return `<div class="sec-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="sec-num">Sec. ${s.num}</div>
+        <span class="badge" style="background:${PAD_COLOR[s.padrino]}20;color:${PAD_COLOR[s.padrino]};font-size:10px">${s.padrino.split(' ')[0]}</span>
+      </div>
+      <div class="sec-enc">🗝 ${s.encargado}</div>
+      <div class="sec-chips">${personas.map(p=>`<span class="chip">${(p.nombre||'').split(' ').slice(0,2).join(' ')}</span>`).join('')||'<span style="font-size:11px;color:var(--muted)">sin asignados</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── BAJAS ──
+function filtrarBajas(){
+  const q=(document.getElementById('bajas-buscar').value||'').toLowerCase();
+  const m=(document.getElementById('bajas-motivo').value||'').toUpperCase();
+  const lista=BAJAS.filter(b=>(!q||(b.nombre||'').toLowerCase().includes(q))&&(!m||(b.motivo||'').includes(m)));
+  const PAD_COL={'Fernando Amezcua':'badge-pan','Martin Yáñez':'badge-green','Rene Espinoza':'badge-amber'};
+  document.getElementById('bajas-lista').innerHTML=lista.map(b=>`
+    <div class="baja-row">
+      <div class="baja-ico">🚫</div>
+      <div style="flex:1">
+        <div class="baja-name">${b.nombre}</div>
+        <div class="baja-motivo">${b.motivo}</div>
+        <div class="baja-meta">${b.estructura?`<span class="badge ${PAD_COL[b.estructura]||'badge-gray'}" style="font-size:10px">${b.estructura}</span>`:''}</div>
+      </div>
+    </div>
+  `).join('');
+  // Stats
+  const tot=BAJAS.length;
+  const noTrabaja=BAJAS.filter(b=>b.motivo.includes('TRABAJA')).length;
+  const baja=BAJAS.filter(b=>b.motivo==='BAJA'||b.motivo.includes('SISTEMA')).length;
+  const otros=tot-noTrabaja-baja;
+  document.getElementById('bajas-stats').innerHTML=`
+    <div class="stat"><div class="stat-n" style="color:#cc0000">${tot}</div><div class="stat-l">Total bajas</div></div>
+    <div class="stat"><div class="stat-n">${noTrabaja}</div><div class="stat-l">Ya no trabaja</div></div>
+    <div class="stat"><div class="stat-n">${baja}</div><div class="stat-l">Baja sistema</div></div>
+    <div class="stat"><div class="stat-n">${otros}</div><div class="stat-l">Otros motivos</div></div>
+  `;
+}
+
+// ── BAJA MODAL ──
+function abrirModalBaja(id,nombre){
+  document.getElementById('baja-id').value=id;
+  document.getElementById('baja-nombre').value=nombre;
+  document.getElementById('baja-coment').value='';
+  closeModal('modal-persona');
+  document.getElementById('modal-baja').style.display='flex';
+}
+async function confirmarBaja(){
+  const id=document.getElementById('baja-id').value;
+  const motivo=document.getElementById('baja-motivo-sel').value;
+  const coment=document.getElementById('baja-coment').value;
+  const nombre=document.getElementById('baja-nombre').value;
+  await sbPatch('personal',`?id=eq.${id}`,{status:'baja',motivo_baja:motivo+(coment?` — ${coment}`:''),fecha_baja:new Date().toISOString().split('T')[0],registrado_por:currentUser});
+  closeModal('modal-baja');
+  showToast(`🚫 ${nombre} dado de baja`);
+  await cargarPersonal();
+  renderPersonal();
+  renderStats();
+}
+
+// ── CONTROL (PENDIENTES) ──
+async function renderControl(){
+  const data=await sbGet('personal','?status=eq.pendiente&order=nombre.asc');
+  pendientesCache=Array.isArray(data)?data:[];
+  filtrarPendientes();
+  // Cambio rápido
+  document.getElementById('cambio-buscar').value='';
+  document.getElementById('cambio-resultado').innerHTML='';
+}
+function filtrarPendientes(){
+  const q=(document.getElementById('pend-buscar').value||'').toLowerCase();
+  const lista=pendientesCache.filter(p=>!q||(p.nombre||'').toLowerCase().includes(q));
+  const canEdit=currentUser==='Octavio'||EDITORAS.includes(currentUser);
+  document.getElementById('pend-lista').innerHTML=lista.length?lista.map(p=>`
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px" id="pcard-${p.id}">
+      <div style="font-weight:700;font-size:13px;margin-bottom:2px">${p.nombre}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${p.telefono||'sin tel'} · ${p.usuario||'sin usuario'}</div>
+      ${canEdit?`
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <textarea id="com-${p.id}" placeholder="comentario (opcional)..." rows="1"
+          style="width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:7px;font-size:12px;resize:none;outline:none;color:var(--text);background:#fff"></textarea>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button onclick="pendienteSi('${p.id}','${p.nombre.replace(/'/g,"\\'")}')"
+            style="padding:9px;background:#eaf3de;border:1.5px solid #a3d977;border-radius:8px;font-size:12px;font-weight:700;color:#2d6a4f;cursor:pointer">
+            ✅ SÍ apoya
+          </button>
+          <button onclick="pendienteNo('${p.id}','${p.nombre.replace(/'/g,"\\'")}')"
+            style="padding:9px;background:#fce8e8;border:1.5px solid #f5c2c2;border-radius:8px;font-size:12px;font-weight:700;color:#cc0000;cursor:pointer">
+            ❌ NO apoya
+          </button>
+        </div>
+      </div>`:'<span style="font-size:11px;color:var(--muted)">Solo editoras pueden confirmar</span>'}
+    </div>
+  `).join(''):'<p style="color:var(--muted);font-size:13px;text-align:center;padding:1.5rem">✅ Sin pendientes</p>';
+}
+
+async function pendienteSi(id,nombre){
+  const padrino=prompt(`✅ ${nombre}\n¿A qué padrino va?\n\n• Fernando Amezcua\n• Martin Yáñez\n• Rene Espinoza`,'Rene Espinoza');
+  if(!padrino)return;
+  const seccion=prompt(`¿A qué sección se asigna?\n(Enter para dejar sin sección por ahora)`,'');
+  const comentario=document.getElementById(`com-${id}`)?.value||'';
+  await sbPatch('personal',`?id=eq.${id}`,{
+    status:'activo',padrino:padrino.trim(),
+    seccion:seccion.trim()||null,
+    comentarios:comentario?`SÍ apoya — ${comentario}`:'SÍ apoya',
+    registrado_por:currentUser
+  });
+  showToast(`✅ ${nombre} → ${padrino.trim()}`);
+  document.getElementById(`pcard-${id}`)?.remove();
+  await cargarPersonal();renderStats();
+}
+
+async function pendienteNo(id,nombre){
+  const comentario=document.getElementById(`com-${id}`)?.value||'';
+  if(!confirm(`❌ Registrar que ${nombre} NO apoya?\n${comentario?'Comentario: '+comentario:''}`))return;
+  await sbPatch('personal',`?id=eq.${id}`,{
+    status:'baja',motivo_baja:'NO QUIERE PARTICIPAR',
+    comentarios:comentario||'No quiere participar',
+    fecha_baja:new Date().toISOString().split('T')[0],
+    registrado_por:currentUser
+  });
+  showToast(`❌ ${nombre} → baja`);
+  document.getElementById(`pcard-${id}`)?.remove();
+}
+
+async function confirmarActivo(id,nombre){
+  if(!confirm(`¿Confirmar a ${nombre} como activo?`))return;
+  await sbPatch('personal',`?id=eq.${id}`,{status:'activo'});
+  showToast(`✓ ${nombre} confirmado`);
+  renderControl();
+}
+
+function buscarParaCambio(){
+  const q=(document.getElementById('cambio-buscar').value||'').toLowerCase();
+  if(q.length<2){document.getElementById('cambio-resultado').innerHTML='';return;}
+  const lista=personalCache.filter(p=>(p.nombre||'').toLowerCase().includes(q)).slice(0,5);
+  document.getElementById('cambio-resultado').innerHTML=lista.map(p=>`
+    <div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:#f8faff">
+      <div style="font-weight:700;font-size:13px">${p.nombre}</div>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+        <select onchange="cambiarPadrino('${p.id}',this.value)" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff">
+          <option value="Fernando Amezcua" ${p.padrino==='Fernando Amezcua'?'selected':''}>Fernando Amezcua</option>
+          <option value="Martin Yáñez" ${p.padrino==='Martin Yáñez'?'selected':''}>Martin Yáñez</option>
+          <option value="Rene Espinoza" ${p.padrino==='Rene Espinoza'?'selected':''}>Rene Espinoza</option>
+        </select>
+        <select onchange="cambiarSeccion('${p.id}',this.value)" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff">
+          <option value="">sin sección</option>
+          ${SECCIONES.map(s=>`<option value="${s.num}" ${p.seccion===s.num?'selected':''}>${s.num}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `).join('');
+}
+async function cambiarPadrino(id,padrino){
+  await sbPatch('personal',`?id=eq.${id}`,{padrino});
+  showToast('✓ Padrino actualizado');
+  await cargarPersonal();
+}
+async function cambiarSeccion(id,seccion){
+  await sbPatch('personal',`?id=eq.${id}`,{seccion:seccion||null});
+  showToast('✓ Sección actualizada');
+  await cargarPersonal();
+}
+
+// ── INEs ──
+async function renderInes(){
+  const nombre=currentUser;
+  const data=await sbGet('personal',`?nombre=ilike.*${encodeURIComponent(nombre.split(' ')[0])}*&status=eq.activo&limit=1`);
+  inePersona=Array.isArray(data)?data[0]:null;
+  const red=parseInt(inePersona?.red_total)||0;
+  const cap=parseInt(inePersona?.ine_capturadas)||0;
+  const pend=Math.max(0,red-cap);
+  document.getElementById('ine-total').textContent=red;
+  document.getElementById('ine-cap').textContent=cap;
+  document.getElementById('ine-pend').textContent=pend;
+
+  // Status banner
+  const banner=document.getElementById('ine-status-banner');
+  const icon=document.getElementById('ine-status-icon');
+  const txt=document.getElementById('ine-status-text');
+  const sub=document.getElementById('ine-status-sub');
+  const link=document.getElementById('ine-cloudinary-link');
+
+  if(red===0){
+    banner.style.background='#f0f0f0';
+    banner.style.color='#888';
+    icon.textContent='⚪';
+    txt.textContent='Sin red asignada';
+    sub.textContent='No tienes INEs que subir';
+    link.style.display='none';
+  } else if(cap>=red){
+    banner.style.background='#2d6a4f';
+    banner.style.color='#fff';
+    icon.textContent='🟢';
+    txt.textContent=`¡Red completa! ${cap}/${red} INEs`;
+    sub.textContent='Todas las INEs de tu red están capturadas';
+    link.style.display='inline-block';
+  } else {
+    banner.style.background='#854f0b';
+    banner.style.color='#fff';
+    icon.textContent='🟡';
+    txt.textContent=`${cap}/${red} INEs capturadas`;
+    sub.textContent=`Te faltan ${pend} INEs por subir`;
+    link.style.display='inline-block';
+  }
+
+  // Link a carpeta Cloudinary
+  const carpeta=inePersona?.carpeta_cloudinary||`gemacuu/${nombre.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}`;
+  const cldLink=`https://console.cloudinary.com/console/c-${CLOUD}/media_library/folders/${encodeURIComponent(carpeta+'/ines')}`;
+  link.href=cldLink;
+
+  const ines=await sbGet('archivos',`?num_empleado=eq.${encodeURIComponent(inePersona?.num_empleado||nombre)}&tipo_evento=eq.ine&order=par_ine.asc,lado_ine.asc`);
+  const grid=document.getElementById('ine-grid');
+  if(!Array.isArray(ines)||!ines.length){
+    grid.innerHTML='<p style="color:var(--muted);font-size:13px">Aún no has subido ninguna INE.</p>';
+    document.getElementById('ine-info').textContent='';
+    return;
+  }
+  grid.innerHTML=ines.map(f=>`
+    <div class="ine-thumb" onclick="window.open('${f.cloudinary_url}','_blank')">
+      <img src="${f.cloudinary_url}" alt="INE">
+      <div class="ine-label">${String(f.par_ine).padStart(3,'0')} ${(f.lado_ine||'').toUpperCase()}</div>
+    </div>
+  `).join('');
+  document.getElementById('ine-info').textContent=`${ines.length} fotos · ${ines.filter(f=>f.lado_ine==='frente').length} pares completos`;
+}
+async function subirIne(input){
+  const file=input.files[0];if(!file)return;
+  const lado=document.querySelector('input[name="inelado"]:checked')?.value||'frente';
+  const status=document.getElementById('ine-status');
+  status.textContent='⏳ subiendo...';
+  const emp=inePersona?.num_empleado||currentUser;
+  const ines=await sbGet('archivos',`?num_empleado=eq.${encodeURIComponent(emp)}&tipo_evento=eq.ine&lado_ine=eq.${lado}&order=par_ine.desc&limit=1`);
+  const ultimo=Array.isArray(ines)?ines[0]?.par_ine||0:0;
+  const parNum=lado==='frente'?ultimo+1:ultimo||1;
+  const carpeta=`gemacuu/${currentUser.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}/ines`;
+  const fd=new FormData();
+  fd.append('file',file);fd.append('upload_preset',PRESET);fd.append('folder',carpeta);
+  fd.append('public_id',`ine_${String(parNum).padStart(3,'0')}_${lado}`);
+  try{
+    const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.secure_url){
+      await sbPost('archivos',{num_empleado:emp,nombre_persona:currentUser,tipo_evento:'ine',cloudinary_url:d.secure_url,cloudinary_public_id:d.public_id,carpeta,par_ine:parNum,lado_ine:lado,subido_por:currentUser,fecha:new Date().toISOString().split('T')[0]});
+      if(lado==='frente'&&inePersona){
+        const nuevas=(inePersona.ine_capturadas||0)+1;
+        await sbPatch('personal',`?id=eq.${inePersona.id}`,{ine_capturadas:nuevas});
+        inePersona.ine_capturadas=nuevas;
+      }
+      status.textContent=`✓ INE ${String(parNum).padStart(3,'0')} ${lado.toUpperCase()} guardada`;
+      showToast(`✓ INE ${String(parNum).padStart(3,'0')} ${lado.toUpperCase()}`);
+      renderInes();
+    }else{status.textContent='✗ error al subir';}
+  }catch(e){status.textContent='✗ error de red';}
+  input.value='';
+}
+
+// ── EXPORT EXCEL ──
+async function exportarExcel(){
+  showToast('⏳ Preparando Excel...');
+
+  // Traer todos los registros de red_amigos
+  let todosAmigos=[];
+  try{
+    const data=await sbGet('red_amigos','?order=personal_id.asc,numero.asc');
+    todosAmigos=Array.isArray(data)?data:[];
+  }catch(e){}
+
+  // Agrupar por personal_id
+  const amigosPorId={};
+  todosAmigos.forEach(a=>{
+    if(!amigosPorId[a.personal_id]) amigosPorId[a.personal_id]=[];
+    amigosPorId[a.personal_id].push(a);
+  });
+
+  // Calcular máximo de posiciones para las columnas (máx 10)
+  const MAX_RED=10;
+
+  // Encabezados fijos + columnas dinámicas de red
+  let headers='NOMBRE,ÁREA,PADRINO,SECCIÓN,NÚM. EMPLEADO,TELÉFONO,USUARIO,RED TOTAL,INE CAPTURADAS,STATUS';
+  for(let i=1;i<=MAX_RED;i++){
+    headers+=`,AMIGO ${i},AMIGO ${i} STATUS`;
+  }
+
+  let csv='\uFEFF'+headers+'\n';
+
+  personalCache.forEach(p=>{
+    const amigos=(amigosPorId[p.id]||[]).filter(a=>a.status!=='sustituto'); // excluir filas sustituto (ya están en sustituido)
+    let fila=`"${p.nombre||''}","${p.area||''}","${p.padrino||''}","${p.seccion||''}","${p.num_empleado||''}","${p.telefono||''}","${p.usuario||''}","${p.red_total||0}","${p.ine_capturadas||0}","${p.status||''}"`;
+
+    for(let i=0;i<MAX_RED;i++){
+      const a=amigos[i];
+      if(a){
+        const esSust=a.status==='sustituido';
+        const nombreAmigo=a.nombre_amigo||'(sin nombre)';
+        const statusAmigo=esSust
+          ?`FUERA → entra: ${a.nombre_sustituto||'?'}${a.motivo_sustituto?' ('+a.motivo_sustituto+')':''}`
+          :'ACTIVO';
+        fila+=`,"${nombreAmigo}","${statusAmigo}"`;
+      } else {
+        fila+=',"",""';
+      }
+    }
+    csv+=fila+'\n';
+  });
+
+  const a1=document.createElement('a');
+  a1.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a1.download=`GEMACUU_personal_${new Date().toISOString().split('T')[0]}.csv`;
+  a1.click();
+
+  // ── CSV 2: Cambios Red de Amigos (sustitutos) con celular ──
+  await new Promise(r=>setTimeout(r,800));
+  // Índice de personal por id para obtener nombre del dueño
+  const personalPorId={};
+  personalCache.forEach(p=>{ personalPorId[p.id]=p; });
+
+  // Buscar celular del sustituto en red_amigos (registro tipo 'sustituto' tiene mismo personal_id y numero)
+  const celPorSustituto={};
+  todosAmigos.filter(a=>a.status==='sustituto').forEach(a=>{
+    celPorSustituto[`${a.personal_id}_${a.numero}`]=a.celular||'';
+  });
+
+  let csv2='\uFEFF'+'PERSONAS A ELIMINAR,SUSTITUTO,CELULAR SUSTITUTO,RED DE AMIGOS\n';
+  todosAmigos.forEach(a=>{
+    if(a.status==='sustituido'&&a.nombre_sustituto){
+      const duenio=personalPorId[a.personal_id];
+      const nombreDuenio=duenio?duenio.nombre:'—';
+      const sale=a.nombre_amigo||'(sin nombre)';
+      const entra=a.nombre_sustituto||'—';
+      const celSust=celPorSustituto[`${a.personal_id}_${a.numero}`]||'';
+      csv2+=`"${sale}","${entra}","${celSust}","${nombreDuenio}"\n`;
+    }
+  });
+  const a2=document.createElement('a');
+  a2.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv2);
+  a2.download=`GEMACUU_cambios_red_${new Date().toISOString().split('T')[0]}.csv`;
+  a2.click();
+
+  showToast('✓ 2 archivos descargados');
+}
+
+// ── RED DE AMIGOS ──
+let redCache={};         // { personal_id: [amigos...] }
+let redPersonaActual=null;
+
+async function cargarRedPersona(personalId){
+  const data=await sbGet('red_amigos',`?personal_id=eq.${personalId}&order=numero.asc`);
+  return Array.isArray(data)?data:[];
+}
+
+async function filtrarRed(){
+  const q=(document.getElementById('red-buscar').value||'').toLowerCase();
+  const pad=document.getElementById('red-padrino').value;
+  let lista=personalCache;
+  if(q) lista=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q)||(p.area||'').toLowerCase().includes(q));
+  if(pad) lista=lista.filter(p=>(p.padrino||'').includes(pad));
+  document.getElementById('red-count').textContent=`${lista.length} personas`;
+
+  // Cargar amigos para cada persona visible (máx 30 para no saturar)
+  const visibles=lista.slice(0,30);
+  const ids=visibles.map(p=>p.id);
+
+  // Fetch masivo: todos los amigos de las personas visibles
+  let amigosData=[];
+  if(ids.length){
+    const inList=ids.map(i=>`"${i}"`).join(',');
+    const data=await sbGet('red_amigos',`?personal_id=in.(${inList})&order=numero.asc`);
+    amigosData=Array.isArray(data)?data:[];
+  }
+
+  // Agrupar por personal_id
+  const agrupadosPorId={};
+  amigosData.forEach(a=>{
+    if(!agrupadosPorId[a.personal_id]) agrupadosPorId[a.personal_id]=[];
+    agrupadosPorId[a.personal_id].push(a);
+  });
+
+  const canEdit=currentUser==='Octavio'||EDITORAS.includes(currentUser);
+  const PAD_COL={'Fernando Amezcua':'badge-pan','Martin Yáñez':'badge-green','Rene Espinoza':'badge-amber'};
+
+  document.getElementById('red-lista').innerHTML=visibles.map(p=>{
+    const amigos=agrupadosPorId[p.id]||[];
+    const totalRegistrados=amigos.length;
+    // Usar red_total de la tabla personal como número oficial de la red
+    const redTotal=parseInt(p.red_total)||0;
+    const sustituidos=amigos.filter(a=>a.status==='sustituido').length;
+
+    const amigosHtml=amigos.map(a=>{
+      const esSust=a.status==='sustituido';
+      const esNuevo=a.status==='sustituto';
+      // Si es sustituido: mostrar nombre tachado en rojo + nombre del que entra en verde
+      // Si es sustituto: NO mostrarlo como fila separada (ya aparece dentro del sustituido)
+      if(esNuevo) return ''; // el sustituto se muestra dentro de la fila del sustituido
+      const nombreMostrar=a.nombre_amigo
+        ?`<span style="${esSust?'text-decoration:line-through;color:#cc0000;font-weight:700':''}">${a.nombre_amigo}</span>`
+        :`<span style="color:var(--muted);font-style:italic${esSust?';text-decoration:line-through':''}">Sin nombre</span>`;
+      return `<div class="amigo-row ${esSust?'sustituido':'activo'}">
+        <div class="amigo-num ${esSust?'sustituido':''}">${a.numero||'?'}</div>
+        <div class="amigo-nombre">
+          <div>${nombreMostrar}</div>
+          ${esSust&&a.nombre_sustituto?`<div style="font-size:12px;color:#2d6a4f;font-weight:700;margin-top:3px">🟢 Entra: ${a.nombre_sustituto}</div>`:''}
+          ${esSust&&!a.nombre_sustituto?`<div style="font-size:11px;color:#cc0000;margin-top:2px">🔴 Fuera — disponible para otro apoyo</div>`:''}
+          ${a.motivo_sustituto?`<div style="font-size:10px;color:var(--muted)">${a.motivo_sustituto}</div>`:''}
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;flex-shrink:0">
+          ${esSust?`<span class="amigo-badge-sustituido">🔴 fuera</span>`:`<span class="amigo-badge-activo">✅</span>`}
+          ${canEdit&&!esSust?`<button class="btn btn-xs" style="background:#fef3c7;border:1px solid #f59e0b;color:#854f0b;font-weight:700" 
+            onclick="abrirModalSustituto('${a.id}','${(a.nombre_amigo||'Sin nombre').replace(/'/g,"\\'")}')">🔄 Cambiar</button>`:''}
+        </div>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    // Mostrar red_total como número oficial, y cuántos tienen nombre registrado
+    const labelRed=redTotal>0
+      ?`<span style="font-size:13px;font-weight:800;color:var(--pan)">${redTotal}</span><span style="font-size:10px;color:var(--muted)"> en red</span>`
+      :`<span style="font-size:13px;color:var(--muted)">0</span><span style="font-size:10px;color:var(--muted)"> en red</span>`;
+
+    return `<div class="red-card">
+      <div class="red-persona-hdr">
+        <div>
+          <div class="red-persona-name">${p.nombre||'—'}</div>
+          <div class="red-persona-meta">
+            <span class="badge ${PAD_COL[p.padrino]||'badge-gray'}" style="font-size:10px">${p.padrino||'—'}</span>
+            ${p.seccion?`<span class="badge badge-pan" style="font-size:10px;margin-left:4px">Sec. ${p.seccion}</span>`:''}
+            · ${p.area||''}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="text-align:right;line-height:1.3">${labelRed}
+            ${totalRegistrados>0?`<div style="font-size:10px;color:var(--muted)">${totalRegistrados} registrado${totalRegistrados!==1?'s':''}</div>`:''}
+          </div>
+          ${canEdit?`<button class="btn btn-primary btn-sm" onclick="abrirModalRed('${p.id}')">✏️ Gestionar</button>`:''}
+        </div>
+      </div>
+      ${totalRegistrados>0?`<div style="margin-top:6px">${amigosHtml}</div>`:`<div style="font-size:12px;color:var(--muted);padding:6px 0">${redTotal>0?`Red de ${redTotal} — nombres pendientes de capturar`:'Sin red registrada aún.'}</div>`}
+      ${sustituidos>0?`<div style="font-size:11px;color:#cc0000;margin-top:6px">🔴 ${sustituidos} fuera — disponible${sustituidos>1?'s':''} para otro tipo de apoyo</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function abrirModalRed(personalId){
+  redPersonaActual=personalCache.find(p=>p.id===personalId);
+  if(!redPersonaActual)return;
+  document.getElementById('modal-red-nombre').textContent=redPersonaActual.nombre||'—';
+  document.getElementById('modal-red-meta').textContent=`${redPersonaActual.area||''} · ${redPersonaActual.padrino||''}`;
+  document.getElementById('nuevo-amigo-nombre').value='';
+  await renderModalAmigos(personalId);
+  document.getElementById('modal-red').style.display='flex';
+}
+
+async function renderModalAmigos(personalId){
+  const amigos=await cargarRedPersona(personalId);
+  redCache[personalId]=amigos;
+  const canEdit=currentUser==='Octavio'||EDITORAS.includes(currentUser);
+  document.getElementById('modal-amigos-lista').innerHTML=amigos.length?amigos.map(a=>{
+    const esSust=a.status==='sustituido';
+    const esNuevo=a.status==='sustituto';
+    if(esNuevo) return ''; // el sustituto se muestra dentro de la fila del sustituido
+    const nombreMostrar=a.nombre_amigo
+      ?`<span style="${esSust?'text-decoration:line-through;color:#cc0000;font-weight:700':''}">${a.nombre_amigo}</span>`
+      :`<span style="color:var(--muted);font-style:italic${esSust?';text-decoration:line-through':''}">Sin nombre</span>`;
+    return `<div class="amigo-row ${esSust?'sustituido':'activo'}" id="arow-${a.id}">
+      <div class="amigo-num ${esSust?'sustituido':''}">${a.numero||'?'}</div>
+      <div class="amigo-nombre" style="flex:1">
+        <div>${nombreMostrar}</div>
+        ${esSust&&a.nombre_sustituto?`<div style="font-size:12px;color:#2d6a4f;font-weight:700;margin-top:3px">🟢 Entra: ${a.nombre_sustituto}</div>`:''}
+        ${esSust&&!a.nombre_sustituto?`<div style="font-size:11px;color:#cc0000;margin-top:2px">🔴 Fuera — disponible para otro apoyo</div>`:''}
+        ${a.motivo_sustituto?`<div style="font-size:10px;color:var(--muted)">${a.motivo_sustituto}</div>`:''}
+      </div>
+      <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+        ${esSust?`<span class="amigo-badge-sustituido">🔴 fuera</span>`:`<span class="amigo-badge-activo">✅</span>`}
+        ${canEdit&&!esSust?`<button class="btn btn-xs" style="background:#fef3c7;border:1px solid #f59e0b;color:#854f0b;font-weight:700"
+          onclick="abrirModalSustituto('${a.id}','${(a.nombre_amigo||'Sin nombre').replace(/'/g,"\\'")}')">🔄 Cambiar</button>`:''}
+        ${canEdit?`<button class="btn btn-danger btn-xs" onclick="eliminarAmigo('${a.id}','${personalId}')">🗑</button>`:''}
+      </div>
+    </div>`;
+  }).filter(Boolean).join(''):`<div style="color:var(--muted);font-size:13px;text-align:center;padding:1rem">Sin integrantes registrados aún.</div>`;
+}
+
+async function agregarAmigo(){
+  const nombre=document.getElementById('nuevo-amigo-nombre').value.trim();
+  if(!redPersonaActual)return;
+  const existentes=redCache[redPersonaActual.id]||[];
+  const numero=(existentes.length>0?Math.max(...existentes.map(a=>a.numero||0)):0)+1;
+  await sbPost('red_amigos',{
+    personal_id:redPersonaActual.id,
+    nombre_amigo:nombre?nombre.toUpperCase():null,
+    numero,
+    status:'activo',
+    registrado_por:currentUser,
+    fecha_registro:new Date().toISOString().split('T')[0]
+  });
+  document.getElementById('nuevo-amigo-nombre').value='';
+  showToast(nombre?`✓ ${nombre.toUpperCase()} agregado`:`✓ Integrante #${numero} agregado`);
+  await renderModalAmigos(redPersonaActual.id);
+}
+
+async function eliminarAmigo(amigoId,personalId){
+  if(!confirm('¿Eliminar este amigo de la red?'))return;
+  await fetch(`${SB_URL}/rest/v1/red_amigos?id=eq.${amigoId}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  showToast('🗑 Amigo eliminado');
+  await renderModalAmigos(personalId);
+}
+
+function abrirModalSustituto(amigoId,nombreSale){
+  document.getElementById('sust-amigo-id').value=amigoId;
+  document.getElementById('sust-sale-nombre').textContent=nombreSale;
+  document.getElementById('sust-entra-nombre').value='';
+  document.getElementById('sust-motivo').value='';
+  document.getElementById('modal-sustituto').style.display='flex';
+}
+
+async function confirmarSustituto(){
+  const amigoId=document.getElementById('sust-amigo-id').value;
+  const nombreEntra=document.getElementById('sust-entra-nombre').value.trim();
+  const motivo=document.getElementById('sust-motivo').value.trim();
+  if(!nombreEntra){showToast('⚠️ Escribe el nombre del sustituto');return;}
+
+  // Marcar el amigo original como sustituido (🔴)
+  await sbPatch('red_amigos',`?id=eq.${amigoId}`,{
+    status:'sustituido',
+    nombre_sustituto:nombreEntra.toUpperCase(),
+    motivo_sustituto:motivo||null,
+    fecha_sustituto:new Date().toISOString().split('T')[0],
+    registrado_por:currentUser
+  });
+
+  // Agregar el sustituto como nuevo registro (🟢) con mismo numero+1 o al final
+  const amigoOrig=Object.values(redCache).flat().find(a=>a.id===amigoId);
+  if(amigoOrig){
+    await sbPost('red_amigos',{
+      personal_id:amigoOrig.personal_id,
+      nombre_amigo:nombreEntra.toUpperCase(),
+      numero:amigoOrig.numero,
+      status:'sustituto',
+      registrado_por:currentUser,
+      fecha_registro:new Date().toISOString().split('T')[0]
+    });
+  }
+
+  closeModal('modal-sustituto');
+  showToast(`🔄 ${nombreEntra.toUpperCase()} entra como sustituto`);
+
+  // Refrescar vista
+  if(redPersonaActual) await renderModalAmigos(redPersonaActual.id);
+  filtrarRed();
+}
+
+// ── EVENTOS ──
+let eventosCache=[];
+let eventoActualId=null;
+let asistenciaLocal={};  // { personal_id: 0|1 }
+
+const PAD_BADGE={'Fernando Amezcua':'badge-pan','Martin Yáñez':'badge-green','Rene Espinoza':'badge-amber'};
+
+async function cargarEventos(){
+  const data=await sbGet('eventos','?order=fecha.desc');
+  eventosCache=Array.isArray(data)?data:[];
+  renderEventoChips();
+  // Mostrar botón nuevo solo para admin
+  document.getElementById('btn-nuevo-evento').style.display=currentUser==='Octavio'?'inline-flex':'none';
+  if(eventosCache.length>0&&!eventoActualId){
+    seleccionarEvento(eventosCache[0].id);
+  }
+}
+
+function renderEventoChips(){
+  const chips=document.getElementById('eventos-chips');
+  if(!eventosCache.length){
+    chips.innerHTML='<div style="font-size:13px;color:var(--muted)">Sin eventos registrados aún.</div>';
+    return;
+  }
+  chips.innerHTML=eventosCache.map(ev=>`
+    <button class="evento-chip ${ev.id===eventoActualId?'sel':''}" onclick="seleccionarEvento('${ev.id}')">
+      📅 ${ev.nombre} ${ev.fecha?'· '+ev.fecha:''}
+    </button>`).join('');
+}
+
+async function seleccionarEvento(id){
+  eventoActualId=id;
+  asistenciaLocal={};
+  renderEventoChips();
+  const ev=eventosCache.find(e=>e.id===id);
+  if(!ev) return;
+
+  document.getElementById('ev-nombre-display').textContent=ev.nombre||'';
+  document.getElementById('ev-meta-display').innerHTML=`
+    ${ev.lugar?`📍 ${ev.lugar} · `:''}
+    📅 ${ev.fecha||'—'} 
+    ${ev.padrino?` · 👤 ${ev.padrino}`:''}`;
+
+  // Botones editar/eliminar solo para admin
+  const isAdmin=currentUser==='Octavio';
+  document.getElementById('btn-editar-evento').style.display=isAdmin?'inline-flex':'none';
+  document.getElementById('btn-eliminar-evento').style.display=isAdmin?'inline-flex':'none';
+
+  // Cargar asistencia ya registrada
+  const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${id}`);
+  const asisRegistrada=Array.isArray(asisData)?asisData:[];
+  asisRegistrada.forEach(a=>{ asistenciaLocal[a.personal_id]=a.presente?1:0; });
+
+  document.getElementById('panel-asistencia').style.display='block';
+  filtrarAsistencia();
+}
+
+function filtrarAsistencia(){
+  const q=(document.getElementById('ev-buscar').value||'').toLowerCase();
+  const pad=document.getElementById('ev-pad-filter').value;
+  const asis=document.getElementById('ev-asis-filter').value;
+
+  let lista=personalCache;
+  if(q) lista=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q));
+  if(pad) lista=lista.filter(p=>p.padrino===pad);
+  if(asis!=='') lista=lista.filter(p=>{
+    const val=asistenciaLocal[p.id];
+    return asis==='1'?val===1:val!==1;
+  });
+
+  const presentes=Object.values(asistenciaLocal).filter(v=>v===1).length;
+  document.getElementById('ev-total').textContent=personalCache.length;
+  document.getElementById('ev-presentes').textContent=presentes;
+  document.getElementById('ev-ausentes').textContent=personalCache.length-presentes;
+
+  document.getElementById('ev-lista-asis').innerHTML=lista.length?lista.map((p,i)=>{
+    const presente=asistenciaLocal[p.id]===1;
+    const padClass=PAD_BADGE[p.padrino]||'badge-gray';
+    return `<div class="asis-row" id="arow-${p.id}">
+      <div class="asis-num">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px">${p.nombre||'—'}</div>
+        <div style="font-size:11px;color:var(--muted)">${p.area||''} ${p.seccion?'· Sec. '+p.seccion:''}</div>
+      </div>
+      <span class="badge ${padClass}" style="font-size:10px">${p.padrino||'—'}</span>
+      <button class="toggle-asis ${presente?'presente':'ausente'}" 
+        onclick="toggleAsistencia('${p.id}',this)" 
+        aria-label="${presente?'Presente':'Ausente'}"
+        title="${presente?'Presente — clic para marcar ausente':'Ausente — clic para marcar presente'}">
+      </button>
+    </div>`;
+  }).join(''):`<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Sin resultados.</div>`;
+}
+
+function toggleAsistencia(personalId, btn){
+  const actual=asistenciaLocal[personalId]===1;
+  asistenciaLocal[personalId]=actual?0:1;
+  btn.className=`toggle-asis ${actual?'ausente':'presente'}`;
+  btn.title=actual?'Ausente — clic para marcar presente':'Presente — clic para marcar ausente';
+  // Actualizar contadores
+  const presentes=Object.values(asistenciaLocal).filter(v=>v===1).length;
+  document.getElementById('ev-presentes').textContent=presentes;
+  document.getElementById('ev-ausentes').textContent=personalCache.length-presentes;
+}
+
+async function guardarAsistencia(){
+  if(!eventoActualId){showToast('⚠️ Selecciona un evento');return;}
+  showToast('⏳ Guardando asistencia...');
+
+  // Primero borrar registros existentes del evento
+  await fetch(`${SB_URL}/rest/v1/asistencia_eventos?evento_id=eq.${eventoActualId}`,{
+    method:'DELETE',
+    headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}
+  });
+
+  // Insertar todos los registros actuales
+  const registros=personalCache.map(p=>({
+    evento_id:eventoActualId,
+    personal_id:p.id,
+    presente:asistenciaLocal[p.id]===1,
+    registrado_por:currentUser,
+    updated_at:new Date().toISOString()
+  }));
+
+  // Guardar en lotes de 50
+  for(let i=0;i<registros.length;i+=50){
+    const lote=registros.slice(i,i+50);
+    const r=await fetch(`${SB_URL}/rest/v1/asistencia_eventos`,{
+      method:'POST',
+      headers:{
+        'apikey':SB_KEY,
+        'Authorization':`Bearer ${SB_KEY}`,
+        'Content-Type':'application/json',
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify(lote)
+    });
+    if(!r.ok) console.error('Error guardando lote',i,await r.text());
+  }
+  showToast('✅ Asistencia guardada correctamente');
+}
+
+function abrirFormEvento(){
+  document.getElementById('ev-edit-id').value='';
+  document.getElementById('ev-nombre').value='';
+  document.getElementById('ev-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ev-padrino').value='';
+  document.getElementById('ev-lugar').value='';
+  document.getElementById('modal-ev-titulo').textContent='📅 Nuevo Evento';
+  document.getElementById('modal-evento').style.display='flex';
+}
+
+function editarEvento(){
+  const ev=eventosCache.find(e=>e.id===eventoActualId);
+  if(!ev) return;
+  document.getElementById('ev-edit-id').value=ev.id;
+  document.getElementById('ev-nombre').value=ev.nombre||'';
+  document.getElementById('ev-fecha').value=ev.fecha||'';
+  document.getElementById('ev-padrino').value=ev.padrino||'';
+  document.getElementById('ev-lugar').value=ev.lugar||'';
+  document.getElementById('modal-ev-titulo').textContent='✏️ Editar Evento';
+  document.getElementById('modal-evento').style.display='flex';
+}
+
+async function guardarEvento(){
+  const nombre=document.getElementById('ev-nombre').value.trim();
+  const fecha=document.getElementById('ev-fecha').value;
+  if(!nombre||!fecha){showToast('⚠️ Nombre y fecha son obligatorios');return;}
+  const payload={
+    nombre,fecha,
+    padrino:document.getElementById('ev-padrino').value,
+    lugar:document.getElementById('ev-lugar').value.trim(),
+    creado_por:currentUser,
+    created_at:new Date().toISOString()
+  };
+  const editId=document.getElementById('ev-edit-id').value;
+  if(editId){
+    await sbPatch('eventos',`?id=eq.${editId}`,payload);
+    showToast('✓ Evento actualizado');
+  } else {
+    await sbPost('eventos',payload);
+    showToast('✓ Evento creado');
+  }
+  closeModal('modal-evento');
+  await cargarEventos();
+}
+
+async function eliminarEvento(){
+  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;}
+  const ev=eventosCache.find(e=>e.id===eventoActualId);
+  if(!ev||!confirm(`¿Eliminar el evento "${ev.nombre}"?`)) return;
+  await fetch(`${SB_URL}/rest/v1/asistencia_eventos?evento_id=eq.${eventoActualId}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${eventoActualId}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  eventoActualId=null;
+  document.getElementById('panel-asistencia').style.display='none';
+  showToast('🗑 Evento eliminado');
+  await cargarEventos();
+}
+
+async function exportarEventos(){
+  showToast('⏳ Preparando Excel...');
+  if(!eventoActualId){showToast('⚠️ Selecciona un evento primero');return;}
+  const ev=eventosCache.find(e=>e.id===eventoActualId);
+  const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoActualId}`);
+  const asisMap={};
+  (Array.isArray(asisData)?asisData:[]).forEach(a=>{asisMap[a.personal_id]=a.presente;});
+
+  let csv='\uFEFF'+'EVENTO,FECHA,LUGAR,PADRINO RESPONSABLE,NOMBRE,ÁREA,PADRINO,SECCIÓN,NÚM. EMPLEADO,USUARIO,ASISTENCIA\n';
+  personalCache.forEach(p=>{
+    const asistio=asisMap[p.id]===true?'PRESENTE':asisMap[p.id]===false?'AUSENTE':'SIN REGISTRAR';
+    csv+=`"${ev?.nombre||''}","${ev?.fecha||''}","${ev?.lugar||''}","${ev?.padrino||''}","${p.nombre||''}","${p.area||''}","${p.padrino||''}","${p.seccion||''}","${p.num_empleado||''}","${p.usuario||''}","${asistio}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`GEMACUU_asistencia_${(ev?.nombre||'evento').replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Excel de asistencia descargado');
+}
+
+// ── INCIDENCIAS ──
+let incidenciasCache=[];
+let incPersonaSeleccionada=null;
+let incImagenesUrls=[];
+
+async function cargarIncidencias(){
+  const data=await sbGet('incidencias','?order=created_at.desc');
+  incidenciasCache=Array.isArray(data)?data:[];
+  filtrarIncidencias();
+}
+
+function filtrarIncidencias(){
+  const q=(document.getElementById('inc-buscar').value||'').toLowerCase();
+  const pad=document.getElementById('inc-padrino').value;
+  let lista=incidenciasCache;
+  if(q) lista=lista.filter(r=>(r.nombre||'').toLowerCase().includes(q)||(r.num_empleado||'').toLowerCase().includes(q));
+  if(pad) lista=lista.filter(r=>r.padrino===pad);
+  document.getElementById('inc-count').textContent=`${lista.length} incidencias`;
+  document.getElementById('inc-lista').innerHTML=lista.length?lista.map(r=>{
+    const fotos=Array.isArray(r.imagenes)?r.imagenes:[];
+    const fecha=(r.created_at||'').split('T')[0];
+    return `<div class="inc-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div style="flex:1">
+          <div class="inc-card-name">${r.nombre||'—'}</div>
+          <div class="inc-card-meta">
+            ${r.padrino?`<span class="badge badge-pan" style="font-size:10px">${r.padrino}</span> · `:''}
+            ${r.num_empleado?`Emp. ${r.num_empleado} · `:''}
+            ${fecha} · por ${r.registrado_por||'—'}
+          </div>
+          <div style="font-size:13px;color:var(--text);margin-bottom:8px">${r.comentario||''}</div>
+          ${fotos.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${fotos.map(url=>`<img class="inc-foto" src="${url}" alt="incidencia" onclick="window.open('${url}','_blank')" title="Ver imagen">`).join('')}
+          </div>`:''}
+          ${fotos.length?`<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+            ${fotos.map((url,i)=>`<a href="${url}" target="_blank" style="font-size:11px;color:var(--pan)">🔗 Imagen ${i+1}</a>`).join('')}
+          </div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-secondary btn-sm" onclick="editarIncidencia('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarIncidencia('${r.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join(''):'<div style="text-align:center;color:var(--muted);padding:2rem">Sin incidencias registradas.</div>';
+}
+
+function abrirFormIncidencia(){
+  incPersonaSeleccionada=null;
+  incImagenesUrls=[];
+  document.getElementById('inc-edit-id').value='';
+  document.getElementById('inc-search-persona').value='';
+  document.getElementById('inc-nombre').value='';
+  document.getElementById('inc-num-emp').value='';
+  document.getElementById('inc-comentario').value='';
+  document.getElementById('inc-fotos').value='';
+  document.getElementById('inc-fotos-preview').innerHTML='';
+  document.getElementById('inc-search-results').style.display='none';
+  document.getElementById('modal-inc-titulo').textContent='⚠️ Nueva Incidencia';
+  document.getElementById('modal-incidencia').style.display='flex';
+}
+
+function buscarPersonaInc(){
+  const q=(document.getElementById('inc-search-persona').value||'').toLowerCase();
+  const res=document.getElementById('inc-search-results');
+  if(q.length<2){res.style.display='none';return;}
+  const matches=personalCache.filter(p=>
+    (p.nombre||'').toLowerCase().includes(q)||(p.num_empleado||'').includes(q)
+  ).slice(0,8);
+  if(!matches.length){res.style.display='none';return;}
+  res.innerHTML=matches.map(p=>`<div class="inc-search-item" onclick="seleccionarPersonaInc('${p.id}')">
+    <b>${p.nombre||'—'}</b> <span style="color:var(--muted);font-size:11px">${p.num_empleado?'· Emp. '+p.num_empleado:''} · ${p.padrino||''}</span>
+  </div>`).join('');
+  res.style.display='block';
+}
+
+function seleccionarPersonaInc(id){
+  incPersonaSeleccionada=personalCache.find(p=>p.id===id);
+  if(!incPersonaSeleccionada)return;
+  document.getElementById('inc-search-persona').value=incPersonaSeleccionada.nombre||'';
+  document.getElementById('inc-nombre').value=incPersonaSeleccionada.nombre||'';
+  document.getElementById('inc-num-emp').value=incPersonaSeleccionada.num_empleado||'';
+  document.getElementById('inc-search-results').style.display='none';
+}
+
+document.addEventListener('click',e=>{
+  const res=document.getElementById('inc-search-results');
+  if(res&&!res.contains(e.target)&&e.target.id!=='inc-search-persona') res.style.display='none';
+});
+
+async function guardarIncidencia(){
+  const nombre=document.getElementById('inc-nombre').value.trim();
+  const comentario=document.getElementById('inc-comentario').value.trim();
+  if(!nombre){showToast('⚠️ Selecciona una persona de la base de datos');return;}
+  if(!comentario){showToast('⚠️ Escribe un comentario');return;}
+
+  // Subir imágenes a Cloudinary
+  const archivos=document.getElementById('inc-fotos').files;
+  const prog=document.getElementById('inc-upload-progress');
+  let imagenesUrls=[...incImagenesUrls];
+
+  if(archivos.length>0){
+    prog.style.display='block';
+    for(const file of archivos){
+      const fd=new FormData();
+      fd.append('file',file);
+      fd.append('upload_preset',PRESET);
+      fd.append('folder',`gemacuu/incidencias`);
+      const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+      const d=await r.json();
+      if(d.secure_url) imagenesUrls.push(d.secure_url);
+    }
+    prog.style.display='none';
+  }
+
+  const payload={
+    nombre,
+    num_empleado:document.getElementById('inc-num-emp').value.trim(),
+    padrino:incPersonaSeleccionada?.padrino||'',
+    comentario,
+    imagenes:imagenesUrls,
+    registrado_por:currentUser,
+    created_at:new Date().toISOString()
+  };
+
+  const editId=document.getElementById('inc-edit-id').value;
+  if(editId){
+    await sbPatch('incidencias',`?id=eq.${editId}`,payload);
+    showToast('✓ Incidencia actualizada');
+  } else {
+    await sbPost('incidencias',payload);
+    showToast('✓ Incidencia registrada');
+  }
+  closeModal('modal-incidencia');
+  await cargarIncidencias();
+}
+
+async function editarIncidencia(id){
+  const r=incidenciasCache.find(x=>x.id===id);
+  if(!r)return;
+  incPersonaSeleccionada=personalCache.find(p=>p.nombre===r.nombre)||null;
+  incImagenesUrls=Array.isArray(r.imagenes)?[...r.imagenes]:[];
+  document.getElementById('inc-edit-id').value=id;
+  document.getElementById('inc-search-persona').value=r.nombre||'';
+  document.getElementById('inc-nombre').value=r.nombre||'';
+  document.getElementById('inc-num-emp').value=r.num_empleado||'';
+  document.getElementById('inc-comentario').value=r.comentario||'';
+  document.getElementById('inc-fotos').value='';
+  document.getElementById('modal-inc-titulo').textContent='✏️ Editar Incidencia';
+  // Mostrar fotos existentes
+  document.getElementById('inc-fotos-preview').innerHTML=incImagenesUrls.map((url,i)=>
+    `<img class="inc-foto" src="${url}" alt="foto ${i+1}" onclick="window.open('${url}','_blank')">`
+  ).join('');
+  document.getElementById('inc-search-results').style.display='none';
+  document.getElementById('modal-incidencia').style.display='flex';
+}
+
+async function eliminarIncidencia(id){
+  if(!confirm('¿Eliminar esta incidencia?'))return;
+  await fetch(`${SB_URL}/rest/v1/incidencias?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  showToast('🗑 Incidencia eliminada');
+  await cargarIncidencias();
+}
+
+// ── NUEVOS AMIGOS ──
+let nuevosCache=[];
+let nuevosAmigosTemp=[];
+let editandoNuevoId=null;
+
+const APROBADORES=['Octavio','Karen Alarcón','Lluvia Aceves','Vianey'];
+
+async function cargarNuevos(){
+  const data=await sbGet('nuevos_amigos','?order=created_at.desc');
+  nuevosCache=Array.isArray(data)?data:[];
+  filtrarNuevos();
+}
+
+function filtrarNuevos(){
+  const q=(document.getElementById('nuevos-buscar').value||'').toLowerCase();
+  const pad=document.getElementById('nuevos-padrino').value;
+  const estado=document.getElementById('nuevos-estado').value;
+  let lista=nuevosCache;
+  if(q) lista=lista.filter(r=>(r.nombre||'').toLowerCase().includes(q)||(r.num_empleado||'').toLowerCase().includes(q));
+  if(pad) lista=lista.filter(r=>r.padrino===pad);
+  if(estado) lista=lista.filter(r=>r.estado===estado);
+  document.getElementById('nuevos-count').textContent=`${lista.length} registros`;
+  const canAprobar=APROBADORES.includes(currentUser);
+  document.getElementById('nuevos-lista').innerHTML=lista.length?lista.map(r=>{
+    const amigos=Array.isArray(r.amigos)?r.amigos:[];
+    const tipoBadge=r.tipo==='reingreso'
+      ?'<span class="badge-reingreso-reg">🔄 Reingreso</span>'
+      :'<span class="badge-nuevo-reg">✨ Nuevo</span>';
+    const estadoBadge=r.estado==='aprobado'
+      ?'<span class="badge-aprobado">✅ Aprobado</span>'
+      :'<span class="badge-pendiente">⏳ Pendiente</span>';
+    const enviadoBadge=r.enviado_sistemas?'<span class="badge-enviado">🟡 Enviado a sistemas · En espera de alta de usuario</span>':'';
+    return `<div class="nuevo-card">
+      <div class="nuevo-card-hdr">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+            ${tipoBadge}${estadoBadge}${enviadoBadge}
+          </div>
+          <div class="nuevo-card-name">${r.nombre||'—'}</div>
+          <div class="nuevo-card-meta">
+            ${r.padrino?`<span class="badge badge-pan" style="font-size:10px">${r.padrino}</span> · `:''}
+            ${r.num_empleado?`Emp. ${r.num_empleado} · `:''}
+            ${r.total_amigos?`Red de ${r.total_amigos}`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn btn-secondary btn-sm" onclick="editarNuevo('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarNuevo('${r.id}')">🗑</button>
+          ${canAprobar&&r.estado!=='aprobado'?`<button class="btn btn-primary btn-sm" style="background:#2d6a4f" onclick="aprobarNuevo('${r.id}')">\u2705 Aprobar</button>`:''}
+          ${currentUser==='Octavio'&&r.estado!=='aprobado'?`<button class="btn btn-sm" style="background:#D97706;color:#fff;font-size:11px" onclick="toggleEnviadoSistemas('${r.id}',${r.enviado_sistemas?true:false})">${r.enviado_sistemas?'↩ Quitar enviado':'📤 Enviar a sistemas'}</button>`:''}
+        </div>
+      </div>
+      ${amigos.length?`<div style="margin-top:6px">${amigos.map((a,i)=>`<div class="amigo-mini">
+        <div class="amigo-mini-num">${i+1}</div>
+        <div style="flex:1"><b>${a.nombre||'—'}</b>${a.celular?` · ${a.celular}`:''}</div>
+      </div>`).join('')}</div>`:'<div style="font-size:12px;color:var(--muted)">Sin amigos registrados aún</div>'}
+      ${r.estado==='aprobado'?`<div style="font-size:11px;color:#065f46;margin-top:6px">✅ Aprobado por ${r.aprobado_por||'—'} · pasado a Red de Amigos</div>`:''}
+    </div>`;
+  }).join(''):'<div style="text-align:center;color:var(--muted);padding:2rem">Sin registros aún.</div>';
+}
+
+function abrirFormNuevo(){
+  editandoNuevoId=null;
+  nuevosAmigosTemp=[];
+  document.getElementById('nuevo-id').value='';
+  document.getElementById('nuevo-nombre').value='';
+  document.getElementById('nuevo-num-emp').value='';
+  document.getElementById('nuevo-celular').value='';
+  document.getElementById('nuevo-padrino-form').value='';
+  document.getElementById('nuevo-total-amigos').value='';
+  document.getElementById('modal-nuevo-titulo').textContent='➕ Nuevo Registro';
+  setTipo('nuevo');
+  renderAmigosTempList();
+  document.getElementById('modal-nuevo-amigo').style.display='flex';
+}
+
+function setTipo(t){
+  document.getElementById('nuevo-tipo').value=t;
+  document.getElementById('btn-tipo-nuevo').className='btn btn-'+(t==='nuevo'?'primary':'secondary')+' w-full';
+  document.getElementById('btn-tipo-reingreso').className='btn btn-'+(t==='reingreso'?'primary':'secondary')+' w-full';
+  document.getElementById('btn-tipo-nuevo').style.flex='1';
+  document.getElementById('btn-tipo-reingreso').style.flex='1';
+  document.getElementById('btn-tipo-nuevo').style.fontSize='13px';
+  document.getElementById('btn-tipo-reingreso').style.fontSize='13px';
+  if(t==='reingreso') document.getElementById('btn-tipo-reingreso').style.background='#854f0b';
+  else document.getElementById('btn-tipo-reingreso').style.background='';
+}
+
+function agregarAmigoNuevo(){
+  const nombre=document.getElementById('na-nombre').value.trim().toUpperCase();
+  const celular=document.getElementById('na-cel').value.trim();
+  if(!nombre) return;
+  nuevosAmigosTemp.push({nombre,celular});
+  document.getElementById('na-nombre').value='';
+  document.getElementById('na-cel').value='';
+  renderAmigosTempList();
+}
+
+function renderAmigosTempList(){
+  document.getElementById('nuevo-amigos-contador').textContent=`${nuevosAmigosTemp.length} registrados`;
+  document.getElementById('nuevo-amigos-lista').innerHTML=nuevosAmigosTemp.map((a,i)=>`
+    <div class="amigo-mini">
+      <div class="amigo-mini-num">${i+1}</div>
+      <div style="flex:1"><b>${a.nombre}</b>${a.celular?` · ${a.celular}`:''}</div>
+      <button onclick="quitarAmigoTemp(${i})" style="border:none;background:none;color:#cc0000;cursor:pointer;font-size:14px">✕</button>
+    </div>`).join('');
+}
+
+function quitarAmigoTemp(i){
+  nuevosAmigosTemp.splice(i,1);
+  renderAmigosTempList();
+}
+
+async function guardarNuevo(){
+  const nombre=document.getElementById('nuevo-nombre').value.trim().toUpperCase();
+  const padrino=document.getElementById('nuevo-padrino-form').value;
+  if(!nombre||!padrino){showToast('⚠️ Nombre y padrino son obligatorios');return;}
+  const payload={
+    nombre,
+    num_empleado:document.getElementById('nuevo-num-emp').value.trim(),
+    celular:document.getElementById('nuevo-celular').value.trim(),
+    padrino,
+    total_amigos:parseInt(document.getElementById('nuevo-total-amigos').value)||0,
+    tipo:document.getElementById('nuevo-tipo').value,
+    amigos:nuevosAmigosTemp,
+    estado:'pendiente',
+    registrado_por:currentUser,
+    created_at:new Date().toISOString()
+  };
+  if(editandoNuevoId){
+    await sbPatch('nuevos_amigos',`?id=eq.${editandoNuevoId}`,payload);
+    showToast('✓ Registro actualizado');
+  } else {
+    await sbPost('nuevos_amigos',payload);
+    showToast('✓ Registro guardado — pendiente de aprobación');
+  }
+  closeModal('modal-nuevo-amigo');
+  await cargarNuevos();
+}
+
+async function editarNuevo(id){
+  const r=nuevosCache.find(x=>x.id===id);
+  if(!r) return;
+  editandoNuevoId=id;
+  nuevosAmigosTemp=Array.isArray(r.amigos)?[...r.amigos]:[];
+  document.getElementById('nuevo-id').value=id;
+  document.getElementById('nuevo-nombre').value=r.nombre||'';
+  document.getElementById('nuevo-num-emp').value=r.num_empleado||'';
+  document.getElementById('nuevo-celular').value=r.celular||'';
+  document.getElementById('nuevo-padrino-form').value=r.padrino||'';
+  document.getElementById('nuevo-total-amigos').value=r.total_amigos||'';
+  document.getElementById('modal-nuevo-titulo').textContent='✏️ Editar Registro';
+  setTipo(r.tipo||'nuevo');
+  renderAmigosTempList();
+  document.getElementById('modal-nuevo-amigo').style.display='flex';
+}
+
+async function eliminarNuevo(id){
+  if(!confirm('¿Eliminar este registro?')) return;
+  await fetch(`${SB_URL}/rest/v1/nuevos_amigos?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  showToast('🗑 Registro eliminado');
+  await cargarNuevos();
+}
+
+async function aprobarNuevo(id){
+  if(!APROBADORES.includes(currentUser)){showToast('⚠️ Sin permiso para aprobar');return;}
+  const r=nuevosCache.find(x=>x.id===id);
+  if(!r) return;
+  if(!confirm(`¿Aprobar a ${r.nombre} y pasar a Red de Amigos?`)) return;
+
+  // 1. Buscar persona en tabla personal
+  const personal=await sbGet('personal',`?nombre=eq.${encodeURIComponent(r.nombre)}`);
+  let personalId=personal&&personal[0]?personal[0].id:null;
+
+  if(personalId){
+    // 2. Actualizar red_total si aplica
+    if(r.total_amigos>0){
+      await sbPatch('personal',`?id=eq.${personalId}`,{red_total:r.total_amigos});
+    }
+    // 3. Agregar amigos a red_amigos
+    if(Array.isArray(r.amigos)){
+      for(let i=0;i<r.amigos.length;i++){
+        const a=r.amigos[i];
+        await sbPost('red_amigos',{
+          personal_id:personalId,
+          nombre_amigo:a.nombre,
+          numero:i+1,
+          status:'activo',
+          registrado_por:currentUser,
+          fecha_registro:new Date().toISOString().split('T')[0]
+        });
+      }
+    }
+  }
+
+  // 4. Marcar como aprobado
+  await sbPatch('nuevos_amigos',`?id=eq.${id}`,{
+    estado:'aprobado',
+    aprobado_por:currentUser,
+    fecha_aprobacion:new Date().toISOString()
+  });
+
+  showToast(`✅ ${r.nombre} aprobado y pasado a Red de Amigos`);
+  await cargarNuevos();
+  if(personalId) redCache={};
+}
+
+async function toggleEnviadoSistemas(id,actual){
+  const val=!actual;
+  await sbPatch('nuevos_amigos',`?id=eq.${id}`,{enviado_sistemas:val});
+  showToast(val?'📤 Marcado como enviado a sistemas':'↩ Marcado como no enviado');
+  await cargarNuevos();
+}
+
+async function exportarNuevos(){
+  showToast('⏳ Preparando Excel...');
+  const wb = XLSX.utils.book_new();
+
+  // Pestaña 1: Resumen — una fila por RED DE AMIGO
+  const hdr1 = ['NUEVO O REINGRESO','RED DE AMIGO','NO. EMPLEADO','CELULAR','TOTAL RED','PADRINO'];
+  const data1 = nuevosCache.map(r=>{
+    const tipo=r.tipo==='reingreso'?'REINGRESO':'REGISTRO NUEVO';
+    const total=r.total_amigos||0;
+    return [tipo, r.nombre||'', r.num_empleado||'', r.celular||'', total, r.padrino||''];
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet([hdr1,...data1]);
+  ws1['!cols']=[18,38,16,16,12,18].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws1, 'Resumen Redes');
+
+  // Pestaña 2: Detalle — una fila por amigo
+  const hdr2 = ['NUEVO O REINGRESO','RED DE AMIGO','AMIGO','CELULAR DEL AMIGO','PADRINO'];
+  const data2 = [];
+  nuevosCache.forEach(r=>{
+    const tipo=r.tipo==='reingreso'?'REINGRESO':'REGISTRO NUEVO';
+    const amigos=Array.isArray(r.amigos)?r.amigos:[];
+    if(amigos.length===0){
+      data2.push([tipo, r.nombre||'', '', '', r.padrino||'']);
+    } else {
+      amigos.forEach(a=>{
+        data2.push([tipo, r.nombre||'', a.nombre||'', a.celular||'', r.padrino||'']);
+      });
+    }
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet([hdr2,...data2]);
+  ws2['!cols']=[18,38,38,18,18].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws2, 'Detalle Amigos');
+
+  const fecha=new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `GEMACUU_nuevos_amigos_${fecha}.xlsx`);
+  showToast('✓ Excel descargado');
+}
+
+function exportarContextual(){
+  const panelActivo=document.querySelector('.panel.on');
+  const id=panelActivo?panelActivo.id:'';
+  if(id==='panel-nuevos') exportarNuevos();
+  else if(id==='panel-incidencias') exportarIncidencias();
+  else if(id==='panel-eventos') exportarEventos();
+  else exportarExcel();
+}
+
+async function exportarIncidencias(){
+  showToast('⏳ Preparando Excel...');
+  let csv='\uFEFF'+'NOMBRE,NÚM. EMPLEADO,PADRINO,COMENTARIO,IMÁGENES,REGISTRADO POR,FECHA\n';
+  incidenciasCache.forEach(r=>{
+    const fotos=Array.isArray(r.imagenes)?r.imagenes.join(' | '):'';
+    const fecha=(r.created_at||'').split('T')[0];
+    csv+=`"${r.nombre||''}","${r.num_empleado||''}","${r.padrino||''}","${(r.comentario||'').replace(/"/g,"'")}","${fotos}","${r.registrado_por||''}","${fecha}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`GEMACUU_incidencias_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Excel de incidencias descargado');
+}
+
+// ── NAV ──
+function goTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('panel-'+name).classList.add('on');
+  btn.classList.add('on');
+  if(name==='eventos'){cargarEventos();}
+  if(name==='incidencias'){cargarIncidencias();}
+  if(name==='nuevos'){cargarNuevos();}
+  if(name==='red'){filtrarRed();}
+  if(name==='secciones')renderSecciones();
+  if(name==='bajas')filtrarBajas();
+  if(name==='ines')renderInes();
+  if(name==='control')renderControl();
+}
+
+// ── MODAL ──
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+// ── TOAST ──
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
 </body>
 </html>
