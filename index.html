@@ -683,6 +683,7 @@ tr:hover td{background:#f8faff}
           <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('')">Limpiar selección</button>
         </div>
         <div id="enl-secciones-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div id="enl-debug" style="font-size:11px;color:var(--pan);margin-top:6px;font-family:monospace"></div>
       </div>
       <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
       <div id="enl-resultado" style="margin-top:10px"></div>
@@ -1503,12 +1504,37 @@ function toggleSeccionEnlace(num){
   renderEnlaceSeccionesChips();
 }
 
-function seleccionarSeccionesPadrino(padrino){
-  // Reemplaza la selección por completo (no se acumula con lo que ya estaba marcado)
-  seccionesSeleccionadas=padrino
-    ? new Set(SECCIONES.filter(s=>s.padrino===padrino).map(s=>s.num))
-    : new Set();
+function normalizarPadrino(pad){
+  const p=(pad||'').toLowerCase();
+  if(p.includes('fernando')) return 'Fernando Amezcua';
+  if(p.includes('martin')||p.includes('yañez')) return 'Martin Yáñez';
+  if(p.includes('rene')||p.includes('espinoza')) return 'Rene Espinoza';
+  return pad||'';
+}
+
+async function seleccionarSeccionesPadrino(padrino){
+  const debugEl=document.getElementById('enl-debug');
+  if(!padrino){
+    seccionesSeleccionadas=new Set();
+    renderEnlaceSeccionesChips();
+    if(debugEl) debugEl.textContent='';
+    console.log('[enlaces] selección de secciones limpiada');
+    return;
+  }
+  // Consulta en vivo la tabla "personal" (no usa el catálogo SECCIONES para esto) y saca
+  // las secciones únicas de las personas activas cuyo padrino normalizado coincide.
+  // TEMPORAL: deja un rastro visible (en pantalla y consola) para verificar antes de quitarlo.
+  if(debugEl) debugEl.textContent='🔍 consultando personal...';
+  const data=await sbGet('personal',`?status=eq.activo&select=nombre,seccion,padrino&_=${Date.now()}`);
+  const filas=Array.isArray(data)?data:[];
+  const coincidencias=filas.filter(p=>normalizarPadrino(p.padrino)===padrino && p.seccion);
+  const secs=new Set(coincidencias.map(p=>p.seccion));
+  seccionesSeleccionadas=secs;
   renderEnlaceSeccionesChips();
+  const listaOrdenada=Array.from(secs).sort();
+  console.log(`[enlaces][TEMPORAL] "Todas — ${padrino}" -> ${secs.size} sección(es) desde personal en vivo:`,listaOrdenada);
+  console.log('[enlaces][TEMPORAL] personas consideradas:',coincidencias.map(p=>`${p.nombre} (sec. ${p.seccion})`));
+  if(debugEl) debugEl.textContent=`🔍 (temporal) "${padrino}": ${secs.size} sección(es) — ${listaOrdenada.join(', ')||'ninguna'}`;
 }
 
 function urlEnlaceSeccion(token){
