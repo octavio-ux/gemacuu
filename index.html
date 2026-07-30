@@ -672,18 +672,13 @@ tr:hover td{background:#f8faff}
       </div>
       <div class="fg">
         <label>Etiqueta (para identificarlo en la lista de abajo)</label>
-        <input type="text" id="enl-etiqueta" placeholder="ej. Lluvia Aceves — secciones de Rene">
+        <input type="text" id="enl-etiqueta" placeholder="ej. Enlace general julio">
       </div>
       <div class="fg">
-        <label>Secciones incluidas</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-          <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('Fernando Amezcua')">Todas — Fernando</button>
-          <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('Martin Yáñez')">Todas — Martin</button>
-          <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('Rene Espinoza')">Todas — Rene</button>
-          <button class="btn btn-secondary btn-xs" onclick="seleccionarSeccionesPadrino('')">Limpiar selección</button>
-        </div>
-        <div id="enl-secciones-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-        <div id="enl-debug" style="font-size:11px;color:var(--pan);margin-top:6px;font-family:monospace"></div>
+        <label>Actividad *</label>
+        <select id="enl-evento">
+          <option value="">— selecciona un evento —</option>
+        </select>
       </div>
       <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
       <div id="enl-resultado" style="margin-top:10px"></div>
@@ -1386,8 +1381,7 @@ async function renderControl(){
   // Enlaces temporales
   document.getElementById('enl-etiqueta').value='';
   document.getElementById('enl-resultado').innerHTML='';
-  seccionesSeleccionadas=new Set();
-  renderEnlaceSeccionesChips();
+  await cargarEventosParaEnlace();
   await cargarEnlaces();
 }
 function filtrarPendientes(){
@@ -1486,55 +1480,17 @@ async function cambiarSeccion(id,seccion){
 }
 
 // ── ENLACES TEMPORALES (asistencia por sección sin login) ──
-let seccionesSeleccionadas=new Set();
 let enlacesCache=[];
+let eventosParaEnlaceCache=[];
 
-function renderEnlaceSeccionesChips(){
-  const cont=document.getElementById('enl-secciones-chips');
-  if(!cont) return;
-  cont.innerHTML=SECCIONES.map(s=>`
-    <button type="button" class="evento-chip ${seccionesSeleccionadas.has(s.num)?'sel':''}" onclick="toggleSeccionEnlace('${s.num}')">
-      ${s.num} · ${s.encargado}
-    </button>`).join('');
-}
-
-function toggleSeccionEnlace(num){
-  if(seccionesSeleccionadas.has(num)) seccionesSeleccionadas.delete(num);
-  else seccionesSeleccionadas.add(num);
-  renderEnlaceSeccionesChips();
-}
-
-function normalizarPadrino(pad){
-  const p=(pad||'').toLowerCase();
-  if(p.includes('fernando')) return 'Fernando Amezcua';
-  if(p.includes('martin')||p.includes('yañez')) return 'Martin Yáñez';
-  if(p.includes('rene')||p.includes('espinoza')) return 'Rene Espinoza';
-  return pad||'';
-}
-
-async function seleccionarSeccionesPadrino(padrino){
-  const debugEl=document.getElementById('enl-debug');
-  if(!padrino){
-    seccionesSeleccionadas=new Set();
-    renderEnlaceSeccionesChips();
-    if(debugEl) debugEl.textContent='';
-    console.log('[enlaces] selección de secciones limpiada');
-    return;
-  }
-  // Consulta en vivo la tabla "personal" (no usa el catálogo SECCIONES para esto) y saca
-  // las secciones únicas de las personas activas cuyo padrino normalizado coincide.
-  // TEMPORAL: deja un rastro visible (en pantalla y consola) para verificar antes de quitarlo.
-  if(debugEl) debugEl.textContent='🔍 consultando personal...';
-  const data=await sbGet('personal',`?status=eq.activo&select=nombre,seccion,padrino&_=${Date.now()}`);
-  const filas=Array.isArray(data)?data:[];
-  const coincidencias=filas.filter(p=>normalizarPadrino(p.padrino)===padrino && p.seccion);
-  const secs=new Set(coincidencias.map(p=>p.seccion));
-  seccionesSeleccionadas=secs;
-  renderEnlaceSeccionesChips();
-  const listaOrdenada=Array.from(secs).sort();
-  console.log(`[enlaces][TEMPORAL] "Todas — ${padrino}" -> ${secs.size} sección(es) desde personal en vivo:`,listaOrdenada);
-  console.log('[enlaces][TEMPORAL] personas consideradas:',coincidencias.map(p=>`${p.nombre} (sec. ${p.seccion})`));
-  if(debugEl) debugEl.textContent=`🔍 (temporal) "${padrino}": ${secs.size} sección(es) — ${listaOrdenada.join(', ')||'ninguna'}`;
+async function cargarEventosParaEnlace(){
+  const data=await sbGet('eventos','?order=fecha.desc');
+  eventosParaEnlaceCache=Array.isArray(data)?data:[];
+  const sel=document.getElementById('enl-evento');
+  const actual=sel.value;
+  sel.innerHTML='<option value="">— selecciona un evento —</option>'+
+    eventosParaEnlaceCache.map(ev=>`<option value="${ev.id}">${ev.nombre}${ev.fecha?' · '+ev.fecha:''}</option>`).join('');
+  if(actual) sel.value=actual;
 }
 
 function urlEnlaceSeccion(token){
@@ -1546,12 +1502,17 @@ function copiarEnlaceGenerado(url){
 }
 
 async function generarEnlace(){
-  if(!seccionesSeleccionadas.size){showToast('⚠️ Selecciona al menos una sección');return;}
+  const eventoId=document.getElementById('enl-evento').value;
+  if(!eventoId){ showToast('⚠️ Selecciona una actividad'); return; }
   const etiqueta=document.getElementById('enl-etiqueta').value.trim();
+  // Todas las secciones activas del sistema (todas las que existan en "personal"), no filtradas por padrino
+  const secciones=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))];
+  if(!secciones.length){ showToast('⚠️ No hay secciones activas en personal'); return; }
   const token=(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2)));
   const r=await sbPost('enlaces_temporales',{
     token,
-    secciones:Array.from(seccionesSeleccionadas),
+    secciones,
+    evento_id:eventoId,
     etiqueta:etiqueta||null,
     creado_por:currentUser
   });
@@ -1559,12 +1520,11 @@ async function generarEnlace(){
   const url=urlEnlaceSeccion(token);
   document.getElementById('enl-resultado').innerHTML=`
     <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
-      ✅ Enlace generado:<br><b>${url}</b>
+      ✅ Enlace generado (${secciones.length} secciones):<br><b>${url}</b>
       <div style="margin-top:6px"><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋 copiar enlace</button></div>
     </div>`;
   document.getElementById('enl-etiqueta').value='';
-  seccionesSeleccionadas=new Set();
-  renderEnlaceSeccionesChips();
+  document.getElementById('enl-evento').value='';
   showToast('✓ Enlace generado');
   await cargarEnlaces();
 }
@@ -1592,10 +1552,12 @@ function renderListaEnlaces(){
         : `<span class="badge badge-green">🟢 activo — caduca ${expira.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>`;
     }
     const url=urlEnlaceSeccion(en.token);
+    const evento=eventosParaEnlaceCache.find(ev=>ev.id===en.evento_id);
+    const eventoLabel=evento?`${evento.nombre}${evento.fecha?' · '+evento.fecha:''}`:'(evento no encontrado)';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
       <div style="flex:1;min-width:180px">
         <div style="font-size:13px;font-weight:700">${en.etiqueta||'(sin etiqueta)'}</div>
-        <div style="font-size:11px;color:var(--muted)">${(en.secciones||[]).length} sección(es) · por ${en.creado_por} · ${new Date(en.creado_en).toLocaleDateString('es-MX')}</div>
+        <div style="font-size:11px;color:var(--muted)">📅 ${eventoLabel} · ${(en.secciones||[]).length} sección(es) · por ${en.creado_por} · ${new Date(en.creado_en).toLocaleDateString('es-MX')}</div>
       </div>
       ${estadoHtml}
       <div style="display:flex;gap:6px">
