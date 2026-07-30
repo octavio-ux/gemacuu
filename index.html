@@ -98,6 +98,10 @@ tr:hover td{background:#f8faff}
 .fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
 .fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text);outline:none;background:#fff;transition:.15s}
 .fg input:focus,.fg select:focus{border-color:var(--pan)}
+.fg-seccion label{color:var(--pan)}
+.fg-seccion select{border:2px solid var(--pan);background:var(--pan-light);font-weight:700;color:var(--pan)}
+.fg-seccion select:focus{border-color:var(--pan);box-shadow:0 0 0 3px rgba(0,51,153,.15)}
+.fg-seccion-hint{font-size:11px;color:var(--pan);font-weight:600;margin-top:4px}
 
 /* ── BUTTONS ── */
 .btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
@@ -553,6 +557,35 @@ tr:hover td{background:#f8faff}
         </div>
       </div>
     </div>
+
+    <!-- ENLACES TEMPORALES DE ASISTENCIA POR SECCIÓN (solo Octavio) -->
+    <div class="card" id="card-enlaces-temporales" style="display:none">
+      <div class="card-title">🔗 Enlaces temporales de asistencia por sección</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Genera un enlace para que un líder de sección o una editora capture asistencia desde su celular, sin iniciar sesión.
+        No caduca hasta que alguien lo abre por primera vez — a partir de ahí tiene la vigencia indicada abajo.
+      </div>
+      <div class="fg">
+        <label>Etiqueta (para identificarlo en la lista de abajo)</label>
+        <input type="text" id="enl-etiqueta" placeholder="ej. Enlace general julio">
+      </div>
+      <div class="fg">
+        <label>Actividad *</label>
+        <select id="enl-evento">
+          <option value="">— selecciona un evento —</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Horas de vigencia (a partir de la primera apertura)</label>
+        <input type="number" id="enl-horas" min="1" step="1" value="15" inputmode="numeric">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
+      <div id="enl-resultado" style="margin-top:10px"></div>
+
+      <div style="border-top:1px solid var(--border);margin:16px 0"></div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
+      <div id="enl-lista"></div>
+    </div>
   </div>
 
   <!-- PANEL: INCIDENCIAS -->
@@ -662,6 +695,7 @@ tr:hover td{background:#f8faff}
         <div id="cambio-resultado"></div>
       </div>
     </div>
+
   </div>
 
   <!-- PANEL: BAJAS -->
@@ -724,17 +758,18 @@ tr:hover td{background:#f8faff}
           <option value="Rene Espinoza">Rene Espinoza</option>
         </select>
       </div>
-      <div class="fg">
-        <label>Sección</label>
+      <div class="fg fg-seccion">
+        <label>🗳️ Sección</label>
         <select id="ep-sec">
           <option value="">— sin sección —</option>
-          <option>855</option><option>856</option><option>908</option>
-          <option>3227</option><option>3231</option><option>3232</option><option>3233</option>
-          <option>3228</option><option>3234</option><option>3235</option><option>3236</option>
-          <option>3237</option><option>3238</option><option>3245</option><option>3239</option>
-          <option>909</option><option>3244</option><option>3246</option><option>3255</option>
-          <option>3256</option><option>3259</option><option>3261</option><option>3263</option>
+          <option>855</option><option>856</option><option>908</option><option>909</option>
+          <option>3227</option><option>3228</option><option>3231</option><option>3232</option>
+          <option>3233</option><option>3234</option><option>3235</option><option>3236</option>
+          <option>3237</option><option>3238</option><option>3239</option><option>3244</option>
+          <option>3245</option><option>3246</option><option>3255</option><option>3256</option>
+          <option>3259</option><option>3261</option><option>3263</option>
         </select>
+        <div class="fg-seccion-hint">Este es el número de sección electoral — NO el número de empleado.</div>
       </div>
       <div class="fg"><label>Núm. Empleado</label><input id="ep-emp" type="text" inputmode="numeric"></div>
       <div class="fg"><label>Usuario</label><input id="ep-usuario" type="text" placeholder="ej: adania"></div>
@@ -1449,6 +1484,105 @@ async function cambiarSeccion(id,seccion){
   await cargarPersonal();
 }
 
+// ── ENLACES TEMPORALES (asistencia por sección sin login) ──
+let enlacesCache=[];
+let eventosParaEnlaceCache=[];
+
+async function cargarEventosParaEnlace(){
+  const data=await sbGet('eventos','?order=fecha.desc');
+  eventosParaEnlaceCache=Array.isArray(data)?data:[];
+  const sel=document.getElementById('enl-evento');
+  const actual=sel.value;
+  sel.innerHTML='<option value="">— selecciona un evento —</option>'+
+    eventosParaEnlaceCache.map(ev=>`<option value="${ev.id}">${ev.nombre}${ev.fecha?' · '+ev.fecha:''}</option>`).join('');
+  if(actual) sel.value=actual;
+}
+
+function urlEnlaceSeccion(token){
+  return `${location.origin}${location.pathname.replace(/index\.html$/,'')}asistencia-seccion.html?token=${token}`;
+}
+
+function copiarEnlaceGenerado(url){
+  navigator.clipboard.writeText(url).then(()=>showToast('📋 enlace copiado')).catch(()=>showToast('⚠️ no se pudo copiar'));
+}
+
+async function generarEnlace(){
+  const eventoId=document.getElementById('enl-evento').value;
+  if(!eventoId){ showToast('⚠️ Selecciona una actividad'); return; }
+  const etiqueta=document.getElementById('enl-etiqueta').value.trim();
+  const horas=parseInt(document.getElementById('enl-horas').value,10);
+  if(!horas||horas<1){ showToast('⚠️ Horas de vigencia inválidas'); return; }
+  // Todas las secciones activas del sistema (todas las que existan en "personal"), no filtradas por padrino
+  const secciones=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))];
+  if(!secciones.length){ showToast('⚠️ No hay secciones activas en personal'); return; }
+  const token=(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2)));
+  const r=await sbPost('enlaces_temporales',{
+    token,
+    secciones,
+    evento_id:eventoId,
+    etiqueta:etiqueta||null,
+    vigencia_horas:horas,
+    creado_por:currentUser
+  });
+  if(!r.ok){ showToast('⚠️ Error al generar el enlace'); return; }
+  const url=urlEnlaceSeccion(token);
+  document.getElementById('enl-resultado').innerHTML=`
+    <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
+      ✅ Enlace generado (${secciones.length} secciones):<br><b>${url}</b>
+      <div style="margin-top:6px"><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋 copiar enlace</button></div>
+    </div>`;
+  document.getElementById('enl-etiqueta').value='';
+  document.getElementById('enl-evento').value='';
+  showToast('✓ Enlace generado');
+  await cargarEnlaces();
+}
+
+async function cargarEnlaces(){
+  const data=await sbGet('enlaces_temporales','?order=creado_en.desc&limit=30');
+  enlacesCache=Array.isArray(data)?data:[];
+  renderListaEnlaces();
+}
+
+function renderListaEnlaces(){
+  const el=document.getElementById('enl-lista');
+  if(!el) return;
+  if(!enlacesCache.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted)">Aún no se han generado enlaces.</div>'; return; }
+  el.innerHTML=enlacesCache.map(en=>{
+    let estadoHtml;
+    if(en.revocado){
+      estadoHtml=`<span class="badge badge-red">🚫 revocado</span>`;
+    } else if(!en.primera_apertura){
+      estadoHtml=`<span class="badge badge-gray">⏳ sin abrir — disponible</span>`;
+    } else {
+      const expira=new Date(new Date(en.primera_apertura).getTime()+(en.vigencia_horas||15)*60*60*1000);
+      estadoHtml = new Date()>expira
+        ? `<span class="badge badge-red">⏱ caducado</span>`
+        : `<span class="badge badge-green">🟢 activo — caduca ${expira.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>`;
+    }
+    const url=urlEnlaceSeccion(en.token);
+    const evento=eventosParaEnlaceCache.find(ev=>ev.id===en.evento_id);
+    const eventoLabel=evento?`${evento.nombre}${evento.fecha?' · '+evento.fecha:''}`:'(evento no encontrado)';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:13px;font-weight:700">${en.etiqueta||'(sin etiqueta)'}</div>
+        <div style="font-size:11px;color:var(--muted)">📅 ${eventoLabel} · ${(en.secciones||[]).length} sección(es) · ⏱ ${en.vigencia_horas||15}h · por ${en.creado_por} · ${new Date(en.creado_en).toLocaleDateString('es-MX')}</div>
+      </div>
+      ${estadoHtml}
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋</button>
+        ${!en.revocado?`<button class="btn btn-danger btn-xs" onclick="revocarEnlace('${en.id}')">🚫 revocar</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function revocarEnlace(id){
+  if(!confirm('¿Revocar este enlace? Dejará de funcionar de inmediato.')) return;
+  await sbPatch('enlaces_temporales',`?id=eq.${id}`,{revocado:true});
+  showToast('🚫 enlace revocado');
+  await cargarEnlaces();
+}
+
 // ── INEs ──
 async function renderInes(){
   const nombre=currentUser;
@@ -1848,7 +1982,18 @@ async function cargarEventos(){
   eventosCache=Array.isArray(data)?data:[];
   renderEventoChips();
   // Mostrar botón nuevo solo para admin
-  document.getElementById('btn-nuevo-evento').style.display=currentUser==='Octavio'?'inline-flex':'none';
+  const isAdmin=currentUser==='Octavio';
+  document.getElementById('btn-nuevo-evento').style.display=isAdmin?'inline-flex':'none';
+  // Enlaces temporales: tarjeta y funcionalidad exclusiva de Octavio
+  const cardEnl=document.getElementById('card-enlaces-temporales');
+  cardEnl.style.display=isAdmin?'':'none';
+  if(isAdmin){
+    document.getElementById('enl-etiqueta').value='';
+    document.getElementById('enl-resultado').innerHTML='';
+    document.getElementById('enl-horas').value=15;
+    await cargarEventosParaEnlace();
+    await cargarEnlaces();
+  }
   if(eventosCache.length>0&&!eventoActualId){
     seleccionarEvento(eventosCache[0].id);
   }

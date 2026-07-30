@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GEMACUU · Asistencia de sección</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pan:#003399;--pan2:#1a4fc4;--red:#cc0000;
+  --bg:#f0f4ff;--white:#fff;--text:#1a1a2e;--muted:#6b7280;
+  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --radius:14px;--radius-sm:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+.hidden{display:none!important}
+.topbar{background:var(--pan);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,102,.2)}
+.topbar-logo{font-size:17px;font-weight:800;letter-spacing:.06em}
+.exp-badge{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px}
+.wrap{max-width:640px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;box-shadow:var(--shadow);margin-bottom:1rem}
+.center-msg{text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px}
+.center-msg .ico{font-size:40px;margin-bottom:10px}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);outline:none;background:#fff}
+.fg input:focus,.fg select:focus{border-color:var(--pan)}
+.btn{padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:var(--pan);color:#fff}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:#f0f4ff;color:var(--pan);border:1px solid var(--border)}
+.btn-link{background:none;border:none;color:var(--pan);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;margin-bottom:8px}
+.w-full{width:100%}
+.error-msg{color:var(--red);font-size:12px;font-weight:700;margin-bottom:10px}
+.seccion-hdr{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.seccion-num{font-size:16px;font-weight:800;color:var(--pan)}
+.seccion-lider{font-size:12px;color:var(--muted);margin-top:2px}
+.seccion-evento{font-size:12px;color:var(--muted);margin-top:2px}
+.persona-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.persona-row:last-child{border-bottom:none}
+.persona-nombre{flex:1;font-size:13px;font-weight:600;min-width:110px}
+.persona-actividad{max-width:150px;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px}
+.persona-status{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.toggle-pres{width:42px;height:24px;border-radius:20px;border:none;cursor:pointer;position:relative;flex-shrink:0;transition:.2s}
+.toggle-pres:disabled{opacity:.5;cursor:not-allowed}
+.toggle-pres.presente{background:#2d6a4f}
+.toggle-pres.ausente{background:var(--border)}
+.toggle-pres::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;transition:.2s}
+.toggle-pres.presente::after{left:21px}
+.toggle-pres.ausente::after{left:3px}
+.vacio{font-size:12px;color:var(--muted);padding:8px 0}
+.apoyo-form{display:flex;gap:8px;flex-wrap:wrap;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
+.apoyo-form input{flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
+.apoyo-form select{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
+.apoyo-form-btns{display:flex;gap:8px;width:100%;justify-content:flex-end}
+.apoyos-lista{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.apoyo-chip{font-size:12px;background:#fef3c7;border:1px solid #fac775;border-radius:7px;padding:6px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.apoyo-tag{font-size:10px;font-weight:700;color:#854f0b;background:#fff;border:1px solid #fac775;border-radius:20px;padding:1px 7px}
+.foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-bottom:10px}
+.foto-thumb{aspect-ratio:1;background:#f0f4ff;border:1px solid var(--border);border-radius:8px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px}
+.foto-thumb img{width:100%;height:100%;object-fit:cover}
+.foto-thumb.uploading{color:var(--muted)}
+.foto-thumb.error{color:var(--red);background:#fce8e8}
+.foto-check{position:absolute;bottom:2px;right:2px;background:#2d6a4f;color:#fff;font-size:11px;font-weight:800;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+.foto-btns{display:flex;gap:8px}
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:12px 16px;box-shadow:0 -2px 12px rgba(0,0,0,.08);z-index:50}
+.save-bar-inner{max-width:640px;margin:0 auto}
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,51,153,.3);white-space:nowrap}
+#toast.show{opacity:1}
+@media(max-width:420px){
+  .persona-actividad{max-width:110px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">🧹 GEMACUU</div>
+  <div class="exp-badge" id="exp-badge">⏳ Enlace temporal</div>
+</div>
+
+<div class="wrap">
+
+  <div id="loading" class="center-msg">
+    <div class="ico">⏳</div>
+    Cargando enlace…
+  </div>
+
+  <div id="error-box" class="card hidden">
+    <div class="center-msg">
+      <div class="ico">⚠️</div>
+      <div id="error-msg" style="font-weight:700;color:var(--red)"></div>
+    </div>
+  </div>
+
+  <div id="acceso-gate" class="card hidden">
+    <div class="fg">
+      <label>Contraseña (tu número de sección)</label>
+      <input type="text" inputmode="numeric" id="inp-seccion-gate" placeholder="ej. 3244">
+    </div>
+    <div class="fg" id="fg-nombre-gate">
+      <label>Tu nombre</label>
+      <input type="text" id="inp-nombre-gate" placeholder="Ej. Octavio" oninput="mayusculizarInput(this)">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Escribe tu primer nombre en mayúscula</div>
+    </div>
+    <div id="acceso-error" class="error-msg hidden"></div>
+    <button class="btn btn-primary w-full" onclick="confirmarAcceso()">Entrar →</button>
+  </div>
+
+  <div id="app" class="hidden">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="registrado-como"></div>
+    <div id="seccion-cont"></div>
+  </div>
+
+</div>
+
+<div id="save-bar" class="save-bar hidden">
+  <div class="save-bar-inner">
+    <button class="btn btn-primary w-full" id="btn-guardar-todo" onclick="guardarTodo()">💾 Guardar asistencia</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+const CLOUD='da7m6y3kk';
+const PRESET='barrido_electoral';
+const ACTIVIDADES=['Encuestador','Volanteo','Apoyo general','Cruceros','Evento político'];
+const SECCIONES=[
+  {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
+  {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
+  {num:'908',encargado:'Ernesto Alonso Ruiz',padrino:'Fernando Amezcua'},
+  {num:'3227',encargado:'Rubí Jurado',padrino:'Fernando Amezcua'},
+  {num:'3231',encargado:'Mayela Chavira',padrino:'Fernando Amezcua'},
+  {num:'3232',encargado:'Sofia Mejia',padrino:'Fernando Amezcua'},
+  {num:'3233',encargado:'Luis Raúl Vargas Ortega',padrino:'Fernando Amezcua'},
+  {num:'3228',encargado:'Lluvia Aceves',padrino:'Rene Espinoza'},
+  {num:'3234',encargado:'Alberto Yahir Favela',padrino:'Rene Espinoza'},
+  {num:'3235',encargado:'Fabián González',padrino:'Rene Espinoza'},
+  {num:'3236',encargado:'Noé Morales',padrino:'Rene Espinoza'},
+  {num:'3237',encargado:'Víctor TG',padrino:'Rene Espinoza'},
+  {num:'3238',encargado:'Ana Payán',padrino:'Rene Espinoza'},
+  {num:'3245',encargado:'Jesús González',padrino:'Rene Espinoza'},
+  {num:'3239',encargado:'Elizabeth Chalaca',padrino:'Rene Espinoza'},
+  {num:'909',encargado:'Saúl Bustillo',padrino:'Martin Yáñez'},
+  {num:'3244',encargado:'Carlos Daniel Pérez',padrino:'Martin Yáñez'},
+  {num:'3246',encargado:'Sergio Carreón',padrino:'Martin Yáñez'},
+  {num:'3255',encargado:'Félix Vázquez',padrino:'Martin Yáñez'},
+  {num:'3256',encargado:'José Luis Sánchez',padrino:'Martin Yáñez'},
+  {num:'3259',encargado:'Jesús Borruel',padrino:'Martin Yáñez'},
+  {num:'3261',encargado:'Yesenia Aróstegui',padrino:'Martin Yáñez'},
+  {num:'3263',encargado:'Pedro Hernández',padrino:'Martin Yáñez'},
+];
+
+async function sbGet(table,params=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  return r.json();
+}
+async function sbPost(table,body){
+  return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+let token=null;
+let enlace=null;
+let expiraEn=null;
+let eventoId=null;
+let eventoInfo=null; // {nombre,fecha} de la tabla "eventos"
+let seccionesValidas=[];   // universo de números de sección que trae el enlace
+let seccionActual=null;    // {num,encargado,padrino} de la única sección desbloqueada
+let registradoPor='';
+const hoy=new Date().toISOString().split('T')[0];
+
+let personalSeccion=[];
+let asistenciaPersonas={};      // { personal_id: {presente, actividad} } — viene de asistencia_eventos
+let apoyosSeccion=[];
+let totalEncuestas=null;
+let fotosSeccion=[];
+const pendientesAutosave=new Map(); // personal_id -> Promise en curso
+
+function mayusculizarInput(input){
+  const pos=input.selectionStart;
+  input.value=input.value.toUpperCase();
+  input.setSelectionRange(pos,pos);
+}
+
+function mostrarError(msg){
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('error-msg').textContent=msg;
+  document.getElementById('error-box').classList.remove('hidden');
+}
+
+async function init(){
+  const params=new URLSearchParams(location.search);
+  token=params.get('token');
+  if(!token){ mostrarError('Este enlace no incluye un token válido.'); return; }
+
+  let rows=await sbGet('enlaces_temporales',`?token=eq.${encodeURIComponent(token)}`);
+  enlace=Array.isArray(rows)?rows[0]:null;
+  if(!enlace || enlace.revocado){ mostrarError('Este enlace no es válido o fue revocado.'); return; }
+
+  if(!enlace.primera_apertura){
+    await fetch(`${SB_URL}/rest/v1/enlaces_temporales?token=eq.${encodeURIComponent(token)}&primera_apertura=is.null`,{
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({primera_apertura:new Date().toISOString()})
+    });
+    rows=await sbGet('enlaces_temporales',`?token=eq.${encodeURIComponent(token)}`);
+    enlace=Array.isArray(rows)?rows[0]:null;
+    if(!enlace){ mostrarError('Este enlace no es válido.'); return; }
+  }
+
+  expiraEn=new Date(new Date(enlace.primera_apertura).getTime()+(enlace.vigencia_horas||15)*60*60*1000);
+  if(new Date()>expiraEn){
+    mostrarError(`Este enlace caducó el ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}.`);
+    return;
+  }
+
+  eventoId=enlace.evento_id;
+  seccionesValidas=enlace.secciones||[];
+  if(!eventoId||!seccionesValidas.length){ mostrarError('Este enlace no tiene una actividad o secciones configuradas.'); return; }
+
+  const eventoRows=await sbGet('eventos',`?id=eq.${eventoId}`);
+  eventoInfo=(Array.isArray(eventoRows)&&eventoRows[0])?eventoRows[0]:null;
+
+  document.getElementById('exp-badge').textContent=`⏳ Enlace temporal — caduca ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+  document.getElementById('loading').classList.add('hidden');
+
+  registradoPor=(localStorage.getItem('gemacuu_asis_nombre')||'').toUpperCase();
+  document.getElementById('fg-nombre-gate').classList.toggle('hidden',!!registradoPor);
+  document.getElementById('acceso-gate').classList.remove('hidden');
+  document.getElementById('inp-seccion-gate').focus();
+}
+
+function confirmarAcceso(){
+  const numSeccion=document.getElementById('inp-seccion-gate').value.trim();
+  const nombreInput=document.getElementById('inp-nombre-gate').value.trim().toUpperCase();
+  const errEl=document.getElementById('acceso-error');
+  errEl.classList.add('hidden');
+
+  if(!registradoPor && !nombreInput){
+    errEl.textContent='Escribe tu nombre.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if(!numSeccion){
+    errEl.textContent='Escribe tu número de sección.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if(!seccionesValidas.includes(numSeccion)){
+    errEl.textContent='Número de sección no válido.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  if(!registradoPor){
+    registradoPor=nombreInput;
+    localStorage.setItem('gemacuu_asis_nombre',registradoPor);
+  }
+
+  seccionActual=SECCIONES.find(s=>s.num===numSeccion)||{num:numSeccion,encargado:'',padrino:''};
+  document.getElementById('acceso-gate').classList.add('hidden');
+  cargarYRenderizar();
+}
+
+async function cargarYRenderizar(){
+  document.getElementById('registrado-como').textContent=`Registrando como: ${registradoPor}`;
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('save-bar').classList.remove('hidden');
+
+  const num=seccionActual.num;
+
+  const personal=await sbGet('personal',`?status=eq.activo&seccion=eq.${encodeURIComponent(num)}&order=nombre.asc`);
+  personalSeccion=Array.isArray(personal)?personal:[];
+
+  if(personalSeccion.length){
+    const ids=personalSeccion.map(p=>p.id).join(',');
+    const asis=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoId}&personal_id=in.(${ids})`);
+    (Array.isArray(asis)?asis:[]).forEach(a=>{
+      asistenciaPersonas[a.personal_id]={presente:!!a.presente,actividad:a.actividad||null};
+    });
+  }
+
+  const apoyos=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
+  apoyosSeccion=Array.isArray(apoyos)?apoyos:[];
+
+  const encuestas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}`);
+  totalEncuestas=(Array.isArray(encuestas)&&encuestas[0])?encuestas[0].total_encuestas:null;
+
+  const fotos=await sbGet('fotos_actividad_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
+  fotosSeccion=Array.isArray(fotos)?fotos:[];
+
+  renderSeccion();
+}
+
+function renderSeccion(){
+  const s=seccionActual;
+  document.getElementById('seccion-cont').innerHTML=`<div class="card">
+    <div class="seccion-hdr">
+      <div class="seccion-num">Sección ${s.num}</div>
+      ${s.encargado?`<div class="seccion-lider">Líder: ${s.encargado}</div>`:''}
+      <div class="seccion-evento">📅 ${eventosNombreActual()}</div>
+    </div>
+
+    <div class="personas-lista">
+      ${personalSeccion.length?personalSeccion.map(renderPersonaRow).join(''):'<div class="vacio">Sin personal activo registrado en esta sección.</div>'}
+    </div>
+
+    <button type="button" class="btn-link" onclick="mostrarFormApoyo()">+ Agregar apoyo</button>
+    <div id="apoyo-form" class="apoyo-form hidden">
+      <input type="text" id="apoyo-nombre" placeholder="Nombre de quien apoyó">
+      <select id="apoyo-actividad">
+        ${ACTIVIDADES.map(a=>`<option value="${a}">${a}</option>`).join('')}
+      </select>
+      <div class="apoyo-form-btns">
+        <button type="button" class="btn btn-secondary" onclick="ocultarFormApoyo()">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarApoyo()">Guardar apoyo</button>
+      </div>
+    </div>
+    <div id="apoyos-lista" class="apoyos-lista">${apoyosSeccion.map(renderApoyoChip).join('')}</div>
+
+    <div class="fg">
+      <label>Total de encuestas de la app (grupo de encuestadores, hoy)</label>
+      <input type="number" min="0" step="1" inputmode="numeric" id="input-encuestas" value="${totalEncuestas??''}" placeholder="0">
+    </div>
+
+    <div class="fg" style="margin-bottom:0">
+      <label>Fotos de la actividad</label>
+      <div class="foto-grid" id="fotos-grid">${fotosSeccion.map(f=>`<div class="foto-thumb"><img src="${f.cloudinary_url}"></div>`).join('')}</div>
+      <div class="foto-btns">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('cam-inp').click()">📷 Cámara</button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('gal-inp').click()">🖼️ Galería</button>
+      </div>
+      <input type="file" id="cam-inp" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFotos(this)">
+      <input type="file" id="gal-inp" accept="image/*" multiple class="hidden" onchange="handleFotos(this)">
+    </div>
+  </div>`;
+}
+
+function eventosNombreActual(){
+  if(!eventoInfo) return 'Actividad seleccionada';
+  return `${eventoInfo.nombre||''}${eventoInfo.fecha?' · '+eventoInfo.fecha:''}`;
+}
+
+function renderPersonaRow(p){
+  const estado=asistenciaPersonas[p.id]||{presente:false,actividad:null};
+  const presente=estado.presente===true;
+  const actividad=estado.actividad||ACTIVIDADES[0];
+  return `<div class="persona-row">
+    <div class="persona-nombre">${p.nombre}</div>
+    <select class="persona-actividad ${presente?'':'hidden'}" onchange="cambiarActividad('${p.id}',this.value)">
+      ${ACTIVIDADES.map(a=>`<option value="${a}" ${a===actividad?'selected':''}>${a}</option>`).join('')}
+    </select>
+    <span class="persona-status" id="status-${p.id}"></span>
+    <button type="button" class="toggle-pres ${presente?'presente':'ausente'}" onclick="togglePersona('${p.id}',this)"></button>
+  </div>`;
+}
+
+function marcarEstadoFila(personalId,estado){
+  const el=document.getElementById(`status-${personalId}`);
+  if(!el) return;
+  if(estado==='guardando'){ el.textContent='⏳'; el.style.cursor='default'; el.title='Guardando…'; }
+  else if(estado==='ok'){
+    el.textContent='✓'; el.style.cursor='default'; el.title='Guardado';
+    setTimeout(()=>{ if(el.textContent==='✓') el.textContent=''; },1200);
+  } else if(estado==='error'){
+    el.textContent='⚠️'; el.style.cursor='pointer'; el.title='Error al guardar — clic para reintentar';
+  } else { el.textContent=''; el.style.cursor='default'; el.title=''; }
+}
+
+function togglePersona(personalId,btn){
+  const actual=asistenciaPersonas[personalId]||{presente:false,actividad:null};
+  const nuevoPresente=!actual.presente;
+  const nuevaActividad=nuevoPresente?(actual.actividad||ACTIVIDADES[0]):null;
+  asistenciaPersonas[personalId]={presente:nuevoPresente,actividad:nuevaActividad};
+
+  btn.className=`toggle-pres ${nuevoPresente?'presente':'ausente'}`;
+  const sel=btn.parentElement.querySelector('.persona-actividad');
+  sel.classList.toggle('hidden',!nuevoPresente);
+  if(nuevoPresente) sel.value=nuevaActividad;
+
+  autoguardarPersona(personalId,{presente:nuevoPresente,actividad:nuevaActividad});
+}
+
+function cambiarActividad(personalId,valor){
+  const actual=asistenciaPersonas[personalId]||{presente:true,actividad:null};
+  actual.actividad=valor;
+  asistenciaPersonas[personalId]=actual;
+  autoguardarPersona(personalId,{presente:actual.presente,actividad:valor});
+}
+
+async function autoguardarPersona(personalId,estado,intentos=0){
+  marcarEstadoFila(personalId,'guardando');
+  const eventoIdCtx=eventoId; // contexto inmutable de esta operación
+  const usuarioCtx=registradoPor;
+  const promesa=(async()=>{
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?on_conflict=evento_id,personal_id`,{
+        method:'POST',
+        headers:{
+          'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,
+          'Content-Type':'application/json',
+          'Prefer':'resolution=merge-duplicates,return=minimal'
+        },
+        body:JSON.stringify([{
+          evento_id:eventoIdCtx,
+          personal_id:personalId,
+          presente:estado.presente,
+          actividad:estado.actividad,
+          registrado_por:usuarioCtx,
+          updated_at:new Date().toISOString()
+        }])
+      });
+      if(!r.ok) throw new Error(await r.text());
+      marcarEstadoFila(personalId,'ok');
+    }catch(e){
+      if(intentos<2){
+        await new Promise(res=>setTimeout(res,800*(intentos+1)));
+        pendientesAutosave.delete(personalId);
+        return autoguardarPersona(personalId,estado,intentos+1);
+      }
+      console.error('Error autoguardando asistencia',personalId,e);
+      marcarEstadoFila(personalId,'error');
+    }finally{
+      pendientesAutosave.delete(personalId);
+    }
+  })();
+  pendientesAutosave.set(personalId,promesa);
+  return promesa;
+}
+
+function mostrarFormApoyo(){ document.getElementById('apoyo-form').classList.remove('hidden'); }
+function ocultarFormApoyo(){
+  document.getElementById('apoyo-form').classList.add('hidden');
+  document.getElementById('apoyo-nombre').value='';
+}
+
+async function guardarApoyo(){
+  const nombre=document.getElementById('apoyo-nombre').value.trim();
+  const actividad=document.getElementById('apoyo-actividad').value;
+  if(!nombre){ showToast('Escribe el nombre de quien apoyó'); return; }
+  const payload={seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,nombre,actividad,es_no_registrado:true,enlace_token:token,registrado_por:registradoPor};
+  const r=await sbPost('apoyos_no_registrados',payload);
+  if(!r.ok){ showToast('⚠️ No se pudo guardar el apoyo — intenta de nuevo'); return; }
+  apoyosSeccion.push(payload);
+  document.getElementById('apoyos-lista').innerHTML=apoyosSeccion.map(renderApoyoChip).join('');
+  ocultarFormApoyo();
+  showToast(`✓ ${nombre} agregado como apoyo`);
+}
+
+function renderApoyoChip(a){
+  return `<div class="apoyo-chip">🏷️ ${a.nombre} · ${a.actividad} <span class="apoyo-tag">apoyo no registrado</span></div>`;
+}
+
+async function handleFotos(input){
+  const files=Array.from(input.files||[]);
+  if(!files.length) return;
+  const grid=document.getElementById('fotos-grid');
+  for(const file of files){
+    const thumb=document.createElement('div');
+    thumb.className='foto-thumb uploading';
+    thumb.textContent='⏳';
+    grid.appendChild(thumb);
+    try{
+      const fd=new FormData();
+      fd.append('file',file);
+      fd.append('upload_preset',PRESET);
+      fd.append('folder',`gemacuu/asistencia-seccion/${seccionActual.num}/${hoy}`);
+      const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+      const d=await r.json();
+      if(d.secure_url){
+        const rInsert=await sbPost('fotos_actividad_seccion',{seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,cloudinary_url:d.secure_url,cloudinary_public_id:d.public_id,enlace_token:token,registrado_por:registradoPor});
+        thumb.className='foto-thumb';
+        thumb.textContent='';
+        const img=document.createElement('img');
+        img.src=d.secure_url;
+        thumb.appendChild(img);
+        if(rInsert.ok){
+          const check=document.createElement('span');
+          check.className='foto-check';
+          check.textContent='✓';
+          thumb.appendChild(check);
+          setTimeout(()=>{ if(thumb.contains(check)) check.remove(); },1500);
+        }
+      } else {
+        thumb.className='foto-thumb error';
+        thumb.textContent='⚠️';
+      }
+    }catch(e){
+      thumb.className='foto-thumb error';
+      thumb.textContent='⚠️';
+      console.error(e);
+    }
+  }
+  input.value='';
+}
+
+async function guardarTodo(){
+  const btn=document.getElementById('btn-guardar-todo');
+  const textoOriginal=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='Guardando...';
+
+  const raw=document.getElementById('input-encuestas').value.trim();
+  let encuestasPayload=null;
+  if(raw!==''){
+    const n=Number(raw);
+    if(!Number.isFinite(n)||!Number.isInteger(n)||n<0){
+      showToast('⚠️ "Total de encuestas" debe ser un número entero válido');
+      btn.disabled=false;btn.textContent=textoOriginal;
+      return;
+    }
+    encuestasPayload={seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,total_encuestas:n,enlace_token:token,registrado_por:registradoPor,updated_at:new Date().toISOString()};
+  }
+
+  // Respaldo idempotente: espera autoguardados en curso y vuelve a mandar un snapshot completo
+  await Promise.allSettled(Array.from(pendientesAutosave.values()));
+
+  const snapshotEventoId=eventoId;
+  const registros=personalSeccion.map(p=>{
+    const estado=asistenciaPersonas[p.id]||{presente:false,actividad:null};
+    return {
+      evento_id:snapshotEventoId,
+      personal_id:p.id,
+      presente:!!estado.presente,
+      actividad:estado.presente?(estado.actividad||ACTIVIDADES[0]):null,
+      registrado_por:registradoPor,
+      updated_at:new Date().toISOString()
+    };
+  });
+
+  let errores=0;
+  for(let i=0;i<registros.length;i+=50){
+    const lote=registros.slice(i,i+50);
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?on_conflict=evento_id,personal_id`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify(lote)
+      });
+      if(!r.ok){ errores++; console.error('Error guardando asistencia',await r.text()); }
+    }catch(e){ errores++; console.error(e); }
+  }
+
+  if(encuestasPayload){
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/encuestas_seccion?on_conflict=seccion,evento_id`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify([encuestasPayload])
+      });
+      if(!r.ok){ errores++; console.error('Error guardando encuestas',await r.text()); }
+    }catch(e){ errores++; console.error(e); }
+  }
+
+  btn.disabled=false;btn.textContent=textoOriginal;
+  if(errores>0) showToast(`⚠️ Hubo ${errores} error(es) al guardar — vuelve a intentar`);
+  else showToast('✅ Asistencia guardada correctamente');
+}
+
+init();
+</script>
+</body>
+</html>
