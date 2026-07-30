@@ -41,14 +41,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .persona-nombre{flex:1;font-size:13px;font-weight:600;min-width:110px}
 .persona-actividad{max-width:150px;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px}
 .persona-status{font-size:13px;width:16px;text-align:center;flex-shrink:0}
-.toggle-pres{width:42px;height:24px;border-radius:20px;border:none;cursor:pointer;position:relative;flex-shrink:0;transition:.2s}
-.toggle-pres:disabled{opacity:.5;cursor:not-allowed}
-.toggle-pres.presente{background:#2d6a4f}
-.toggle-pres.ausente{background:var(--border)}
-.toggle-pres::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;transition:.2s}
-.toggle-pres.presente::after{left:21px}
-.toggle-pres.ausente::after{left:3px}
+.persona-origen{font-size:10px;color:var(--pan);background:#e6eeff;border-radius:20px;padding:1px 7px;font-weight:700;flex-shrink:0}
+.estado-select{width:132px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
+.estado-select:disabled{opacity:.5;cursor:not-allowed}
+.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
+.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
+.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
+.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
 .vacio{font-size:12px;color:var(--muted);padding:8px 0}
+.buscar-otra{position:relative;margin:10px 0}
+.buscar-otra input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none}
+.buscar-otra-resultados{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);margin-top:4px;max-height:220px;overflow-y:auto;z-index:20}
+.buscar-otra-item{padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border)}
+.buscar-otra-item:last-child{border-bottom:none}
+.buscar-otra-item:hover{background:#f0f4ff}
+.buscar-otra-item .bo-sec{font-size:11px;color:var(--muted)}
+.buscar-otra-vacio{padding:9px 12px;font-size:12px;color:var(--muted)}
 .apoyo-form{display:flex;gap:8px;flex-wrap:wrap;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
 .apoyo-form input{flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
 .apoyo-form select{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
@@ -128,6 +136,9 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const CLOUD='da7m6y3kk';
 const PRESET='barrido_electoral';
 const ACTIVIDADES=['Encuestador','Volanteo','Apoyo general','Cruceros','Evento político'];
+const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
+const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
+const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vacaciones',INCAPACIDAD:'e-incapacidad'};
 const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
   {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
@@ -179,11 +190,14 @@ let seccionActual=null;    // {num,encargado,padrino} de la única sección desb
 let registradoPor='';
 const hoy=new Date().toISOString().split('T')[0];
 
-let personalSeccion=[];
-let asistenciaPersonas={};      // { personal_id: {presente, actividad} } — viene de asistencia_eventos
+let personalSeccion=[];         // gente cuya sección real es esta (siempre visible, aunque no tenga estado capturado)
+let personalExterno=[];         // gente de OTRAS secciones que este líder agregó por búsqueda (persiste vía capturado_en_seccion)
+let asistenciaPersonas={};      // { personal_id: {estado, actividad} } — viene de asistencia_eventos
 let apoyosSeccion=[];
 let totalEncuestas=null;
 let fotosSeccion=[];
+let buscarOtraResultados=[];
+let buscarOtraTimer=null;
 const pendientesAutosave=new Map(); // personal_id -> Promise en curso
 
 function mayusculizarInput(input){
@@ -296,13 +310,31 @@ async function cargarYRenderizar(){
 
   const personal=await sbGet('personal',`?status=eq.activo&seccion=eq.${encodeURIComponent(num)}&order=nombre.asc`);
   personalSeccion=Array.isArray(personal)?personal:[];
+  const idsPropios=new Set(personalSeccion.map(p=>p.id));
 
   if(personalSeccion.length){
     const ids=personalSeccion.map(p=>p.id).join(',');
     const asis=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoId}&personal_id=in.(${ids})`);
     (Array.isArray(asis)?asis:[]).forEach(a=>{
-      asistenciaPersonas[a.personal_id]={presente:!!a.presente,actividad:a.actividad||null};
+      asistenciaPersonas[a.personal_id]={estado:a.estado||null,actividad:a.actividad||null};
     });
+  }
+
+  // Gente de OTRAS secciones que este líder ya marcó antes desde este mismo enlace de sección:
+  // se reconoce por capturado_en_seccion, no por su sección real, para que sobreviva a un recargo de página.
+  const asisExterna=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoId}&capturado_en_seccion=eq.${encodeURIComponent(num)}&select=personal_id,estado,actividad`);
+  const idsExternos=(Array.isArray(asisExterna)?asisExterna:[])
+    .map(a=>a.personal_id)
+    .filter(id=>!idsPropios.has(id));
+  if(idsExternos.length){
+    const personalExternoRows=await sbGet('personal',`?id=in.(${idsExternos.join(',')})&order=nombre.asc`);
+    personalExterno=Array.isArray(personalExternoRows)?personalExternoRows:[];
+    asisExterna.forEach(a=>{
+      if(idsPropios.has(a.personal_id)) return;
+      asistenciaPersonas[a.personal_id]={estado:a.estado||null,actividad:a.actividad||null};
+    });
+  } else {
+    personalExterno=[];
   }
 
   const apoyos=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
@@ -327,7 +359,18 @@ function renderSeccion(){
     </div>
 
     <div class="personas-lista">
-      ${personalSeccion.length?personalSeccion.map(renderPersonaRow).join(''):'<div class="vacio">Sin personal activo registrado en esta sección.</div>'}
+      ${personalSeccion.length?personalSeccion.map(p=>renderPersonaRow(p,false)).join(''):'<div class="vacio">Sin personal activo registrado en esta sección.</div>'}
+    </div>
+
+    ${personalExterno.length?`
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 4px">De otras secciones</div>
+    <div class="personas-lista">
+      ${personalExterno.map(p=>renderPersonaRow(p,true)).join('')}
+    </div>`:''}
+
+    <div class="buscar-otra">
+      <input type="text" id="inp-buscar-otra" placeholder="🔎 Buscar otra persona por nombre (cualquier sección)…" oninput="buscarOtraPersona(this.value)" autocomplete="off">
+      <div id="buscar-otra-resultados" class="buscar-otra-resultados hidden"></div>
     </div>
 
     <button type="button" class="btn-link" onclick="mostrarFormApoyo()">+ Agregar apoyo</button>
@@ -366,17 +409,21 @@ function eventosNombreActual(){
   return `${eventoInfo.nombre||''}${eventoInfo.fecha?' · '+eventoInfo.fecha:''}`;
 }
 
-function renderPersonaRow(p){
-  const estado=asistenciaPersonas[p.id]||{presente:false,actividad:null};
-  const presente=estado.presente===true;
+function renderPersonaRow(p,esExterna){
+  const estado=asistenciaPersonas[p.id]||{estado:null,actividad:null};
+  const marcado=estado.estado||'';
+  const esAsistencia=marcado==='ASISTENCIA';
   const actividad=estado.actividad||ACTIVIDADES[0];
   return `<div class="persona-row">
-    <div class="persona-nombre">${p.nombre}</div>
-    <select class="persona-actividad ${presente?'':'hidden'}" onchange="cambiarActividad('${p.id}',this.value)">
+    <div class="persona-nombre">${p.nombre}${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}</div>
+    <select class="persona-actividad ${esAsistencia?'':'hidden'}" onchange="cambiarActividad('${p.id}',this.value)">
       ${ACTIVIDADES.map(a=>`<option value="${a}" ${a===actividad?'selected':''}>${a}</option>`).join('')}
     </select>
     <span class="persona-status" id="status-${p.id}"></span>
-    <button type="button" class="toggle-pres ${presente?'presente':'ausente'}" onclick="togglePersona('${p.id}',this)"></button>
+    <select class="estado-select ${marcado?ESTADO_CLASS[marcado]:''}" onchange="cambiarEstado('${p.id}',this.value,this)">
+      <option value="" ${marcado?'disabled':''}>— sin capturar —</option>
+      ${ESTADOS.map(e=>`<option value="${e}" ${e===marcado?'selected':''}>${ESTADO_LABEL[e]}</option>`).join('')}
+    </select>
   </div>`;
 }
 
@@ -392,30 +439,32 @@ function marcarEstadoFila(personalId,estado){
   } else { el.textContent=''; el.style.cursor='default'; el.title=''; }
 }
 
-function togglePersona(personalId,btn){
-  const actual=asistenciaPersonas[personalId]||{presente:false,actividad:null};
-  const nuevoPresente=!actual.presente;
-  const nuevaActividad=nuevoPresente?(actual.actividad||ACTIVIDADES[0]):null;
-  asistenciaPersonas[personalId]={presente:nuevoPresente,actividad:nuevaActividad};
+function cambiarEstado(personalId,valor,sel){
+  const actual=asistenciaPersonas[personalId]||{estado:null,actividad:null};
+  const esAsistencia=valor==='ASISTENCIA';
+  const nuevaActividad=esAsistencia?(actual.actividad||ACTIVIDADES[0]):null;
+  asistenciaPersonas[personalId]={estado:valor,actividad:nuevaActividad};
 
-  btn.className=`toggle-pres ${nuevoPresente?'presente':'ausente'}`;
-  const sel=btn.parentElement.querySelector('.persona-actividad');
-  sel.classList.toggle('hidden',!nuevoPresente);
-  if(nuevoPresente) sel.value=nuevaActividad;
+  sel.className=`estado-select ${ESTADO_CLASS[valor]||''}`;
+  sel.querySelector('option[value=""]').disabled=true;
+  const actividadSel=sel.parentElement.querySelector('.persona-actividad');
+  actividadSel.classList.toggle('hidden',!esAsistencia);
+  if(esAsistencia) actividadSel.value=nuevaActividad;
 
-  autoguardarPersona(personalId,{presente:nuevoPresente,actividad:nuevaActividad});
+  autoguardarPersona(personalId,{estado:valor,actividad:nuevaActividad});
 }
 
 function cambiarActividad(personalId,valor){
-  const actual=asistenciaPersonas[personalId]||{presente:true,actividad:null};
+  const actual=asistenciaPersonas[personalId]||{estado:'ASISTENCIA',actividad:null};
   actual.actividad=valor;
   asistenciaPersonas[personalId]=actual;
-  autoguardarPersona(personalId,{presente:actual.presente,actividad:valor});
+  autoguardarPersona(personalId,{estado:actual.estado,actividad:valor});
 }
 
 async function autoguardarPersona(personalId,estado,intentos=0){
   marcarEstadoFila(personalId,'guardando');
   const eventoIdCtx=eventoId; // contexto inmutable de esta operación
+  const seccionCtx=seccionActual.num;
   const usuarioCtx=registradoPor;
   const promesa=(async()=>{
     try{
@@ -429,8 +478,9 @@ async function autoguardarPersona(personalId,estado,intentos=0){
         body:JSON.stringify([{
           evento_id:eventoIdCtx,
           personal_id:personalId,
-          presente:estado.presente,
+          estado:estado.estado,
           actividad:estado.actividad,
+          capturado_en_seccion:seccionCtx,
           registrado_por:usuarioCtx,
           updated_at:new Date().toISOString()
         }])
@@ -451,6 +501,38 @@ async function autoguardarPersona(personalId,estado,intentos=0){
   })();
   pendientesAutosave.set(personalId,promesa);
   return promesa;
+}
+
+function buscarOtraPersona(q){
+  clearTimeout(buscarOtraTimer);
+  const resEl=document.getElementById('buscar-otra-resultados');
+  q=q.trim();
+  if(q.length<2){ resEl.classList.add('hidden'); resEl.innerHTML=''; return; }
+  buscarOtraTimer=setTimeout(async()=>{
+    const rows=await sbGet('personal',`?status=eq.activo&nombre=ilike.*${encodeURIComponent(q)}*&order=nombre.asc&limit=15`);
+    const yaListados=new Set([...personalSeccion,...personalExterno].map(p=>p.id));
+    buscarOtraResultados=(Array.isArray(rows)?rows:[]).filter(p=>!yaListados.has(p.id));
+    if(!buscarOtraResultados.length){
+      resEl.innerHTML='<div class="buscar-otra-vacio">Sin resultados (o ya está en la lista).</div>';
+    } else {
+      resEl.innerHTML=buscarOtraResultados.map(p=>`
+        <div class="buscar-otra-item" onclick="agregarPersonaExterna('${p.id}')">
+          ${p.nombre}<div class="bo-sec">${p.seccion?'Sec. '+p.seccion:'sin sección'}</div>
+        </div>`).join('');
+    }
+    resEl.classList.remove('hidden');
+  },300);
+}
+
+function agregarPersonaExterna(personalId){
+  const p=buscarOtraResultados.find(x=>x.id===personalId);
+  if(!p) return;
+  personalExterno.push(p);
+  asistenciaPersonas[p.id]=asistenciaPersonas[p.id]||{estado:null,actividad:null};
+  document.getElementById('inp-buscar-otra').value='';
+  document.getElementById('buscar-otra-resultados').classList.add('hidden');
+  renderSeccion();
+  showToast(`✓ ${p.nombre} agregada — captura su estado abajo`);
 }
 
 function mostrarFormApoyo(){ document.getElementById('apoyo-form').classList.remove('hidden'); }
@@ -541,17 +623,22 @@ async function guardarTodo(){
   await Promise.allSettled(Array.from(pendientesAutosave.values()));
 
   const snapshotEventoId=eventoId;
-  const registros=personalSeccion.map(p=>{
-    const estado=asistenciaPersonas[p.id]||{presente:false,actividad:null};
-    return {
-      evento_id:snapshotEventoId,
-      personal_id:p.id,
-      presente:!!estado.presente,
-      actividad:estado.presente?(estado.actividad||ACTIVIDADES[0]):null,
-      registrado_por:registradoPor,
-      updated_at:new Date().toISOString()
-    };
-  });
+  const snapshotSeccion=seccionActual.num;
+  // Respaldo: solo gente con un estado realmente capturado — nunca se inventa "Falta" para quien no se ha revisado.
+  const registros=[...personalSeccion,...personalExterno]
+    .filter(p=>asistenciaPersonas[p.id]?.estado)
+    .map(p=>{
+      const estado=asistenciaPersonas[p.id];
+      return {
+        evento_id:snapshotEventoId,
+        personal_id:p.id,
+        estado:estado.estado,
+        actividad:estado.estado==='ASISTENCIA'?(estado.actividad||ACTIVIDADES[0]):null,
+        capturado_en_seccion:snapshotSeccion,
+        registrado_por:registradoPor,
+        updated_at:new Date().toISOString()
+      };
+    });
 
   let errores=0;
   for(let i=0;i<registros.length;i+=50){

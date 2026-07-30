@@ -197,13 +197,12 @@ tr:hover td{background:#f8faff}
 .asis-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px}
 .asis-row:last-child{border-bottom:none}
 .asis-num{width:22px;height:22px;border-radius:50%;background:#e6f1fb;color:#0c447c;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.toggle-asis{width:38px;height:22px;border-radius:20px;border:none;cursor:pointer;position:relative;flex-shrink:0;transition:.2s}
-.toggle-asis.presente{background:#2d6a4f}
-.toggle-asis.ausente{background:var(--border)}
-.toggle-asis::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;transition:.2s}
-.toggle-asis.presente::after{left:19px}
-.toggle-asis.ausente::after{left:3px}
-.toggle-asis:disabled,.btn:disabled{opacity:.5;cursor:not-allowed}
+.estado-select{width:126px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
+.estado-select:disabled,.btn:disabled{opacity:.5;cursor:not-allowed}
+.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
+.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
+.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
+.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
 .badge-nuevo-reg{background:#e6f1fb;color:#185fa5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
 .badge-reingreso-reg{background:#faeeda;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
 .badge-pendiente{background:#fef3c7;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
@@ -512,7 +511,7 @@ tr:hover td{background:#f8faff}
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Evento</th><th>Presentes</th><th>Ausentes</th><th>Total</th></tr></thead>
+          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th></tr></thead>
           <tbody id="resumen-eventos-tbody"></tbody>
         </table>
       </div>
@@ -533,18 +532,30 @@ tr:hover td{background:#f8faff}
           </div>
         </div>
         <!-- Métricas -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:12px">
           <div style="background:var(--bg2);border-radius:8px;padding:10px;text-align:center">
             <div id="ev-total" style="font-size:22px;font-weight:800;color:var(--pan)">0</div>
             <div style="font-size:10px;color:var(--muted)">Total</div>
           </div>
-          <div style="background:#d1fae5;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-presentes" style="font-size:22px;font-weight:800;color:#065f46">0</div>
-            <div style="font-size:10px;color:#065f46">Presentes</div>
+          <div style="background:#eaf3de;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-asistencia" style="font-size:22px;font-weight:800;color:#2d6a4f">0</div>
+            <div style="font-size:10px;color:#2d6a4f">Asistencia</div>
           </div>
           <div style="background:#fce8e8;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-ausentes" style="font-size:22px;font-weight:800;color:#cc0000">0</div>
-            <div style="font-size:10px;color:#cc0000">Ausentes</div>
+            <div id="ev-falta" style="font-size:22px;font-weight:800;color:#cc0000">0</div>
+            <div style="font-size:10px;color:#cc0000">Falta</div>
+          </div>
+          <div style="background:#e6eeff;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-vacaciones" style="font-size:22px;font-weight:800;color:#003399">0</div>
+            <div style="font-size:10px;color:#003399">Vacaciones</div>
+          </div>
+          <div style="background:#fef3c7;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-incapacidad" style="font-size:22px;font-weight:800;color:#854f0b">0</div>
+            <div style="font-size:10px;color:#854f0b">Incapacidad</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-sin-capturar" style="font-size:22px;font-weight:800;color:var(--muted)">0</div>
+            <div style="font-size:10px;color:var(--muted)">Sin capturar</div>
           </div>
         </div>
         <!-- Filtros -->
@@ -560,8 +571,11 @@ tr:hover td{background:#f8faff}
           </select>
           <select id="ev-asis-filter" onchange="filtrarAsistencia()" style="min-width:120px">
             <option value="">Todos</option>
-            <option value="1">Presentes</option>
-            <option value="0">Ausentes</option>
+            <option value="ASISTENCIA">Asistencia</option>
+            <option value="FALTA">Falta</option>
+            <option value="VACACIONES">Vacaciones</option>
+            <option value="INCAPACIDAD">Incapacidad</option>
+            <option value="SIN_CAPTURAR">Sin capturar</option>
           </select>
         </div>
         <!-- Lista asistencia -->
@@ -1990,6 +2004,9 @@ let eventoLoadToken=0;   // se incrementa en cada seleccionarEvento(); una respu
 const asistenciaPendientes=new Map(); // `${evento_id}:${personal_id}` -> Promise del autoguardado en curso
 
 const PAD_BADGE={'Fernando Amezcua':'badge-pan','Martin Yáñez':'badge-green','Rene Espinoza':'badge-amber'};
+const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
+const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
+const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vacaciones',INCAPACIDAD:'e-incapacidad'};
 
 async function cargarEventos(){
   const data=await sbGet('eventos','?order=fecha.desc');
@@ -2014,38 +2031,43 @@ async function cargarEventos(){
   await cargarResumenEventos();
 }
 
-let resumenEventosCache=[]; // [{evento, presentes, ausentes, total}]
+let resumenEventosCache=[]; // [{evento, asistencia, falta, vacaciones, incapacidad, sinCapturar, total}]
 
 async function cargarResumenEventos(){
   const tbody=document.getElementById('resumen-eventos-tbody');
   if(!eventosCache.length){
     resumenEventosCache=[];
-    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
     return;
   }
-  const presData=await sbGet('asistencia_eventos','?presente=eq.true&select=evento_id');
-  const presentesPorEvento={};
-  (Array.isArray(presData)?presData:[]).forEach(a=>{
-    presentesPorEvento[a.evento_id]=(presentesPorEvento[a.evento_id]||0)+1;
+  const estData=await sbGet('asistencia_eventos','?estado=not.is.null&select=evento_id,estado');
+  const conteoPorEvento={};
+  (Array.isArray(estData)?estData:[]).forEach(a=>{
+    if(!conteoPorEvento[a.evento_id]) conteoPorEvento[a.evento_id]={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
+    if(conteoPorEvento[a.evento_id].hasOwnProperty(a.estado)) conteoPorEvento[a.evento_id][a.estado]++;
   });
   const total=personalCache.length;
   resumenEventosCache=eventosCache.map(ev=>{
-    const presentes=presentesPorEvento[ev.id]||0;
-    return {evento:ev, presentes, ausentes:total-presentes, total};
+    const c=conteoPorEvento[ev.id]||{ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
+    const capturados=c.ASISTENCIA+c.FALTA+c.VACACIONES+c.INCAPACIDAD;
+    return {evento:ev, asistencia:c.ASISTENCIA, falta:c.FALTA, vacaciones:c.VACACIONES, incapacidad:c.INCAPACIDAD, sinCapturar:total-capturados, total};
   });
   tbody.innerHTML=resumenEventosCache.map(r=>`<tr>
       <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}</td>
-      <td style="color:#065f46;font-weight:700">${r.presentes}</td>
-      <td style="color:#cc0000;font-weight:700">${r.ausentes}</td>
+      <td style="color:#2d6a4f;font-weight:700">${r.asistencia}</td>
+      <td style="color:#cc0000;font-weight:700">${r.falta}</td>
+      <td style="color:#003399;font-weight:700">${r.vacaciones}</td>
+      <td style="color:#854f0b;font-weight:700">${r.incapacidad}</td>
+      <td style="color:var(--muted)">${r.sinCapturar}</td>
       <td>${r.total}</td>
     </tr>`).join('');
 }
 
 function exportarResumenEventos(){
   if(!resumenEventosCache.length){ showToast('⚠️ No hay eventos registrados'); return; }
-  let csv='\uFEFF'+'EVENTO,FECHA,PRESENTES,AUSENTES,TOTAL\n';
+  let csv='\uFEFF'+'EVENTO,FECHA,ASISTENCIA,FALTA,VACACIONES,INCAPACIDAD,SIN CAPTURAR,TOTAL\n';
   resumenEventosCache.forEach(r=>{
-    csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.presentes}","${r.ausentes}","${r.total}"\n`;
+    csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.asistencia}","${r.falta}","${r.vacaciones}","${r.incapacidad}","${r.sinCapturar}","${r.total}"\n`;
   });
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
@@ -2067,7 +2089,7 @@ function renderEventoChips(){
 }
 
 function setAsistenciaInteractiva(activa){
-  document.querySelectorAll('.toggle-asis').forEach(b=>b.disabled=!activa);
+  document.querySelectorAll('.estado-select').forEach(b=>b.disabled=!activa);
   document.querySelectorAll('.btn-guardar-asistencia').forEach(b=>b.disabled=!activa);
 }
 
@@ -2099,10 +2121,20 @@ async function seleccionarEvento(id){
   const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${id}`);
   if(miToken!==eventoLoadToken) return; // el usuario ya cambió de evento; se descarta esta respuesta obsoleta
   const asisRegistrada=Array.isArray(asisData)?asisData:[];
-  asisRegistrada.forEach(a=>{ asistenciaLocal[a.personal_id]=a.presente?1:0; });
+  asisRegistrada.forEach(a=>{ asistenciaLocal[a.personal_id]=a.estado||null; });
 
   setAsistenciaInteractiva(true);
   filtrarAsistencia();
+}
+
+function contarEstados(){
+  const conteo={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
+  personalCache.forEach(p=>{
+    const v=asistenciaLocal[p.id];
+    if(v&&conteo.hasOwnProperty(v)) conteo[v]++;
+  });
+  const sinCapturar=personalCache.length-ESTADOS.reduce((s,e)=>s+conteo[e],0);
+  return {...conteo, SIN_CAPTURAR:sinCapturar};
 }
 
 function filtrarAsistencia(){
@@ -2114,17 +2146,20 @@ function filtrarAsistencia(){
   if(q) lista=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q));
   if(pad) lista=lista.filter(p=>p.padrino===pad);
   if(asis!=='') lista=lista.filter(p=>{
-    const val=asistenciaLocal[p.id];
-    return asis==='1'?val===1:val!==1;
+    const val=asistenciaLocal[p.id]||null;
+    return asis==='SIN_CAPTURAR'?!val:val===asis;
   });
 
-  const presentes=Object.values(asistenciaLocal).filter(v=>v===1).length;
+  const c=contarEstados();
   document.getElementById('ev-total').textContent=personalCache.length;
-  document.getElementById('ev-presentes').textContent=presentes;
-  document.getElementById('ev-ausentes').textContent=personalCache.length-presentes;
+  document.getElementById('ev-asistencia').textContent=c.ASISTENCIA;
+  document.getElementById('ev-falta').textContent=c.FALTA;
+  document.getElementById('ev-vacaciones').textContent=c.VACACIONES;
+  document.getElementById('ev-incapacidad').textContent=c.INCAPACIDAD;
+  document.getElementById('ev-sin-capturar').textContent=c.SIN_CAPTURAR;
 
   document.getElementById('ev-lista-asis').innerHTML=lista.length?lista.map((p,i)=>{
-    const presente=asistenciaLocal[p.id]===1;
+    const marcado=asistenciaLocal[p.id]||'';
     const padClass=PAD_BADGE[p.padrino]||'badge-gray';
     return `<div class="asis-row" id="arow-${p.id}">
       <div class="asis-num">${i+1}</div>
@@ -2134,37 +2169,39 @@ function filtrarAsistencia(){
       </div>
       <span class="badge ${padClass}" style="font-size:10px">${p.padrino||'—'}</span>
       <span id="asis-status-${p.id}" style="font-size:13px;width:16px;text-align:center;flex-shrink:0" onclick="reintentarAsistencia('${p.id}')"></span>
-      <button class="toggle-asis ${presente?'presente':'ausente'}"
-        onclick="toggleAsistencia('${p.id}',this)"
-        aria-label="${presente?'Presente':'Ausente'}"
-        title="${presente?'Presente — clic para marcar ausente':'Ausente — clic para marcar presente'}">
-      </button>
+      <select class="estado-select ${marcado?ESTADO_CLASS[marcado]:''}" onchange="toggleAsistencia('${p.id}',this.value,this)">
+        <option value="" ${marcado?'disabled':''}>— sin capturar —</option>
+        ${ESTADOS.map(e=>`<option value="${e}" ${e===marcado?'selected':''}>${ESTADO_LABEL[e]}</option>`).join('')}
+      </select>
     </div>`;
   }).join(''):`<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Sin resultados.</div>`;
 }
 
-function toggleAsistencia(personalId, btn){
+function toggleAsistencia(personalId, nuevoEstado, sel){
   const eventoId=eventoActualId;
   if(!eventoId) return;
-  const nuevoPresente=asistenciaLocal[personalId]!==1;
-  asistenciaLocal[personalId]=nuevoPresente?1:0;
-  btn.className=`toggle-asis ${nuevoPresente?'presente':'ausente'}`;
-  btn.title=nuevoPresente?'Presente — clic para marcar ausente':'Ausente — clic para marcar presente';
+  asistenciaLocal[personalId]=nuevoEstado;
+  sel.className=`estado-select ${ESTADO_CLASS[nuevoEstado]||''}`;
+  sel.querySelector('option[value=""]').disabled=true;
 
   // Actualizar contadores
-  const presentes=Object.values(asistenciaLocal).filter(v=>v===1).length;
-  document.getElementById('ev-presentes').textContent=presentes;
-  document.getElementById('ev-ausentes').textContent=personalCache.length-presentes;
+  const c=contarEstados();
+  document.getElementById('ev-asistencia').textContent=c.ASISTENCIA;
+  document.getElementById('ev-falta').textContent=c.FALTA;
+  document.getElementById('ev-vacaciones').textContent=c.VACACIONES;
+  document.getElementById('ev-incapacidad').textContent=c.INCAPACIDAD;
+  document.getElementById('ev-sin-capturar').textContent=c.SIN_CAPTURAR;
 
   // Contexto inmutable de esta operación: se captura ahora, nunca se vuelve a leer eventoActualId/asistenciaLocal después
-  guardarAsistenciaIndividual({evento_id:eventoId, personal_id:personalId, presente:nuevoPresente, registrado_por:currentUser});
+  guardarAsistenciaIndividual({evento_id:eventoId, personal_id:personalId, estado:nuevoEstado, registrado_por:currentUser});
 }
 
 function reintentarAsistencia(personalId){
   const clave=`${eventoActualId}:${personalId}`;
   if(asistenciaPendientes.has(clave)) return; // ya hay un intento en curso
-  const presente=asistenciaLocal[personalId]===1;
-  guardarAsistenciaIndividual({evento_id:eventoActualId, personal_id:personalId, presente, registrado_por:currentUser});
+  const estado=asistenciaLocal[personalId];
+  if(!estado) return;
+  guardarAsistenciaIndividual({evento_id:eventoActualId, personal_id:personalId, estado, registrado_por:currentUser});
 }
 
 function marcarEstadoFila(personalId, eventoId, estado){
@@ -2195,7 +2232,7 @@ async function guardarAsistenciaIndividual(ctx, intentos=0){
         body:JSON.stringify([{
           evento_id:ctx.evento_id,
           personal_id:ctx.personal_id,
-          presente:ctx.presente,
+          estado:ctx.estado,
           registrado_por:ctx.registrado_por,
           updated_at:new Date().toISOString()
         }])
@@ -2223,7 +2260,8 @@ async function guardarAsistencia(){
   // Contexto inmutable de este guardado masivo: se captura ahora y no se vuelve a leer eventoActualId/asistenciaLocal después
   const eventoId=eventoActualId;
   const usuario=currentUser;
-  const snapshot=personalCache.map(p=>({personal_id:p.id, presente:asistenciaLocal[p.id]===1}));
+  // Solo gente con un estado realmente capturado — nunca se inventa "Falta" para quien no se ha revisado.
+  const snapshot=personalCache.filter(p=>asistenciaLocal[p.id]).map(p=>({personal_id:p.id, estado:asistenciaLocal[p.id]}));
 
   showToast('⏳ Guardando asistencia...');
   setAsistenciaInteractiva(false);
@@ -2234,7 +2272,7 @@ async function guardarAsistencia(){
   const registros=snapshot.map(s=>({
     evento_id:eventoId,
     personal_id:s.personal_id,
-    presente:s.presente,
+    estado:s.estado,
     registrado_por:usuario,
     updated_at:new Date().toISOString()
   }));
@@ -2334,12 +2372,12 @@ async function exportarEventos(){
   const ev=eventosCache.find(e=>e.id===eventoId);
   const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoId}`);
   const asisMap={};
-  (Array.isArray(asisData)?asisData:[]).forEach(a=>{asisMap[a.personal_id]=a.presente;});
+  (Array.isArray(asisData)?asisData:[]).forEach(a=>{asisMap[a.personal_id]=a.estado;});
 
-  let csv='\uFEFF'+'EVENTO,FECHA,LUGAR,PADRINO RESPONSABLE,NOMBRE,ÁREA,PADRINO,SECCIÓN,NÚM. EMPLEADO,USUARIO,ASISTENCIA\n';
+  let csv='\uFEFF'+'EVENTO,FECHA,LUGAR,PADRINO RESPONSABLE,NOMBRE,ÁREA,PADRINO,SECCIÓN,NÚM. EMPLEADO,USUARIO,ESTADO\n';
   personalCache.forEach(p=>{
-    const asistio=asisMap[p.id]===true?'PRESENTE':asisMap[p.id]===false?'AUSENTE':'SIN REGISTRAR';
-    csv+=`"${ev?.nombre||''}","${ev?.fecha||''}","${ev?.lugar||''}","${ev?.padrino||''}","${p.nombre||''}","${p.area||''}","${p.padrino||''}","${p.seccion||''}","${p.num_empleado||''}","${p.usuario||''}","${asistio}"\n`;
+    const estado=asisMap[p.id]?ESTADO_LABEL[asisMap[p.id]].toUpperCase():'SIN CAPTURAR';
+    csv+=`"${ev?.nombre||''}","${ev?.fecha||''}","${ev?.lugar||''}","${ev?.padrino||''}","${p.nombre||''}","${p.area||''}","${p.padrino||''}","${p.seccion||''}","${p.num_empleado||''}","${p.usuario||''}","${estado}"\n`;
   });
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
