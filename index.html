@@ -553,6 +553,35 @@ tr:hover td{background:#f8faff}
         </div>
       </div>
     </div>
+
+    <!-- ENLACES TEMPORALES DE ASISTENCIA POR SECCIÓN (solo Octavio) -->
+    <div class="card" id="card-enlaces-temporales" style="display:none">
+      <div class="card-title">🔗 Enlaces temporales de asistencia por sección</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Genera un enlace para que un líder de sección o una editora capture asistencia desde su celular, sin iniciar sesión.
+        No caduca hasta que alguien lo abre por primera vez — a partir de ahí tiene la vigencia indicada abajo.
+      </div>
+      <div class="fg">
+        <label>Etiqueta (para identificarlo en la lista de abajo)</label>
+        <input type="text" id="enl-etiqueta" placeholder="ej. Enlace general julio">
+      </div>
+      <div class="fg">
+        <label>Actividad *</label>
+        <select id="enl-evento">
+          <option value="">— selecciona un evento —</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Horas de vigencia (a partir de la primera apertura)</label>
+        <input type="number" id="enl-horas" min="1" step="1" value="15" inputmode="numeric">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
+      <div id="enl-resultado" style="margin-top:10px"></div>
+
+      <div style="border-top:1px solid var(--border);margin:16px 0"></div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
+      <div id="enl-lista"></div>
+    </div>
   </div>
 
   <!-- PANEL: INCIDENCIAS -->
@@ -663,30 +692,6 @@ tr:hover td{background:#f8faff}
       </div>
     </div>
 
-    <!-- ENLACES TEMPORALES DE ASISTENCIA POR SECCIÓN -->
-    <div class="card">
-      <div class="card-title">🔗 Enlaces temporales de asistencia por sección</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-        Genera un enlace para que un líder de sección o una editora capture asistencia desde su celular, sin iniciar sesión.
-        No caduca hasta que alguien lo abre por primera vez — a partir de ahí tiene 15 horas de vigencia.
-      </div>
-      <div class="fg">
-        <label>Etiqueta (para identificarlo en la lista de abajo)</label>
-        <input type="text" id="enl-etiqueta" placeholder="ej. Enlace general julio">
-      </div>
-      <div class="fg">
-        <label>Actividad *</label>
-        <select id="enl-evento">
-          <option value="">— selecciona un evento —</option>
-        </select>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
-      <div id="enl-resultado" style="margin-top:10px"></div>
-
-      <div style="border-top:1px solid var(--border);margin:16px 0"></div>
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
-      <div id="enl-lista"></div>
-    </div>
   </div>
 
   <!-- PANEL: BAJAS -->
@@ -1378,11 +1383,6 @@ async function renderControl(){
   // Cambio rápido
   document.getElementById('cambio-buscar').value='';
   document.getElementById('cambio-resultado').innerHTML='';
-  // Enlaces temporales
-  document.getElementById('enl-etiqueta').value='';
-  document.getElementById('enl-resultado').innerHTML='';
-  await cargarEventosParaEnlace();
-  await cargarEnlaces();
 }
 function filtrarPendientes(){
   const q=(document.getElementById('pend-buscar').value||'').toLowerCase();
@@ -1505,6 +1505,8 @@ async function generarEnlace(){
   const eventoId=document.getElementById('enl-evento').value;
   if(!eventoId){ showToast('⚠️ Selecciona una actividad'); return; }
   const etiqueta=document.getElementById('enl-etiqueta').value.trim();
+  const horas=parseInt(document.getElementById('enl-horas').value,10);
+  if(!horas||horas<1){ showToast('⚠️ Horas de vigencia inválidas'); return; }
   // Todas las secciones activas del sistema (todas las que existan en "personal"), no filtradas por padrino
   const secciones=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))];
   if(!secciones.length){ showToast('⚠️ No hay secciones activas en personal'); return; }
@@ -1514,6 +1516,7 @@ async function generarEnlace(){
     secciones,
     evento_id:eventoId,
     etiqueta:etiqueta||null,
+    vigencia_horas:horas,
     creado_por:currentUser
   });
   if(!r.ok){ showToast('⚠️ Error al generar el enlace'); return; }
@@ -1546,7 +1549,7 @@ function renderListaEnlaces(){
     } else if(!en.primera_apertura){
       estadoHtml=`<span class="badge badge-gray">⏳ sin abrir — disponible</span>`;
     } else {
-      const expira=new Date(new Date(en.primera_apertura).getTime()+15*60*60*1000);
+      const expira=new Date(new Date(en.primera_apertura).getTime()+(en.vigencia_horas||15)*60*60*1000);
       estadoHtml = new Date()>expira
         ? `<span class="badge badge-red">⏱ caducado</span>`
         : `<span class="badge badge-green">🟢 activo — caduca ${expira.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>`;
@@ -1557,7 +1560,7 @@ function renderListaEnlaces(){
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
       <div style="flex:1;min-width:180px">
         <div style="font-size:13px;font-weight:700">${en.etiqueta||'(sin etiqueta)'}</div>
-        <div style="font-size:11px;color:var(--muted)">📅 ${eventoLabel} · ${(en.secciones||[]).length} sección(es) · por ${en.creado_por} · ${new Date(en.creado_en).toLocaleDateString('es-MX')}</div>
+        <div style="font-size:11px;color:var(--muted)">📅 ${eventoLabel} · ${(en.secciones||[]).length} sección(es) · ⏱ ${en.vigencia_horas||15}h · por ${en.creado_por} · ${new Date(en.creado_en).toLocaleDateString('es-MX')}</div>
       </div>
       ${estadoHtml}
       <div style="display:flex;gap:6px">
@@ -1974,7 +1977,18 @@ async function cargarEventos(){
   eventosCache=Array.isArray(data)?data:[];
   renderEventoChips();
   // Mostrar botón nuevo solo para admin
-  document.getElementById('btn-nuevo-evento').style.display=currentUser==='Octavio'?'inline-flex':'none';
+  const isAdmin=currentUser==='Octavio';
+  document.getElementById('btn-nuevo-evento').style.display=isAdmin?'inline-flex':'none';
+  // Enlaces temporales: tarjeta y funcionalidad exclusiva de Octavio
+  const cardEnl=document.getElementById('card-enlaces-temporales');
+  cardEnl.style.display=isAdmin?'':'none';
+  if(isAdmin){
+    document.getElementById('enl-etiqueta').value='';
+    document.getElementById('enl-resultado').innerHTML='';
+    document.getElementById('enl-horas').value=15;
+    await cargarEventosParaEnlace();
+    await cargarEnlaces();
+  }
   if(eventosCache.length>0&&!eventoActualId){
     seleccionarEvento(eventosCache[0].id);
   }
