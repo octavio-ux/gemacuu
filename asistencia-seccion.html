@@ -100,7 +100,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     </div>
     <div class="fg" id="fg-nombre-gate">
       <label>Tu nombre</label>
-      <input type="text" id="inp-nombre-gate" placeholder="¿Quién está capturando la asistencia?">
+      <input type="text" id="inp-nombre-gate" placeholder="Ej. Octavio">
     </div>
     <div id="acceso-error" class="error-msg hidden"></div>
     <button class="btn btn-primary w-full" onclick="confirmarAcceso()">Entrar →</button>
@@ -227,7 +227,7 @@ async function init(){
   document.getElementById('exp-badge').textContent=`⏳ Enlace temporal — caduca ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
   document.getElementById('loading').classList.add('hidden');
 
-  registradoPor=localStorage.getItem('gemacuu_asis_nombre')||'';
+  registradoPor=(localStorage.getItem('gemacuu_asis_nombre')||'').toUpperCase();
   document.getElementById('fg-nombre-gate').classList.toggle('hidden',!!registradoPor);
   document.getElementById('acceso-gate').classList.remove('hidden');
   document.getElementById('inp-seccion-gate').focus();
@@ -235,7 +235,7 @@ async function init(){
 
 function confirmarAcceso(){
   const numSeccion=document.getElementById('inp-seccion-gate').value.trim();
-  const nombreInput=document.getElementById('inp-nombre-gate').value.trim();
+  const nombreInput=document.getElementById('inp-nombre-gate').value.trim().toUpperCase();
   const errEl=document.getElementById('acceso-error');
   errEl.classList.add('hidden');
 
