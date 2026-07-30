@@ -100,7 +100,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     </div>
     <div class="fg" id="fg-nombre-gate">
       <label>Tu nombre</label>
-      <input type="text" id="inp-nombre-gate" placeholder="Ej. Octavio">
+      <input type="text" id="inp-nombre-gate" placeholder="Ej. Octavio" oninput="mayusculizarInput(this)">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Escribe tu primer nombre en mayúscula</div>
     </div>
     <div id="acceso-error" class="error-msg hidden"></div>
     <button class="btn btn-primary w-full" onclick="confirmarAcceso()">Entrar →</button>
@@ -184,6 +185,12 @@ let apoyosSeccion=[];
 let totalEncuestas=null;
 let fotosSeccion=[];
 const pendientesAutosave=new Map(); // personal_id -> Promise en curso
+
+function mayusculizarInput(input){
+  const pos=input.selectionStart;
+  input.value=input.value.toUpperCase();
+  input.setSelectionRange(pos,pos);
+}
 
 function mostrarError(msg){
   document.getElementById('loading').classList.add('hidden');
