@@ -98,6 +98,10 @@ tr:hover td{background:#f8faff}
 .fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
 .fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text);outline:none;background:#fff;transition:.15s}
 .fg input:focus,.fg select:focus{border-color:var(--pan)}
+.fg-seccion label{color:var(--pan)}
+.fg-seccion select{border:2px solid var(--pan);background:var(--pan-light);font-weight:700;color:var(--pan)}
+.fg-seccion select:focus{border-color:var(--pan);box-shadow:0 0 0 3px rgba(0,51,153,.15)}
+.fg-seccion-hint{font-size:11px;color:var(--pan);font-weight:600;margin-top:4px}
 
 /* ── BUTTONS ── */
 .btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
@@ -754,8 +758,8 @@ tr:hover td{background:#f8faff}
           <option value="Rene Espinoza">Rene Espinoza</option>
         </select>
       </div>
-      <div class="fg">
-        <label>Sección</label>
+      <div class="fg fg-seccion">
+        <label>🗳️ Sección</label>
         <select id="ep-sec">
           <option value="">— sin sección —</option>
           <option>855</option><option>856</option><option>908</option>
@@ -765,6 +769,7 @@ tr:hover td{background:#f8faff}
           <option>909</option><option>3244</option><option>3246</option><option>3255</option>
           <option>3256</option><option>3259</option><option>3261</option><option>3263</option>
         </select>
+        <div class="fg-seccion-hint">Este es el número de sección electoral — NO el número de empleado.</div>
       </div>
       <div class="fg"><label>Núm. Empleado</label><input id="ep-emp" type="text" inputmode="numeric"></div>
       <div class="fg"><label>Usuario</label><input id="ep-usuario" type="text" placeholder="ej: adania"></div>
