@@ -504,6 +504,20 @@ tr:hover td{background:#f8faff}
       </div>
     </div>
 
+    <!-- Resumen de asistencia total por evento -->
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📊 Resumen de asistencia por evento</div>
+        <button class="btn btn-secondary btn-sm" onclick="exportarResumenEventos()">↓ Excel resumen</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Evento</th><th>Presentes</th><th>Ausentes</th><th>Total</th></tr></thead>
+          <tbody id="resumen-eventos-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Panel asistencia del evento seleccionado -->
     <div id="panel-asistencia" style="display:none">
       <div class="card" style="margin-bottom:1rem">
@@ -1997,6 +2011,47 @@ async function cargarEventos(){
   if(eventosCache.length>0&&!eventoActualId){
     seleccionarEvento(eventosCache[0].id);
   }
+  await cargarResumenEventos();
+}
+
+let resumenEventosCache=[]; // [{evento, presentes, ausentes, total}]
+
+async function cargarResumenEventos(){
+  const tbody=document.getElementById('resumen-eventos-tbody');
+  if(!eventosCache.length){
+    resumenEventosCache=[];
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
+    return;
+  }
+  const presData=await sbGet('asistencia_eventos','?presente=eq.true&select=evento_id');
+  const presentesPorEvento={};
+  (Array.isArray(presData)?presData:[]).forEach(a=>{
+    presentesPorEvento[a.evento_id]=(presentesPorEvento[a.evento_id]||0)+1;
+  });
+  const total=personalCache.length;
+  resumenEventosCache=eventosCache.map(ev=>{
+    const presentes=presentesPorEvento[ev.id]||0;
+    return {evento:ev, presentes, ausentes:total-presentes, total};
+  });
+  tbody.innerHTML=resumenEventosCache.map(r=>`<tr>
+      <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}</td>
+      <td style="color:#065f46;font-weight:700">${r.presentes}</td>
+      <td style="color:#cc0000;font-weight:700">${r.ausentes}</td>
+      <td>${r.total}</td>
+    </tr>`).join('');
+}
+
+function exportarResumenEventos(){
+  if(!resumenEventosCache.length){ showToast('⚠️ No hay eventos registrados'); return; }
+  let csv='\uFEFF'+'EVENTO,FECHA,PRESENTES,AUSENTES,TOTAL\n';
+  resumenEventosCache.forEach(r=>{
+    csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.presentes}","${r.ausentes}","${r.total}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`GEMACUU_resumen_eventos_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Resumen descargado');
 }
 
 function renderEventoChips(){
