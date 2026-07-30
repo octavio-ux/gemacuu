@@ -104,7 +104,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Escribe tu primer nombre en mayúscula</div>
     </div>
     <div id="acceso-error" class="error-msg hidden"></div>
-    <button class="btn btn-primary w-full" onclick="confirmarAcceso()">Entrar →</button>
+    <button class="btn btn-primary w-full" id="btn-entrar-gate" onclick="confirmarAcceso()">Entrar →</button>
   </div>
 
   <div id="app" class="hidden">
@@ -240,7 +240,7 @@ async function init(){
   document.getElementById('inp-seccion-gate').focus();
 }
 
-function confirmarAcceso(){
+async function confirmarAcceso(){
   const numSeccion=document.getElementById('inp-seccion-gate').value.trim();
   const nombreInput=document.getElementById('inp-nombre-gate').value.trim().toUpperCase();
   const errEl=document.getElementById('acceso-error');
@@ -256,7 +256,22 @@ function confirmarAcceso(){
     errEl.classList.remove('hidden');
     return;
   }
-  if(!seccionesValidas.includes(numSeccion)){
+
+  // Validación en vivo contra "personal" (no la lista fija capturada al generar el enlace):
+  // así una sección corregida después de generado el enlace se reconoce de inmediato.
+  const btn=document.getElementById('btn-entrar-gate');
+  btn.disabled=true;
+  btn.textContent='Verificando…';
+  let personas;
+  try{
+    personas=await sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&status=eq.activo&select=id&limit=1`);
+  }catch(e){
+    personas=null;
+  }
+  btn.disabled=false;
+  btn.textContent='Entrar →';
+
+  if(!Array.isArray(personas)||!personas.length){
     errEl.textContent='Número de sección no válido.';
     errEl.classList.remove('hidden');
     return;
