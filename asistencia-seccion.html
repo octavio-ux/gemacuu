@@ -516,9 +516,20 @@ function buscarOtraPersona(q){
   q=q.trim();
   if(q.length<2){ resEl.classList.add('hidden'); resEl.innerHTML=''; return; }
   buscarOtraTimer=setTimeout(async()=>{
-    const rows=await sbGet('personal',`?status=eq.activo&nombre=ilike.*${encodeURIComponent(q)}*&order=nombre.asc&limit=15`);
+    // Se piden más de los que se muestran porque el orden alfabético de la
+    // base no prioriza "empieza con" — eso se resuelve abajo, en el cliente.
+    const rows=await sbGet('personal',`?status=eq.activo&nombre=ilike.*${encodeURIComponent(q)}*&order=nombre.asc&limit=50`);
     const yaListados=new Set([...personalSeccion,...personalExterno].map(p=>p.id));
-    buscarOtraResultados=(Array.isArray(rows)?rows:[]).filter(p=>!yaListados.has(p.id));
+    const qUpper=q.toUpperCase();
+    buscarOtraResultados=(Array.isArray(rows)?rows:[])
+      .filter(p=>!yaListados.has(p.id))
+      .sort((a,b)=>{
+        const aEmpieza=(a.nombre||'').toUpperCase().startsWith(qUpper);
+        const bEmpieza=(b.nombre||'').toUpperCase().startsWith(qUpper);
+        if(aEmpieza!==bEmpieza) return aEmpieza?-1:1;
+        return (a.nombre||'').localeCompare(b.nombre||'','es');
+      })
+      .slice(0,15);
     if(!buscarOtraResultados.length){
       resEl.innerHTML='<div class="buscar-otra-vacio">Sin resultados (o ya está en la lista).</div>';
     } else {
