@@ -194,15 +194,7 @@ tr:hover td{background:#f8faff}
 .inc-search-item:last-child{border-bottom:none}
 .evento-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)}
 .evento-chip.sel{background:#e6f1fb;border-color:#185fa5;color:#0c447c;font-weight:700}
-.asis-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px}
-.asis-row:last-child{border-bottom:none}
-.asis-num{width:22px;height:22px;border-radius:50%;background:#e6f1fb;color:#0c447c;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.estado-select{width:126px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
-.estado-select:disabled,.btn:disabled{opacity:.5;cursor:not-allowed}
-.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
-.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
-.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
-.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .badge-nuevo-reg{background:#e6f1fb;color:#185fa5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
 .badge-reingreso-reg{background:#faeeda;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
 .badge-pendiente{background:#fef3c7;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
@@ -526,13 +518,12 @@ tr:hover td{background:#f8faff}
             <div id="ev-meta-display" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm btn-guardar-asistencia" onclick="guardarAsistencia()">💾 Guardar asistencia</button>
             <button id="btn-editar-evento" class="btn btn-secondary btn-sm" onclick="editarEvento()" style="display:none">✏️</button>
             <button id="btn-eliminar-evento" class="btn btn-danger btn-sm" onclick="eliminarEvento()" style="display:none">🗑</button>
           </div>
         </div>
         <!-- Métricas -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px">
           <div style="background:var(--bg2);border-radius:8px;padding:10px;text-align:center">
             <div id="ev-total" style="font-size:22px;font-weight:800;color:var(--pan)">0</div>
             <div style="font-size:10px;color:var(--muted)">Total</div>
@@ -557,31 +548,6 @@ tr:hover td{background:#f8faff}
             <div id="ev-sin-capturar" style="font-size:22px;font-weight:800;color:var(--muted)">0</div>
             <div style="font-size:10px;color:var(--muted)">Sin capturar</div>
           </div>
-        </div>
-        <!-- Filtros -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-          <div style="position:relative;flex:1;min-width:180px">
-            <input type="text" id="ev-buscar" placeholder="Escribe nombre para buscar..." oninput="filtrarAsistencia()">
-          </div>
-          <select id="ev-pad-filter" onchange="filtrarAsistencia()" style="min-width:140px">
-            <option value="">Todos los padrinos</option>
-            <option>Fernando Amezcua</option>
-            <option>Martin Yáñez</option>
-            <option>Rene Espinoza</option>
-          </select>
-          <select id="ev-asis-filter" onchange="filtrarAsistencia()" style="min-width:120px">
-            <option value="">Todos</option>
-            <option value="ASISTENCIA">Asistencia</option>
-            <option value="FALTA">Falta</option>
-            <option value="VACACIONES">Vacaciones</option>
-            <option value="INCAPACIDAD">Incapacidad</option>
-            <option value="SIN_CAPTURAR">Sin capturar</option>
-          </select>
-        </div>
-        <!-- Lista asistencia -->
-        <div id="ev-lista-asis" style="border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
-        <div style="display:flex;justify-content:flex-end;margin-top:10px">
-          <button class="btn btn-primary btn-guardar-asistencia" onclick="guardarAsistencia()">💾 Guardar asistencia</button>
         </div>
       </div>
     </div>
@@ -2001,12 +1967,9 @@ let eventosCache=[];
 let eventoActualId=null;
 let asistenciaLocal={};  // { personal_id: 0|1 }
 let eventoLoadToken=0;   // se incrementa en cada seleccionarEvento(); una respuesta async solo se aplica si su token sigue vigente
-const asistenciaPendientes=new Map(); // `${evento_id}:${personal_id}` -> Promise del autoguardado en curso
 
-const PAD_BADGE={'Fernando Amezcua':'badge-pan','Martin Yáñez':'badge-green','Rene Espinoza':'badge-amber'};
 const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
 const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
-const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vacaciones',INCAPACIDAD:'e-incapacidad'};
 
 async function cargarEventos(){
   const data=await sbGet('eventos','?order=fecha.desc');
@@ -2088,11 +2051,6 @@ function renderEventoChips(){
     </button>`).join('');
 }
 
-function setAsistenciaInteractiva(activa){
-  document.querySelectorAll('.estado-select').forEach(b=>b.disabled=!activa);
-  document.querySelectorAll('.btn-guardar-asistencia').forEach(b=>b.disabled=!activa);
-}
-
 async function seleccionarEvento(id){
   eventoActualId=id;
   const miToken=++eventoLoadToken;
@@ -2112,19 +2070,14 @@ async function seleccionarEvento(id){
   document.getElementById('btn-editar-evento').style.display=isAdmin?'inline-flex':'none';
   document.getElementById('btn-eliminar-evento').style.display=isAdmin?'inline-flex':'none';
 
-  // Limpiar la vista de inmediato y bloquear toggles mientras carga
-  document.getElementById('panel-asistencia').style.display='block';
-  document.getElementById('ev-lista-asis').innerHTML='<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Cargando asistencia…</div>';
-  setAsistenciaInteractiva(false);
-
   // Cargar asistencia ya registrada
+  document.getElementById('panel-asistencia').style.display='block';
   const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${id}`);
   if(miToken!==eventoLoadToken) return; // el usuario ya cambió de evento; se descarta esta respuesta obsoleta
   const asisRegistrada=Array.isArray(asisData)?asisData:[];
   asisRegistrada.forEach(a=>{ asistenciaLocal[a.personal_id]=a.estado||null; });
 
-  setAsistenciaInteractiva(true);
-  filtrarAsistencia();
+  actualizarConteosEvento();
 }
 
 function contarEstados(){
@@ -2137,19 +2090,9 @@ function contarEstados(){
   return {...conteo, SIN_CAPTURAR:sinCapturar};
 }
 
-function filtrarAsistencia(){
-  const q=(document.getElementById('ev-buscar').value||'').toLowerCase();
-  const pad=document.getElementById('ev-pad-filter').value;
-  const asis=document.getElementById('ev-asis-filter').value;
-
-  let lista=personalCache;
-  if(q) lista=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q));
-  if(pad) lista=lista.filter(p=>p.padrino===pad);
-  if(asis!=='') lista=lista.filter(p=>{
-    const val=asistenciaLocal[p.id]||null;
-    return asis==='SIN_CAPTURAR'?!val:val===asis;
-  });
-
+// Solo lectura: la captura real de asistencia ya se hace desde el enlace
+// temporal por sección (asistencia-seccion.html), no desde esta pestaña.
+function actualizarConteosEvento(){
   const c=contarEstados();
   document.getElementById('ev-total').textContent=personalCache.length;
   document.getElementById('ev-asistencia').textContent=c.ASISTENCIA;
@@ -2157,152 +2100,6 @@ function filtrarAsistencia(){
   document.getElementById('ev-vacaciones').textContent=c.VACACIONES;
   document.getElementById('ev-incapacidad').textContent=c.INCAPACIDAD;
   document.getElementById('ev-sin-capturar').textContent=c.SIN_CAPTURAR;
-
-  document.getElementById('ev-lista-asis').innerHTML=lista.length?lista.map((p,i)=>{
-    const marcado=asistenciaLocal[p.id]||'';
-    const padClass=PAD_BADGE[p.padrino]||'badge-gray';
-    return `<div class="asis-row" id="arow-${p.id}">
-      <div class="asis-num">${i+1}</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:13px">${p.nombre||'—'}</div>
-        <div style="font-size:11px;color:var(--muted)">${p.area||''} ${p.seccion?'· Sec. '+p.seccion:''}</div>
-      </div>
-      <span class="badge ${padClass}" style="font-size:10px">${p.padrino||'—'}</span>
-      <span id="asis-status-${p.id}" style="font-size:13px;width:16px;text-align:center;flex-shrink:0" onclick="reintentarAsistencia('${p.id}')"></span>
-      <select class="estado-select ${marcado?ESTADO_CLASS[marcado]:''}" onchange="toggleAsistencia('${p.id}',this.value,this)">
-        <option value="" ${marcado?'disabled':''}>— sin capturar —</option>
-        ${ESTADOS.map(e=>`<option value="${e}" ${e===marcado?'selected':''}>${ESTADO_LABEL[e]}</option>`).join('')}
-      </select>
-    </div>`;
-  }).join(''):`<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Sin resultados.</div>`;
-}
-
-function toggleAsistencia(personalId, nuevoEstado, sel){
-  const eventoId=eventoActualId;
-  if(!eventoId) return;
-  asistenciaLocal[personalId]=nuevoEstado;
-  sel.className=`estado-select ${ESTADO_CLASS[nuevoEstado]||''}`;
-  sel.querySelector('option[value=""]').disabled=true;
-
-  // Actualizar contadores
-  const c=contarEstados();
-  document.getElementById('ev-asistencia').textContent=c.ASISTENCIA;
-  document.getElementById('ev-falta').textContent=c.FALTA;
-  document.getElementById('ev-vacaciones').textContent=c.VACACIONES;
-  document.getElementById('ev-incapacidad').textContent=c.INCAPACIDAD;
-  document.getElementById('ev-sin-capturar').textContent=c.SIN_CAPTURAR;
-
-  // Contexto inmutable de esta operación: se captura ahora, nunca se vuelve a leer eventoActualId/asistenciaLocal después
-  guardarAsistenciaIndividual({evento_id:eventoId, personal_id:personalId, estado:nuevoEstado, registrado_por:currentUser});
-}
-
-function reintentarAsistencia(personalId){
-  const clave=`${eventoActualId}:${personalId}`;
-  if(asistenciaPendientes.has(clave)) return; // ya hay un intento en curso
-  const estado=asistenciaLocal[personalId];
-  if(!estado) return;
-  guardarAsistenciaIndividual({evento_id:eventoActualId, personal_id:personalId, estado, registrado_por:currentUser});
-}
-
-function marcarEstadoFila(personalId, eventoId, estado){
-  if(eventoId!==eventoActualId) return; // el evento ya no es el que está visible; no tocar la UI
-  const el=document.getElementById(`asis-status-${personalId}`);
-  if(!el) return;
-  if(estado==='guardando'){ el.textContent='⏳'; el.style.cursor='default'; el.title='Guardando…'; }
-  else if(estado==='ok'){
-    el.textContent='✓'; el.style.cursor='default'; el.title='Guardado';
-    setTimeout(()=>{ if(el.textContent==='✓') el.textContent=''; },1200);
-  } else if(estado==='error'){
-    el.textContent='⚠️'; el.style.cursor='pointer'; el.title='Error al guardar — clic para reintentar';
-  } else { el.textContent=''; el.style.cursor='default'; el.title=''; }
-}
-
-async function guardarAsistenciaIndividual(ctx, intentos=0){
-  const clave=`${ctx.evento_id}:${ctx.personal_id}`;
-  marcarEstadoFila(ctx.personal_id, ctx.evento_id, 'guardando');
-  const promesa=(async()=>{
-    try{
-      const r=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?on_conflict=evento_id,personal_id`,{
-        method:'POST',
-        headers:{
-          'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,
-          'Content-Type':'application/json',
-          'Prefer':'resolution=merge-duplicates,return=minimal'
-        },
-        body:JSON.stringify([{
-          evento_id:ctx.evento_id,
-          personal_id:ctx.personal_id,
-          estado:ctx.estado,
-          registrado_por:ctx.registrado_por,
-          updated_at:new Date().toISOString()
-        }])
-      });
-      if(!r.ok) throw new Error(await r.text());
-      marcarEstadoFila(ctx.personal_id, ctx.evento_id, 'ok');
-    }catch(e){
-      if(intentos<2){
-        await new Promise(res=>setTimeout(res,800*(intentos+1)));
-        asistenciaPendientes.delete(clave);
-        return guardarAsistenciaIndividual(ctx, intentos+1);
-      }
-      console.error('Error guardando asistencia individual',ctx,e);
-      marcarEstadoFila(ctx.personal_id, ctx.evento_id, 'error');
-    }finally{
-      asistenciaPendientes.delete(clave);
-    }
-  })();
-  asistenciaPendientes.set(clave, promesa);
-  return promesa;
-}
-
-async function guardarAsistencia(){
-  if(!eventoActualId){showToast('⚠️ Selecciona un evento');return;}
-  // Contexto inmutable de este guardado masivo: se captura ahora y no se vuelve a leer eventoActualId/asistenciaLocal después
-  const eventoId=eventoActualId;
-  const usuario=currentUser;
-  // Solo gente con un estado realmente capturado — nunca se inventa "Falta" para quien no se ha revisado.
-  const snapshot=personalCache.filter(p=>asistenciaLocal[p.id]).map(p=>({personal_id:p.id, estado:asistenciaLocal[p.id]}));
-
-  showToast('⏳ Guardando asistencia...');
-  setAsistenciaInteractiva(false);
-
-  // Esperar a que terminen los autoguardados individuales en curso antes del guardado masivo
-  await Promise.allSettled(Array.from(asistenciaPendientes.values()));
-
-  const registros=snapshot.map(s=>({
-    evento_id:eventoId,
-    personal_id:s.personal_id,
-    estado:s.estado,
-    registrado_por:usuario,
-    updated_at:new Date().toISOString()
-  }));
-
-  // Upsert idempotente en lotes de 50 (sin borrar antes)
-  let lotesConError=0;
-  for(let i=0;i<registros.length;i+=50){
-    const lote=registros.slice(i,i+50);
-    try{
-      const r=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?on_conflict=evento_id,personal_id`,{
-        method:'POST',
-        headers:{
-          'apikey':SB_KEY,
-          'Authorization':`Bearer ${SB_KEY}`,
-          'Content-Type':'application/json',
-          'Prefer':'resolution=merge-duplicates,return=minimal'
-        },
-        body:JSON.stringify(lote)
-      });
-      if(!r.ok){ lotesConError++; console.error('Error guardando lote',i,await r.text()); }
-    }catch(e){
-      lotesConError++;
-      console.error('Error de red guardando lote',i,e);
-    }
-  }
-
-  if(eventoId===eventoActualId) setAsistenciaInteractiva(true);
-
-  if(lotesConError>0) showToast(`⚠️ ${lotesConError} lote(s) fallaron al guardar — vuelve a intentar`);
-  else showToast('✅ Asistencia guardada correctamente');
 }
 
 function abrirFormEvento(){
