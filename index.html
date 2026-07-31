@@ -195,6 +195,14 @@ tr:hover td{background:#f8faff}
 .evento-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)}
 .evento-chip.sel{background:#e6f1fb;border-color:#185fa5;color:#0c447c;font-weight:700}
 .btn:disabled{opacity:.5;cursor:not-allowed}
+.corr-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
+.corr-row:last-child{border-bottom:none}
+.estado-select{width:126px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
+.estado-select:disabled{opacity:.5;cursor:not-allowed}
+.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
+.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
+.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
+.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
 .badge-nuevo-reg{background:#e6f1fb;color:#185fa5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
 .badge-reingreso-reg{background:#faeeda;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
 .badge-pendiente{background:#fef3c7;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
@@ -305,10 +313,12 @@ tr:hover td{background:#f8faff}
     <button class="ntab" onclick="goTab('ines',this)">🪪 INEs</button>
     <button class="ntab" id="tab-red" onclick="goTab('red',this)">🤝 Red de Amigos</button>
     <button class="ntab" id="tab-eventos" onclick="goTab('eventos',this)">📅 Eventos</button>
+    <button class="ntab" id="tab-correccion" onclick="goTab('correccion',this)">✏️ Corregir asistencia</button>
     <button class="ntab" id="tab-nuevos" onclick="goTab('nuevos',this)">➕ Nuevos Amigos</button>
     <button class="ntab" id="tab-incidencias" onclick="goTab('incidencias',this)">⚠️ Incidencias</button>
     <button class="ntab" id="tab-control" onclick="goTab('control',this)">⚙️ Control</button>
     <button class="ntab" id="tab-bajas" onclick="goTab('bajas',this)">🚫 Bajas (30)</button>
+    <button class="ntab" id="tab-historial" onclick="goTab('historial',this)">📜 Historial de cambios</button>
   </div>
 
   <!-- PANEL: BASE OPERATIVA -->
@@ -509,6 +519,23 @@ tr:hover td{background:#f8faff}
       </div>
     </div>
 
+    <!-- Faltas acumuladas por persona (todos los eventos) -->
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📉 Faltas acumuladas por persona</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Suma de "Falta" en todos los eventos registrados. Solo se listan personas con al menos una falta.</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportarFaltasAcumuladas()">↓ Excel</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Sección</th><th>Padrino</th><th>Total de faltas</th></tr></thead>
+          <tbody id="faltas-acumuladas-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Panel asistencia del evento seleccionado -->
     <div id="panel-asistencia" style="display:none">
       <div class="card" style="margin-bottom:1rem">
@@ -579,6 +606,49 @@ tr:hover td{background:#f8faff}
       <div style="border-top:1px solid var(--border);margin:16px 0"></div>
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
       <div id="enl-lista"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: CORRECCIÓN DE ASISTENCIA -->
+  <div id="panel-correccion" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">✏️ Corregir asistencia</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Corrige el estado de cualquier persona, de cualquier sección, para un evento ya registrado.
+        Cada cambio queda guardado en el historial con quién lo hizo y qué valor tenía antes.
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Actividad</label>
+        <select id="corr-evento" onchange="seleccionarEventoCorreccion(this.value)">
+          <option value="">— selecciona un evento —</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="corr-contenido" style="display:none">
+      <div class="card" style="margin-bottom:1rem">
+        <input type="text" id="corr-buscar" placeholder="Buscar persona por nombre..." oninput="renderCorreccionLista()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none">
+      </div>
+      <div class="card">
+        <div id="corr-lista"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: HISTORIAL DE CAMBIOS (solo Octavio) -->
+  <div id="panel-historial" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">📜 Historial de cambios de asistencia</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Últimos 200 cambios hechos desde "Corregir asistencia", más reciente primero.</div>
+      <input type="text" id="hist-buscar" placeholder="Buscar por nombre de la persona o de quién hizo el cambio..." oninput="renderHistorial()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none">
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Fecha/hora</th><th>Evento</th><th>Persona</th><th>Antes</th><th>Después</th><th>Modificado por</th></tr></thead>
+          <tbody id="hist-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -1044,6 +1114,7 @@ const CLOUD='da7m6y3kk';
 const PRESET='barrido_electoral';
 const PASSWORDS={'Fernando Amezcua':'24617','Martin Yáñez':'18132','Rene Espinoza':'24181','Octavio':'chelo1942','Karen Alarcón':'25068','Lluvia Aceves':'25872','Vianey':'5936'};
 const EDITORAS=['Karen Alarcón','Lluvia Aceves','Vianey'];
+const PADRINOS=['Fernando Amezcua','Martin Yáñez','Rene Espinoza'];
 const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
   {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
@@ -1127,6 +1198,7 @@ async function doLogin(){
   document.getElementById('tname').textContent=currentUser;
   const isAdmin=currentUser==='Octavio';
   const isEditor=EDITORAS.includes(currentUser);
+  const isPadrino=PADRINOS.includes(currentUser);
   document.getElementById('btn-export').style.display=(isAdmin||isEditor)?'inline-flex':'none';
   document.getElementById('btn-nueva-persona').style.display=(isAdmin||isEditor)?'inline-flex':'none';
   document.getElementById('tab-red').style.display='block';
@@ -1135,6 +1207,8 @@ async function doLogin(){
   document.getElementById('tab-nuevos').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-control').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-bajas').style.display=(isAdmin||isEditor)?'block':'none';
+  document.getElementById('tab-correccion').style.display=(isAdmin||isEditor||isPadrino)?'block':'none';
+  document.getElementById('tab-historial').style.display=isAdmin?'block':'none';
   await cargarPersonal();
   renderStats();
   renderPersonal();
@@ -1970,6 +2044,7 @@ let eventoLoadToken=0;   // se incrementa en cada seleccionarEvento(); una respu
 
 const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
 const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
+const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vacaciones',INCAPACIDAD:'e-incapacidad'};
 
 async function cargarEventos(){
   const data=await sbGet('eventos','?order=fecha.desc');
@@ -1992,6 +2067,7 @@ async function cargarEventos(){
     seleccionarEvento(eventosCache[0].id);
   }
   await cargarResumenEventos();
+  await cargarFaltasAcumuladas();
 }
 
 let resumenEventosCache=[]; // [{evento, asistencia, falta, vacaciones, incapacidad, sinCapturar, total}]
@@ -2024,6 +2100,44 @@ async function cargarResumenEventos(){
       <td style="color:var(--muted)">${r.sinCapturar}</td>
       <td>${r.total}</td>
     </tr>`).join('');
+}
+
+let faltasAcumuladasCache=[]; // [{persona, total}]
+
+async function cargarFaltasAcumuladas(){
+  const tbody=document.getElementById('faltas-acumuladas-tbody');
+  const faltasData=await sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id');
+  const conteoPorPersona={};
+  (Array.isArray(faltasData)?faltasData:[]).forEach(a=>{
+    conteoPorPersona[a.personal_id]=(conteoPorPersona[a.personal_id]||0)+1;
+  });
+  faltasAcumuladasCache=personalCache
+    .filter(p=>conteoPorPersona[p.id]>0)
+    .map(p=>({persona:p, total:conteoPorPersona[p.id]}))
+    .sort((a,b)=>b.total-a.total);
+  if(!faltasAcumuladasCache.length){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted)">Nadie tiene faltas registradas todavía.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=faltasAcumuladasCache.map(r=>`<tr>
+      <td><b>${r.persona.nombre||''}</b></td>
+      <td>${r.persona.seccion?'Sec. '+r.persona.seccion:'—'}</td>
+      <td>${r.persona.padrino||'—'}</td>
+      <td style="color:#cc0000;font-weight:700">${r.total}</td>
+    </tr>`).join('');
+}
+
+function exportarFaltasAcumuladas(){
+  if(!faltasAcumuladasCache.length){ showToast('⚠️ No hay faltas registradas'); return; }
+  let csv='\uFEFF'+'NOMBRE,SECCIÓN,PADRINO,TOTAL DE FALTAS\n';
+  faltasAcumuladasCache.forEach(r=>{
+    csv+=`"${r.persona.nombre||''}","${r.persona.seccion||''}","${r.persona.padrino||''}","${r.total}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`GEMACUU_faltas_acumuladas_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Faltas acumuladas descargadas');
 }
 
 function exportarResumenEventos(){
@@ -2181,6 +2295,170 @@ async function exportarEventos(){
   a.download=`GEMACUU_asistencia_${(ev?.nombre||'evento').replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   showToast('✓ Excel de asistencia descargado');
+}
+
+// ── CORRECCIÓN DE ASISTENCIA (con historial) ──
+let corrEventoId=null;
+let corrAsistenciaLocal={};    // { personal_id: estado|null }
+let corrPendientes=new Map();  // personal_id -> Promise en curso
+
+async function cargarCorreccion(){
+  const data=await sbGet('eventos','?order=fecha.desc');
+  eventosCache=Array.isArray(data)?data:[];
+  const sel=document.getElementById('corr-evento');
+  const actual=sel.value;
+  sel.innerHTML='<option value="">— selecciona un evento —</option>'+
+    eventosCache.map(ev=>`<option value="${ev.id}">${ev.nombre}${ev.fecha?' · '+ev.fecha:''}</option>`).join('');
+  if(actual&&eventosCache.some(ev=>ev.id===actual)){
+    sel.value=actual;
+    await seleccionarEventoCorreccion(actual); // refresca por si algo cambió desde la última visita
+  } else {
+    corrEventoId=null;
+    document.getElementById('corr-contenido').style.display='none';
+  }
+}
+
+async function seleccionarEventoCorreccion(eventoId){
+  corrEventoId=eventoId||null;
+  corrAsistenciaLocal={};
+  if(!corrEventoId){
+    document.getElementById('corr-contenido').style.display='none';
+    return;
+  }
+  document.getElementById('corr-contenido').style.display='block';
+  document.getElementById('corr-buscar').value='';
+  document.getElementById('corr-lista').innerHTML='<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Cargando…</div>';
+
+  const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${corrEventoId}`);
+  if(corrEventoId!==eventoId) return; // el usuario ya cambió de evento
+  (Array.isArray(asisData)?asisData:[]).forEach(a=>{ corrAsistenciaLocal[a.personal_id]=a.estado||null; });
+  renderCorreccionLista();
+}
+
+function renderCorreccionLista(){
+  const q=(document.getElementById('corr-buscar').value||'').toLowerCase();
+  let lista=personalCache;
+  if(q) lista=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q));
+
+  document.getElementById('corr-lista').innerHTML=lista.length?lista.map(p=>{
+    const marcado=corrAsistenciaLocal[p.id]||'';
+    return `<div class="corr-row" id="corr-row-${p.id}">
+      <div style="flex:1;min-width:140px">
+        <div style="font-weight:700">${p.nombre||'—'}</div>
+        <div style="font-size:11px;color:var(--muted)">${p.padrino||''} ${p.seccion?'· Sec. '+p.seccion:''}</div>
+      </div>
+      <span id="corr-status-${p.id}" style="font-size:13px;width:16px;text-align:center;flex-shrink:0" onclick="reintentarCorreccion('${p.id}')"></span>
+      <select class="estado-select ${marcado?ESTADO_CLASS[marcado]:''}" onchange="cambiarEstadoCorreccion('${p.id}',this.value,this)">
+        <option value="" ${marcado?'disabled':''}>— sin capturar —</option>
+        ${ESTADOS.map(e=>`<option value="${e}" ${e===marcado?'selected':''}>${ESTADO_LABEL[e]}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join(''):`<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Sin resultados.</div>`;
+}
+
+let corrUltimoCtx={}; // personal_id -> último ctx enviado, para que reintentar conserve el estado_anterior correcto
+
+function cambiarEstadoCorreccion(personalId,nuevoEstado,sel){
+  const estadoAnterior=corrAsistenciaLocal[personalId]||null;
+  corrAsistenciaLocal[personalId]=nuevoEstado;
+  sel.className=`estado-select ${ESTADO_CLASS[nuevoEstado]||''}`;
+  sel.querySelector('option[value=""]').disabled=true;
+  const ctx={evento_id:corrEventoId, personal_id:personalId, estado_anterior:estadoAnterior, estado_nuevo:nuevoEstado};
+  corrUltimoCtx[personalId]=ctx;
+  guardarCorreccion(ctx);
+}
+
+function reintentarCorreccion(personalId){
+  if(corrPendientes.has(personalId)) return;
+  const ctx=corrUltimoCtx[personalId];
+  if(!ctx) return;
+  guardarCorreccion(ctx);
+}
+
+function marcarEstadoCorreccion(personalId,estado){
+  const el=document.getElementById(`corr-status-${personalId}`);
+  if(!el) return;
+  if(estado==='guardando'){ el.textContent='⏳'; el.style.cursor='default'; el.title='Guardando…'; }
+  else if(estado==='ok'){
+    el.textContent='✓'; el.style.cursor='default'; el.title='Guardado';
+    setTimeout(()=>{ if(el.textContent==='✓') el.textContent=''; },1200);
+  } else if(estado==='error'){
+    el.textContent='⚠️'; el.style.cursor='pointer'; el.title='Error al guardar — clic para reintentar';
+  } else { el.textContent=''; el.style.cursor='default'; el.title=''; }
+}
+
+async function guardarCorreccion(ctx,intentos=0){
+  marcarEstadoCorreccion(ctx.personal_id,'guardando');
+  const promesa=(async()=>{
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?on_conflict=evento_id,personal_id`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify([{evento_id:ctx.evento_id, personal_id:ctx.personal_id, estado:ctx.estado_nuevo, registrado_por:currentUser, updated_at:new Date().toISOString()}])
+      });
+      if(!r.ok) throw new Error(await r.text());
+      // El cambio no cuenta como guardado hasta que también quede su rastro en el historial
+      // (reintentar aquí re-manda el estado, pero es un upsert idempotente — no hace daño repetirlo).
+      const rHist=await fetch(`${SB_URL}/rest/v1/asistencia_historial`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify([{evento_id:ctx.evento_id, personal_id:ctx.personal_id, estado_anterior:ctx.estado_anterior, estado_nuevo:ctx.estado_nuevo, modificado_por:currentUser}])
+      });
+      if(!rHist.ok) throw new Error(await rHist.text());
+      marcarEstadoCorreccion(ctx.personal_id,'ok');
+    }catch(e){
+      if(intentos<2){
+        await new Promise(res=>setTimeout(res,800*(intentos+1)));
+        corrPendientes.delete(ctx.personal_id);
+        return guardarCorreccion(ctx,intentos+1);
+      }
+      console.error('Error guardando corrección',ctx,e);
+      marcarEstadoCorreccion(ctx.personal_id,'error');
+    }finally{
+      corrPendientes.delete(ctx.personal_id);
+    }
+  })();
+  corrPendientes.set(ctx.personal_id,promesa);
+  return promesa;
+}
+
+// ── HISTORIAL DE CAMBIOS (solo Octavio) ──
+let historialCache=[];
+
+async function cargarHistorial(){
+  const tbody=document.getElementById('hist-tbody');
+  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Cargando…</td></tr>';
+  document.getElementById('hist-buscar').value='';
+  const data=await sbGet('asistencia_historial','?order=modificado_en.desc&limit=200');
+  historialCache=Array.isArray(data)?data:[];
+  renderHistorial();
+}
+
+function renderHistorial(){
+  const q=(document.getElementById('hist-buscar').value||'').toLowerCase();
+  const tbody=document.getElementById('hist-tbody');
+  if(!historialCache.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin cambios registrados todavía.</td></tr>';
+    return;
+  }
+  let filas=historialCache.map(h=>{
+    const persona=personalCache.find(p=>p.id===h.personal_id);
+    const evento=eventosCache.find(e=>e.id===h.evento_id);
+    return {...h, nombrePersona:persona?.nombre||'(persona no encontrada)', nombreEvento:evento?evento.nombre+(evento.fecha?' · '+evento.fecha:''):'(evento no encontrado)'};
+  });
+  if(q) filas=filas.filter(f=>f.nombrePersona.toLowerCase().includes(q)||(f.modificado_por||'').toLowerCase().includes(q));
+  if(!filas.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin resultados.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=filas.map(f=>`<tr>
+      <td>${new Date(f.modificado_en).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${f.nombreEvento}</td>
+      <td>${f.nombrePersona}</td>
+      <td>${f.estado_anterior?ESTADO_LABEL[f.estado_anterior]:'sin capturar'}</td>
+      <td><b>${ESTADO_LABEL[f.estado_nuevo]||f.estado_nuevo}</b></td>
+      <td>${f.modificado_por||''}</td>
+    </tr>`).join('');
 }
 
 // ── INCIDENCIAS ──
@@ -2630,6 +2908,8 @@ function goTab(name,btn){
   document.getElementById('panel-'+name).classList.add('on');
   btn.classList.add('on');
   if(name==='eventos'){cargarEventos();}
+  if(name==='correccion'){cargarCorreccion();}
+  if(name==='historial'){cargarHistorial();}
   if(name==='incidencias'){cargarIncidencias();}
   if(name==='nuevos'){cargarNuevos();}
   if(name==='red'){filtrarRed();}
