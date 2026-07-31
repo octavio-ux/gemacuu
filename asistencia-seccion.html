@@ -16,7 +16,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .hidden{display:none!important}
 .topbar{background:var(--pan);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,102,.2)}
 .topbar-logo{font-size:17px;font-weight:800;letter-spacing:.06em}
-.exp-badge{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px}
+.exp-badge{display:inline-block;margin-top:6px;margin-right:6px;font-size:11px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px}
+.exp-countdown.exp-warn{background:#fce8e8;border-color:#f5c2c2;color:var(--red)}
 .wrap{max-width:640px;margin:0 auto;padding:16px}
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;box-shadow:var(--shadow);margin-bottom:1rem}
 .center-msg{text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px}
@@ -85,6 +86,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="topbar">
   <div class="topbar-logo">🧹 GEMACUU</div>
   <div class="exp-badge" id="exp-badge">⏳ Enlace temporal</div>
+  <div class="exp-badge exp-countdown hidden" id="exp-countdown"></div>
 </div>
 
 <div class="wrap">
@@ -212,6 +214,19 @@ function mostrarError(msg){
   document.getElementById('error-box').classList.remove('hidden');
 }
 
+// Reloj visual, no cambia cuándo el enlace deja de funcionar (eso lo decide expiraEn ya cargado).
+function actualizarCuentaRegresiva(){
+  if(!expiraEn) return;
+  const el=document.getElementById('exp-countdown');
+  const msRestantes=expiraEn.getTime()-Date.now();
+  const totalMin=Math.max(0,Math.floor(msRestantes/60000));
+  const horas=Math.floor(totalMin/60);
+  const minutos=totalMin%60;
+  el.textContent=`⏱ ${String(horas).padStart(2,'0')}h ${String(minutos).padStart(2,'0')}m restantes`;
+  el.classList.toggle('exp-warn',totalMin<60);
+  el.classList.remove('hidden');
+}
+
 async function init(){
   const params=new URLSearchParams(location.search);
   token=params.get('token');
@@ -246,6 +261,8 @@ async function init(){
   eventoInfo=(Array.isArray(eventoRows)&&eventoRows[0])?eventoRows[0]:null;
 
   document.getElementById('exp-badge').textContent=`⏳ Enlace temporal — caduca ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+  actualizarCuentaRegresiva();
+  setInterval(actualizarCuentaRegresiva,60000);
   document.getElementById('loading').classList.add('hidden');
 
   registradoPor=(localStorage.getItem('gemacuu_asis_nombre')||'').toUpperCase();
