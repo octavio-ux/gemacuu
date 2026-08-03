@@ -492,6 +492,7 @@ tr:hover td{background:#f8faff}
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-secondary btn-sm" onclick="exportarEventos()">↓ Excel</button>
+          <button class="btn btn-secondary btn-sm" onclick="compartirWhatsAppEvento()">📤 Compartir por WhatsApp</button>
           <button class="btn btn-primary btn-sm" id="btn-nuevo-evento" onclick="abrirFormEvento()" style="display:none">➕ Nuevo evento</button>
         </div>
       </div>
@@ -2295,6 +2296,56 @@ async function exportarEventos(){
   a.download=`GEMACUU_asistencia_${(ev?.nombre||'evento').replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   showToast('✓ Excel de asistencia descargado');
+}
+
+async function compartirWhatsAppEvento(){
+  if(!eventoActualId){showToast('⚠️ Selecciona un evento primero');return;}
+  showToast('⏳ Preparando mensaje...');
+  const eventoId=eventoActualId;
+  const ev=eventosCache.find(e=>e.id===eventoId);
+
+  const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoId}&select=personal_id,estado`);
+  const asisMap={};
+  (Array.isArray(asisData)?asisData:[]).forEach(a=>{asisMap[a.personal_id]=a.estado;});
+
+  const conteo={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
+  const faltaNombres=[];
+  personalCache.forEach(p=>{
+    const v=asisMap[p.id];
+    if(v&&conteo.hasOwnProperty(v)){
+      conteo[v]++;
+      if(v==='FALTA') faltaNombres.push(p.nombre||'');
+    }
+  });
+  const total=personalCache.length;
+  const sinCapturar=total-ESTADOS.reduce((s,e)=>s+conteo[e],0);
+
+  let faltaTexto=`${conteo.FALTA}`;
+  if(faltaNombres.length){
+    const primeros=faltaNombres.slice(0,3);
+    const resto=faltaNombres.length-primeros.length;
+    faltaTexto+=` (${primeros.join(', ')}${resto>0?' +'+resto+' más':''})`;
+  }
+
+  let totalEncuestas=0;
+  try{
+    const encData=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=total_encuestas`);
+    (Array.isArray(encData)?encData:[]).forEach(r=>{ if(typeof r.total_encuestas==='number') totalEncuestas+=r.total_encuestas; });
+  }catch(e){ console.error('Error cargando encuestas',e); }
+
+  const linkEvidencia=`${location.origin}${location.pathname.replace(/index\.html$/,'')}evidencia-evento.html?evento=${eventoId}`;
+
+  const mensaje=`GEMACUU — ${ev?.nombre||''}\n${ev?.fecha||''}\n\n`+
+    `✅ Asistencia: ${conteo.ASISTENCIA}\n`+
+    `❌ Falta: ${faltaTexto}\n`+
+    `🏖 Vacaciones: ${conteo.VACACIONES}\n`+
+    `🏥 Incapacidad: ${conteo.INCAPACIDAD}\n`+
+    `⏳ Sin capturar: ${sinCapturar}\n`+
+    `Total: ${total}\n\n`+
+    `📋 Encuestas/puertas: ${totalEncuestas}\n\n`+
+    `📸 Ver evidencia completa: ${linkEvidencia}`;
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`,'_blank');
 }
 
 // ── CORRECCIÓN DE ASISTENCIA (con historial) ──

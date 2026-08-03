@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GEMACUU · Evidencia por evento</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pan:#003399;--red:#cc0000;--green:#2d6a4f;
+  --bg:#f0f4ff;--text:#1a1a2e;--muted:#6b7280;
+  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --radius:14px;--radius-sm:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:32px}
+.hidden{display:none!important}
+.topbar{background:var(--pan);color:#fff;padding:18px 16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,102,.2)}
+.topbar-logo{font-size:19px;font-weight:800;letter-spacing:.06em}
+.topbar-sub{font-size:12px;opacity:.85;margin-top:4px}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;box-shadow:var(--shadow);margin-bottom:1rem}
+.center-msg{text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px}
+.center-msg .ico{font-size:40px;margin-bottom:10px}
+.dato-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:2px}
+.dato-valor{font-size:16px;font-weight:700;color:var(--pan)}
+.card-title{font-size:15px;font-weight:800;color:var(--pan);margin-bottom:12px}
+.secciones-chips{display:flex;flex-wrap:wrap;gap:6px}
+.seccion-chip{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--bg);color:var(--muted)}
+.seccion-chip.sel{background:#e6eeff;border-color:var(--pan);color:var(--pan)}
+.fotos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.foto-item img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);display:block;margin-bottom:8px;background:var(--bg)}
+.btn-descarga{display:block;width:100%;text-align:center;padding:9px;background:var(--pan);color:#fff;border-radius:var(--radius-sm);font-size:12px;font-weight:700;text-decoration:none}
+.vacio{text-align:center;color:var(--muted);font-size:13px;padding:1.5rem 0}
+.footer{text-align:center;font-size:11px;color:var(--muted);margin-top:24px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">🧹 GEMACUU</div>
+  <div class="topbar-sub">Evidencia por evento</div>
+</div>
+
+<div class="wrap">
+
+  <div id="loading" class="center-msg">
+    <div class="ico">⏳</div>
+    Cargando…
+  </div>
+
+  <div id="error-box" class="card hidden">
+    <div class="center-msg">
+      <div class="ico">⚠️</div>
+      <div id="error-msg"></div>
+    </div>
+  </div>
+
+  <div id="contenido" class="hidden">
+    <div class="card">
+      <div class="dato-label">Evento</div>
+      <div class="dato-valor" id="d-evento"></div>
+      <div class="dato-label" style="margin-top:10px">Fecha</div>
+      <div class="dato-valor" id="d-fecha"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📍 Secciones</div>
+      <div class="secciones-chips" id="secciones-chips"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" id="fotos-titulo">📸 Evidencia fotográfica</div>
+      <div class="fotos-grid" id="fotos-cont"></div>
+    </div>
+  </div>
+
+  <div class="footer">Documento generado por GEMACUU</div>
+</div>
+
+<script>
+const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+const SECCIONES=[
+  {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
+  {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
+  {num:'908',encargado:'Ernesto Alonso Ruiz',padrino:'Fernando Amezcua'},
+  {num:'3227',encargado:'Rubí Jurado',padrino:'Fernando Amezcua'},
+  {num:'3231',encargado:'Mayela Chavira',padrino:'Fernando Amezcua'},
+  {num:'3232',encargado:'Sofia Mejia',padrino:'Fernando Amezcua'},
+  {num:'3233',encargado:'Luis Raúl Vargas Ortega',padrino:'Fernando Amezcua'},
+  {num:'3228',encargado:'Lluvia Aceves',padrino:'Rene Espinoza'},
+  {num:'3234',encargado:'Alberto Yahir Favela',padrino:'Rene Espinoza'},
+  {num:'3235',encargado:'Fabián González',padrino:'Rene Espinoza'},
+  {num:'3236',encargado:'Noé Morales',padrino:'Rene Espinoza'},
+  {num:'3237',encargado:'Víctor TG',padrino:'Rene Espinoza'},
+  {num:'3238',encargado:'Ana Payán',padrino:'Rene Espinoza'},
+  {num:'3245',encargado:'Jesús González',padrino:'Rene Espinoza'},
+  {num:'3239',encargado:'Elizabeth Chalaca',padrino:'Rene Espinoza'},
+  {num:'909',encargado:'Saúl Bustillo',padrino:'Martin Yáñez'},
+  {num:'3244',encargado:'Carlos Daniel Pérez',padrino:'Martin Yáñez'},
+  {num:'3246',encargado:'Sergio Carreón',padrino:'Martin Yáñez'},
+  {num:'3255',encargado:'Félix Vázquez',padrino:'Martin Yáñez'},
+  {num:'3256',encargado:'José Luis Sánchez',padrino:'Martin Yáñez'},
+  {num:'3259',encargado:'Jesús Borruel',padrino:'Martin Yáñez'},
+  {num:'3261',encargado:'Yesenia Aróstegui',padrino:'Martin Yáñez'},
+  {num:'3263',encargado:'Pedro Hernández',padrino:'Martin Yáñez'},
+];
+
+let evento=null;
+let fotosPorSeccion={};
+let seccionSeleccionada=null;
+
+async function sbGet(table,params=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+function mostrarError(msg){
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('error-msg').textContent=msg;
+  document.getElementById('error-box').classList.remove('hidden');
+}
+
+// Inserta fl_attachment justo después de /upload/ para que Cloudinary fuerce
+// la descarga real del archivo en vez de solo abrir la imagen en el navegador.
+function urlDescarga(cloudinaryUrl){
+  return cloudinaryUrl.replace('/upload/','/upload/fl_attachment/');
+}
+
+async function init(){
+  const params=new URLSearchParams(location.search);
+  const eventoId=params.get('evento');
+  if(!eventoId){ mostrarError('Este enlace no incluye un evento válido.'); return; }
+
+  let fotos;
+  try{
+    const eventoRows=await sbGet('eventos',`?id=eq.${encodeURIComponent(eventoId)}`);
+    evento=Array.isArray(eventoRows)?eventoRows[0]:null;
+    if(!evento){ mostrarError('No se encontró el evento indicado en este enlace.'); return; }
+
+    const fotosData=await sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`);
+    fotos=Array.isArray(fotosData)?fotosData:[];
+  }catch(e){
+    console.error(e);
+    mostrarError('No se pudo cargar la evidencia de este evento. Intenta de nuevo más tarde.');
+    return;
+  }
+
+  fotos.forEach(f=>{
+    if(!fotosPorSeccion[f.seccion]) fotosPorSeccion[f.seccion]=[];
+    fotosPorSeccion[f.seccion].push(f);
+  });
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('contenido').classList.remove('hidden');
+  document.getElementById('d-evento').textContent=evento.nombre||'—';
+  document.getElementById('d-fecha').textContent=evento.fecha||'—';
+
+  renderChips();
+
+  const primeraConFotos=SECCIONES.find(s=>(fotosPorSeccion[s.num]||[]).length>0);
+  seleccionarSeccion(primeraConFotos?primeraConFotos.num:SECCIONES[0].num);
+}
+
+function renderChips(){
+  const cont=document.getElementById('secciones-chips');
+  cont.innerHTML=SECCIONES.map(s=>{
+    const n=(fotosPorSeccion[s.num]||[]).length;
+    return `<button type="button" class="seccion-chip ${s.num===seccionSeleccionada?'sel':''}" onclick="seleccionarSeccion('${s.num}')">Sec. ${s.num} (${n})</button>`;
+  }).join('');
+}
+
+function seleccionarSeccion(num){
+  seccionSeleccionada=num;
+  renderChips();
+  const fotos=fotosPorSeccion[num]||[];
+  document.getElementById('fotos-titulo').textContent=`📸 Sección ${num} (${fotos.length})`;
+  const fotosCont=document.getElementById('fotos-cont');
+  if(!fotos.length){
+    fotosCont.innerHTML='<div class="vacio">Sin evidencia fotográfica todavía</div>';
+  } else {
+    fotosCont.innerHTML=fotos.map((f,i)=>`
+      <div class="foto-item">
+        <img src="${f.cloudinary_url}" loading="lazy" alt="Evidencia sección ${num} ${i+1}">
+        <a class="btn-descarga" href="${urlDescarga(f.cloudinary_url)}" download>⬇ Descargar</a>
+      </div>`).join('');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
