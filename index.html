@@ -514,7 +514,7 @@ tr:hover td{background:#f8faff}
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th><th>Encuestas/puertas</th></tr></thead>
+          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th><th>Totales de la app de encuestas</th></tr></thead>
           <tbody id="resumen-eventos-tbody"></tbody>
         </table>
       </div>
@@ -576,6 +576,17 @@ tr:hover td{background:#f8faff}
             <div id="ev-sin-capturar" style="font-size:22px;font-weight:800;color:var(--muted)">0</div>
             <div style="font-size:10px;color:var(--muted)">Sin capturar</div>
           </div>
+        </div>
+      </div>
+
+      <!-- Resumen por padrino y sección (uso interno, mismos datos que evidencia-evento.html) -->
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title">🗂 Resumen por padrino y sección</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Padrino</th><th>Sección</th><th>Líder</th><th>Participaron</th><th>Encuestas</th><th>Fotos</th></tr></thead>
+            <tbody id="resumen-padrino-seccion-tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -2151,7 +2162,7 @@ function exportarFaltasAcumuladas(){
 
 function exportarResumenEventos(){
   if(!resumenEventosCache.length){ showToast('⚠️ No hay eventos registrados'); return; }
-  let csv='\uFEFF'+'EVENTO,FECHA,ASISTENCIA,FALTA,VACACIONES,INCAPACIDAD,SIN CAPTURAR,TOTAL,ENCUESTAS/PUERTAS\n';
+  let csv='\uFEFF'+'EVENTO,FECHA,ASISTENCIA,FALTA,VACACIONES,INCAPACIDAD,SIN CAPTURAR,TOTAL,TOTALES DE LA APP DE ENCUESTAS\n';
   resumenEventosCache.forEach(r=>{
     csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.asistencia}","${r.falta}","${r.vacaciones}","${r.incapacidad}","${r.sinCapturar}","${r.total}","${r.encuestas}"\n`;
   });
@@ -2201,6 +2212,7 @@ async function seleccionarEvento(id){
   asisRegistrada.forEach(a=>{ asistenciaLocal[a.personal_id]=a.estado||null; });
 
   actualizarConteosEvento();
+  renderResumenPadrinoSeccion(id,miToken);
 }
 
 function contarEstados(){
@@ -2223,6 +2235,42 @@ function actualizarConteosEvento(){
   document.getElementById('ev-vacaciones').textContent=c.VACACIONES;
   document.getElementById('ev-incapacidad').textContent=c.INCAPACIDAD;
   document.getElementById('ev-sin-capturar').textContent=c.SIN_CAPTURAR;
+}
+
+// Participaron = personal.seccion === sección del catálogo, con estado ASISTENCIA
+// en asistencia_eventos para este evento (misma definición que el resto de la
+// pestaña Eventos usa; no cruza capturado_en_seccion de apoyos de otras secciones).
+async function renderResumenPadrinoSeccion(eventoId,miToken){
+  const tbody=document.getElementById('resumen-padrino-seccion-tbody');
+  if(!tbody) return;
+  const [fotosData,encData]=await Promise.all([
+    sbGet('fotos_actividad_seccion',`?evento_id=eq.${eventoId}&select=seccion`),
+    sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion,total_encuestas`)
+  ]);
+  if(miToken!==eventoLoadToken) return; // el usuario ya cambió de evento; se descarta esta respuesta obsoleta
+
+  const fotosPorSeccion={};
+  (Array.isArray(fotosData)?fotosData:[]).forEach(f=>{
+    fotosPorSeccion[f.seccion]=(fotosPorSeccion[f.seccion]||0)+1;
+  });
+  const encuestasPorSeccion={};
+  (Array.isArray(encData)?encData:[]).forEach(e=>{
+    encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
+  });
+  const participaronPorSeccion={};
+  personalCache.forEach(p=>{
+    if(!p.seccion) return;
+    if(asistenciaLocal[p.id]==='ASISTENCIA') participaronPorSeccion[p.seccion]=(participaronPorSeccion[p.seccion]||0)+1;
+  });
+
+  tbody.innerHTML=SECCIONES.map(s=>`<tr>
+      <td>${s.padrino||'—'}</td>
+      <td><b>${s.num}</b></td>
+      <td>${s.encargado||'—'}</td>
+      <td>${participaronPorSeccion[s.num]||0}</td>
+      <td>${encuestasPorSeccion[s.num]||0}</td>
+      <td>${fotosPorSeccion[s.num]||0}</td>
+    </tr>`).join('');
 }
 
 function abrirFormEvento(){
@@ -2343,17 +2391,24 @@ async function compartirWhatsAppEvento(){
 
   const linkEvidencia=`${location.origin}${location.pathname.replace(/index\.html$/,'')}evidencia-evento.html?evento=${eventoId}`;
 
-  const mensaje=`GEMACUU — ${ev?.nombre||''}\n${ev?.fecha||''}\n\n`+
-    `✅ Asistencia: ${conteo.ASISTENCIA}\n`+
-    `❌ Falta: ${faltaTexto}\n`+
-    `🏖 Vacaciones: ${conteo.VACACIONES}\n`+
-    `🏥 Incapacidad: ${conteo.INCAPACIDAD}\n`+
-    `⏳ Sin capturar: ${sinCapturar}\n`+
-    `Total: ${total}\n\n`+
-    `📋 Encuestas/puertas: ${totalEncuestas}\n\n`+
-    `📸 Ver evidencia completa: ${linkEvidencia}`;
+  // Emojis como escapes \u{...} (en vez del glifo literal) para que el mensaje
+  // nunca dependa de que este archivo se sirva/edite siempre en UTF-8 limpio.
+  const E_CHECK='\u2705', E_CROSS='\u274C', E_BEACH='\u{1F3D6}', E_HOSPITAL='\u{1F3E5}',
+        E_HOURGLASS='\u23F3', E_CLIPBOARD='\u{1F4CB}', E_CAMERA='\u{1F4F8}';
 
-  window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`,'_blank');
+  const mensaje=`GEMACUU — ${ev?.nombre||''}\n${ev?.fecha||''}\n\n`+
+    `${E_CHECK} Asistencia: ${conteo.ASISTENCIA}\n`+
+    `${E_CROSS} Falta: ${faltaTexto}\n`+
+    `${E_BEACH} Vacaciones: ${conteo.VACACIONES}\n`+
+    `${E_HOSPITAL} Incapacidad: ${conteo.INCAPACIDAD}\n`+
+    `${E_HOURGLASS} Sin capturar: ${sinCapturar}\n`+
+    `Total: ${total}\n\n`+
+    `${E_CLIPBOARD} Encuestas/puertas: ${totalEncuestas}\n\n`+
+    `${E_CAMERA} Ver evidencia completa: ${linkEvidencia}`;
+
+  // api.whatsapp.com en vez de wa.me: mismo destino, pero sin el salto de
+  // redirección extra de wa.me, que en algunos casos maltrata emoji de 4 bytes.
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`,'_blank');
 }
 
 // ── CORRECCIÓN DE ASISTENCIA (con historial) ──
