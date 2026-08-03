@@ -88,6 +88,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   </div>
 </div>
 
+<div id="revocado-box" class="wrap hidden">
+  <div class="card center-msg">
+    <div class="ico">🔒</div>
+    <div>Esta evidencia ya no está disponible públicamente.</div>
+  </div>
+</div>
+
 <div id="contenido" class="hidden">
 
   <div class="banner">
@@ -178,6 +185,11 @@ function mostrarError(msg){
   document.getElementById('error-box').classList.remove('hidden');
 }
 
+function mostrarRevocado(){
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('revocado-box').classList.remove('hidden');
+}
+
 // Inserta fl_attachment justo después de /upload/ para que Cloudinary fuerce
 // la descarga real del archivo en vez de solo abrir la imagen en el navegador.
 function urlDescarga(cloudinaryUrl){
@@ -193,6 +205,7 @@ async function init(){
     const eventoRows=await sbGet('eventos',`?id=eq.${encodeURIComponent(eventoId)}`);
     evento=Array.isArray(eventoRows)?eventoRows[0]:null;
     if(!evento){ mostrarError('No se encontró el evento indicado en este enlace.'); return; }
+    if(evento.evidencia_publica===false){ mostrarRevocado(); return; }
 
     const [personal,asisEvento,faltasTodas,fotos,encuestas]=await Promise.all([
       sbGet('personal','?status=eq.activo&select=id,nombre,seccion&order=nombre.asc'),
