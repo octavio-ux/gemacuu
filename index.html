@@ -984,16 +984,20 @@ tr:hover td{background:#f8faff}
         <label>Fecha *</label>
         <input type="date" id="ev-fecha">
       </div>
-      <div class="fg" style="margin-bottom:0">
-        <label>Padrino responsable</label>
-        <select id="ev-padrino">
-          <option value="">— seleccionar —</option>
-          <option>Fernando Amezcua</option>
-          <option>Martin Yáñez</option>
-          <option>Rene Espinoza</option>
-          <option>Todos</option>
-        </select>
+      <div class="fg" id="ev-dias-wrap" style="margin-bottom:0">
+        <label>¿Cuántos días?</label>
+        <input type="number" id="ev-dias" min="1" step="1" value="1">
       </div>
+    </div>
+    <div class="fg">
+      <label>Padrino responsable</label>
+      <select id="ev-padrino">
+        <option value="">— seleccionar —</option>
+        <option>Fernando Amezcua</option>
+        <option>Martin Yáñez</option>
+        <option>Rene Espinoza</option>
+        <option>Todos</option>
+      </select>
     </div>
     <div class="fg">
       <label>Lugar</label>
@@ -2332,6 +2336,8 @@ function abrirFormEvento(){
   document.getElementById('ev-edit-id').value='';
   document.getElementById('ev-nombre').value='';
   document.getElementById('ev-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ev-dias').value='1';
+  document.getElementById('ev-dias-wrap').style.display='';
   document.getElementById('ev-padrino').value='';
   document.getElementById('ev-lugar').value='';
   document.getElementById('modal-ev-titulo').textContent='📅 Nuevo Evento';
@@ -2344,30 +2350,59 @@ function editarEvento(){
   document.getElementById('ev-edit-id').value=ev.id;
   document.getElementById('ev-nombre').value=ev.nombre||'';
   document.getElementById('ev-fecha').value=ev.fecha||'';
+  document.getElementById('ev-dias').value='1';
+  document.getElementById('ev-dias-wrap').style.display='none'; // varios días solo aplica al crear, no al editar
   document.getElementById('ev-padrino').value=ev.padrino||'';
   document.getElementById('ev-lugar').value=ev.lugar||'';
   document.getElementById('modal-ev-titulo').textContent='✏️ Editar Evento';
   document.getElementById('modal-evento').style.display='flex';
 }
 
+// Suma días en UTC sobre los componentes Y-M-D del input date, para no
+// arriesgar que un +1 día se recorra por la zona horaria del navegador.
+function sumarDiasFecha(fechaStr,dias){
+  const [y,m,d]=fechaStr.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d));
+  dt.setUTCDate(dt.getUTCDate()+dias);
+  return dt.toISOString().split('T')[0];
+}
+
 async function guardarEvento(){
   const nombre=document.getElementById('ev-nombre').value.trim();
   const fecha=document.getElementById('ev-fecha').value;
   if(!nombre||!fecha){showToast('⚠️ Nombre y fecha son obligatorios');return;}
-  const payload={
-    nombre,fecha,
-    padrino:document.getElementById('ev-padrino').value,
-    lugar:document.getElementById('ev-lugar').value.trim(),
-    creado_por:currentUser,
-    created_at:new Date().toISOString()
-  };
+  const padrino=document.getElementById('ev-padrino').value;
+  const lugar=document.getElementById('ev-lugar').value.trim();
   const editId=document.getElementById('ev-edit-id').value;
+
   if(editId){
+    const payload={nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()};
     await sbPatch('eventos',`?id=eq.${editId}`,payload);
     showToast('✓ Evento actualizado');
-  } else {
-    await sbPost('eventos',payload);
+    closeModal('modal-evento');
+    await cargarEventos();
+    return;
+  }
+
+  const diasRaw=parseInt(document.getElementById('ev-dias').value,10);
+  const dias=Number.isFinite(diasRaw)&&diasRaw>1?diasRaw:1;
+
+  if(dias===1){
+    await sbPost('eventos',{nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()});
     showToast('✓ Evento creado');
+  } else {
+    const fechaFinal=sumarDiasFecha(fecha,dias-1);
+    if(!confirm(`¿Crear ${dias} eventos, uno por día del ${fecha} al ${fechaFinal}?`)) return;
+    const creadoEn=new Date().toISOString();
+    const payloads=Array.from({length:dias},(_,i)=>({
+      nombre:`${nombre} Día ${i+1}`,
+      fecha:sumarDiasFecha(fecha,i),
+      padrino,lugar,
+      creado_por:currentUser,
+      created_at:creadoEn
+    }));
+    await sbPost('eventos',payloads);
+    showToast(`✓ ${dias} eventos creados`);
   }
   closeModal('modal-evento');
   await cargarEventos();
