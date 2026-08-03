@@ -2052,6 +2052,7 @@ async function confirmarSustituto(){
 let eventosCache=[];
 let eventoActualId=null;
 let asistenciaLocal={};  // { personal_id: 0|1 }
+let estadoPorSeccionLocal={}; // { seccion: { personal_id: estado } } — según capturado_en_seccion (con fallback a personal.seccion si no viene), para saber dónde participó cada quien realmente ese día, no solo su sección de nómina
 let eventoLoadToken=0;   // se incrementa en cada seleccionarEvento(); una respuesta async solo se aplica si su token sigue vigente
 
 const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
@@ -2189,6 +2190,7 @@ async function seleccionarEvento(id){
   eventoActualId=id;
   const miToken=++eventoLoadToken;
   asistenciaLocal={};
+  estadoPorSeccionLocal={};
   renderEventoChips();
   const ev=eventosCache.find(e=>e.id===id);
   if(!ev) return;
@@ -2209,7 +2211,17 @@ async function seleccionarEvento(id){
   const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${id}`);
   if(miToken!==eventoLoadToken) return; // el usuario ya cambió de evento; se descarta esta respuesta obsoleta
   const asisRegistrada=Array.isArray(asisData)?asisData:[];
-  asisRegistrada.forEach(a=>{ asistenciaLocal[a.personal_id]=a.estado||null; });
+  asisRegistrada.forEach(a=>{
+    asistenciaLocal[a.personal_id]=a.estado||null;
+    // Dónde participó realmente: la sección donde fue capturado (hay mucha rotación de
+    // personal entre secciones el día del evento); si esa fila no trae capturado_en_seccion
+    // (p.ej. quedó así desde "Corregir asistencia"), se usa su sección de nómina de respaldo.
+    const persona=personalCache.find(p=>p.id===a.personal_id);
+    const seccionEfectiva=a.capturado_en_seccion||(persona&&persona.seccion);
+    if(!seccionEfectiva) return;
+    if(!estadoPorSeccionLocal[seccionEfectiva]) estadoPorSeccionLocal[seccionEfectiva]={};
+    estadoPorSeccionLocal[seccionEfectiva][a.personal_id]=a.estado||null;
+  });
 
   actualizarConteosEvento();
   renderResumenPadrinoSeccion(id,miToken);
@@ -2237,9 +2249,10 @@ function actualizarConteosEvento(){
   document.getElementById('ev-sin-capturar').textContent=c.SIN_CAPTURAR;
 }
 
-// Participaron = personal.seccion === sección del catálogo, con estado ASISTENCIA
-// en asistencia_eventos para este evento (misma definición que el resto de la
-// pestaña Eventos usa; no cruza capturado_en_seccion de apoyos de otras secciones).
+// Participaron = gente cuya asistencia de este evento quedó capturada bajo esa
+// sección (estadoPorSeccionLocal, construido a partir de capturado_en_seccion en
+// seleccionarEvento), no su sección de nómina — así se refleja la rotación real
+// de personal entre secciones el día del evento.
 async function renderResumenPadrinoSeccion(eventoId,miToken){
   const tbody=document.getElementById('resumen-padrino-seccion-tbody');
   if(!tbody) return;
@@ -2258,9 +2271,9 @@ async function renderResumenPadrinoSeccion(eventoId,miToken){
     encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
   });
   const participaronPorSeccion={};
-  personalCache.forEach(p=>{
-    if(!p.seccion) return;
-    if(asistenciaLocal[p.id]==='ASISTENCIA') participaronPorSeccion[p.seccion]=(participaronPorSeccion[p.seccion]||0)+1;
+  SECCIONES.forEach(s=>{
+    const mapa=estadoPorSeccionLocal[s.num]||{};
+    participaronPorSeccion[s.num]=Object.values(mapa).filter(e=>e==='ASISTENCIA').length;
   });
 
   tbody.innerHTML=SECCIONES.map(s=>`<tr>

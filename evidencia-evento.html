@@ -155,7 +155,12 @@ const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones
 
 let evento=null;
 let personalCache=[];
-let asisMap={};             // personal_id -> estado (este evento)
+let asisMap={};             // personal_id -> estado (este evento, global)
+let estadoPorSeccion={};    // seccion -> { personal_id: estado } — según capturado_en_seccion,
+                             // con fallback a personal.seccion si esa fila no lo trae (p.ej. viene
+                             // de "Corregir asistencia"). Así se refleja dónde participó cada quien
+                             // en realidad, no solo su sección de nómina — hay mucha rotación de
+                             // personal entre secciones el día del evento.
 let faltasAcumuladas={};    // personal_id -> total de FALTA en todos los eventos
 let fotosPorSeccion={};
 let encuestasPorSeccion={};
@@ -191,14 +196,21 @@ async function init(){
 
     const [personal,asisEvento,faltasTodas,fotos,encuestas]=await Promise.all([
       sbGet('personal','?status=eq.activo&select=id,nombre,seccion&order=nombre.asc'),
-      sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado`),
+      sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado,capturado_en_seccion`),
       sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id'),
       sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`),
       sbGet('encuestas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion,total_encuestas`)
     ]);
 
     personalCache=Array.isArray(personal)?personal:[];
-    (Array.isArray(asisEvento)?asisEvento:[]).forEach(a=>{ asisMap[a.personal_id]=a.estado||null; });
+    (Array.isArray(asisEvento)?asisEvento:[]).forEach(a=>{
+      asisMap[a.personal_id]=a.estado||null;
+      const persona=personalCache.find(p=>p.id===a.personal_id);
+      const seccionEfectiva=a.capturado_en_seccion||(persona&&persona.seccion);
+      if(!seccionEfectiva) return;
+      if(!estadoPorSeccion[seccionEfectiva]) estadoPorSeccion[seccionEfectiva]={};
+      estadoPorSeccion[seccionEfectiva][a.personal_id]=a.estado||null;
+    });
     (Array.isArray(faltasTodas)?faltasTodas:[]).forEach(a=>{ faltasAcumuladas[a.personal_id]=(faltasAcumuladas[a.personal_id]||0)+1; });
     (Array.isArray(fotos)?fotos:[]).forEach(f=>{
       if(!fotosPorSeccion[f.seccion]) fotosPorSeccion[f.seccion]=[];
@@ -258,8 +270,9 @@ function renderFaltaron(){
 function renderSecciones(){
   const cont=document.getElementById('secciones-cont');
   cont.innerHTML=SECCIONES.map(s=>{
-    const personalSeccion=personalCache.filter(p=>p.seccion===s.num);
-    const participaron=personalSeccion.filter(p=>asisMap[p.id]==='ASISTENCIA').length;
+    const nativos=personalCache.filter(p=>p.seccion===s.num);
+    const mapaSeccion=estadoPorSeccion[s.num]||{};
+    const participaron=Object.values(mapaSeccion).filter(e=>e==='ASISTENCIA').length;
     const encuestas=encuestasPorSeccion[s.num]||0;
     const fotos=fotosPorSeccion[s.num]||[];
     const abierta=seccionesExpandidas.has(s.num);
@@ -275,18 +288,36 @@ function renderSecciones(){
         <div class="seccion-hdr-metric"><div class="n">${fotos.length}</div><div class="l">Fotos</div></div>
         <div class="seccion-arrow">▼</div>
       </div>
-      <div class="seccion-detail">${abierta?renderSeccionDetalle(s.num,personalSeccion,fotos):''}</div>
+      <div class="seccion-detail">${abierta?renderSeccionDetalle(s.num,nativos,mapaSeccion,fotos):''}</div>
     </div>`;
   }).join('');
 }
 
-function renderSeccionDetalle(num,personalSeccion,fotos){
-  const asisHtml=personalSeccion.length
-    ? `<div class="asis-grid">${personalSeccion.map(p=>{
-        const estado=asisMap[p.id];
-        const cls=estado?`e-${estado}`:'e-SIN';
-        const label=estado?ESTADO_LABEL[estado]:'Sin capturar';
-        return `<div class="asis-row"><span>${p.nombre||''}</span><span class="asis-estado ${cls}">${label}</span></div>`;
+function renderSeccionDetalle(num,nativos,mapaSeccion,fotos){
+  // Lista = personal nativo de la sección (mostrando "Sin capturar" si su asistencia
+  // quedó registrada en OTRA sección ese día) + gente de otras secciones que trabajó
+  // aquí (capturado_en_seccion === esta sección).
+  const idsConFila=new Set(Object.keys(mapaSeccion));
+  const filasNativos=nativos.map(p=>({
+    nombre:p.nombre||'',
+    estado:idsConFila.has(String(p.id))?mapaSeccion[p.id]:null,
+    esExterno:false
+  }));
+  const idsNativos=new Set(nativos.map(p=>String(p.id)));
+  const filasExternas=Object.keys(mapaSeccion)
+    .filter(pid=>!idsNativos.has(pid))
+    .map(pid=>{
+      const persona=personalCache.find(p=>String(p.id)===pid);
+      return {nombre:(persona&&persona.nombre)||'(persona)',estado:mapaSeccion[pid],esExterno:true};
+    });
+  const filas=[...filasNativos,...filasExternas];
+
+  const asisHtml=filas.length
+    ? `<div class="asis-grid">${filas.map(f=>{
+        const cls=f.estado?`e-${f.estado}`:'e-SIN';
+        const label=f.estado?ESTADO_LABEL[f.estado]:'Sin capturar';
+        const tag=f.esExterno?' <span style="color:var(--muted);font-size:10px">(otra sección)</span>':'';
+        return `<div class="asis-row"><span>${f.nombre}${tag}</span><span class="asis-estado ${cls}">${label}</span></div>`;
       }).join('')}</div>`
     : '<div class="vacio">Sin personal activo registrado en esta sección.</div>';
 
