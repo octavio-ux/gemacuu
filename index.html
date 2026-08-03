@@ -514,7 +514,7 @@ tr:hover td{background:#f8faff}
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th></tr></thead>
+          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th><th>Encuestas/puertas</th></tr></thead>
           <tbody id="resumen-eventos-tbody"></tbody>
         </table>
       </div>
@@ -2077,20 +2077,27 @@ async function cargarResumenEventos(){
   const tbody=document.getElementById('resumen-eventos-tbody');
   if(!eventosCache.length){
     resumenEventosCache=[];
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
     return;
   }
-  const estData=await sbGet('asistencia_eventos','?estado=not.is.null&select=evento_id,estado');
+  const [estData,encData]=await Promise.all([
+    sbGet('asistencia_eventos','?estado=not.is.null&select=evento_id,estado'),
+    sbGet('encuestas_seccion','?select=evento_id,total_encuestas')
+  ]);
   const conteoPorEvento={};
   (Array.isArray(estData)?estData:[]).forEach(a=>{
     if(!conteoPorEvento[a.evento_id]) conteoPorEvento[a.evento_id]={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
     if(conteoPorEvento[a.evento_id].hasOwnProperty(a.estado)) conteoPorEvento[a.evento_id][a.estado]++;
   });
+  const encuestasPorEvento={};
+  (Array.isArray(encData)?encData:[]).forEach(e=>{
+    encuestasPorEvento[e.evento_id]=(encuestasPorEvento[e.evento_id]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
+  });
   const total=personalCache.length;
   resumenEventosCache=eventosCache.map(ev=>{
     const c=conteoPorEvento[ev.id]||{ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
     const capturados=c.ASISTENCIA+c.FALTA+c.VACACIONES+c.INCAPACIDAD;
-    return {evento:ev, asistencia:c.ASISTENCIA, falta:c.FALTA, vacaciones:c.VACACIONES, incapacidad:c.INCAPACIDAD, sinCapturar:total-capturados, total};
+    return {evento:ev, asistencia:c.ASISTENCIA, falta:c.FALTA, vacaciones:c.VACACIONES, incapacidad:c.INCAPACIDAD, sinCapturar:total-capturados, total, encuestas:encuestasPorEvento[ev.id]||0};
   });
   tbody.innerHTML=resumenEventosCache.map(r=>`<tr>
       <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}</td>
@@ -2100,6 +2107,7 @@ async function cargarResumenEventos(){
       <td style="color:#854f0b;font-weight:700">${r.incapacidad}</td>
       <td style="color:var(--muted)">${r.sinCapturar}</td>
       <td>${r.total}</td>
+      <td>${r.encuestas}</td>
     </tr>`).join('');
 }
 
@@ -2143,9 +2151,9 @@ function exportarFaltasAcumuladas(){
 
 function exportarResumenEventos(){
   if(!resumenEventosCache.length){ showToast('⚠️ No hay eventos registrados'); return; }
-  let csv='\uFEFF'+'EVENTO,FECHA,ASISTENCIA,FALTA,VACACIONES,INCAPACIDAD,SIN CAPTURAR,TOTAL\n';
+  let csv='\uFEFF'+'EVENTO,FECHA,ASISTENCIA,FALTA,VACACIONES,INCAPACIDAD,SIN CAPTURAR,TOTAL,ENCUESTAS/PUERTAS\n';
   resumenEventosCache.forEach(r=>{
-    csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.asistencia}","${r.falta}","${r.vacaciones}","${r.incapacidad}","${r.sinCapturar}","${r.total}"\n`;
+    csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.asistencia}","${r.falta}","${r.vacaciones}","${r.incapacidad}","${r.sinCapturar}","${r.total}","${r.encuestas}"\n`;
   });
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
