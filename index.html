@@ -651,12 +651,26 @@ tr:hover td{background:#f8faff}
     <div class="card" style="margin-bottom:1rem">
       <div class="card-title">📜 Historial de cambios de asistencia</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Últimos 200 cambios hechos desde "Corregir asistencia", más reciente primero.</div>
-      <input type="text" id="hist-buscar" placeholder="Buscar por nombre de la persona o de quién hizo el cambio..." oninput="renderHistorial()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none">
+      <input type="text" id="hist-buscar" placeholder="Buscar por nombre de la persona o de quién hizo el cambio..." oninput="renderHistorial()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;margin-bottom:10px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="fg" style="flex:1;min-width:160px;margin-bottom:0">
+          <label>Sección</label>
+          <select id="hist-filtro-seccion" onchange="renderHistorial()">
+            <option value="">todas las secciones</option>
+          </select>
+        </div>
+        <div class="fg" style="flex:1;min-width:160px;margin-bottom:0">
+          <label>Líder</label>
+          <select id="hist-filtro-lider" onchange="renderHistorial()">
+            <option value="">todos los líderes</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="card">
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Fecha/hora</th><th>Evento</th><th>Persona</th><th>Antes</th><th>Después</th><th>Modificado por</th></tr></thead>
+          <thead><tr><th>Fecha/hora</th><th>Evento</th><th>Persona</th><th>Sección</th><th>Antes</th><th>Después</th><th>Modificado por</th></tr></thead>
           <tbody id="hist-tbody"></tbody>
         </table>
       </div>
@@ -2525,8 +2539,17 @@ let historialCache=[];
 
 async function cargarHistorial(){
   const tbody=document.getElementById('hist-tbody');
-  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Cargando…</td></tr>';
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Cargando…</td></tr>';
   document.getElementById('hist-buscar').value='';
+  const selSeccion=document.getElementById('hist-filtro-seccion');
+  const selLider=document.getElementById('hist-filtro-lider');
+  selSeccion.innerHTML='<option value="">todas las secciones</option>'+
+    SECCIONES.map(s=>`<option value="${s.num}">Sec. ${s.num} — ${s.encargado}</option>`).join('');
+  const lideresOrdenados=[...SECCIONES].sort((a,b)=>(a.encargado||'').localeCompare(b.encargado||'','es'));
+  selLider.innerHTML='<option value="">todos los líderes</option>'+
+    lideresOrdenados.map(s=>`<option value="${s.encargado}">${s.encargado}</option>`).join('');
+  selSeccion.value='';
+  selLider.value='';
   const data=await sbGet('asistencia_historial','?order=modificado_en.desc&limit=200');
   historialCache=Array.isArray(data)?data:[];
   renderHistorial();
@@ -2534,25 +2557,36 @@ async function cargarHistorial(){
 
 function renderHistorial(){
   const q=(document.getElementById('hist-buscar').value||'').toLowerCase();
+  const seccionFiltro=document.getElementById('hist-filtro-seccion').value;
+  const liderFiltro=document.getElementById('hist-filtro-lider').value;
   const tbody=document.getElementById('hist-tbody');
   if(!historialCache.length){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin cambios registrados todavía.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin cambios registrados todavía.</td></tr>';
     return;
   }
   let filas=historialCache.map(h=>{
     const persona=personalCache.find(p=>p.id===h.personal_id);
     const evento=eventosCache.find(e=>e.id===h.evento_id);
-    return {...h, nombrePersona:persona?.nombre||'(persona no encontrada)', nombreEvento:evento?evento.nombre+(evento.fecha?' · '+evento.fecha:''):'(evento no encontrado)'};
+    const seccionInfo=persona?.seccion?SECCIONES.find(s=>s.num===persona.seccion):null;
+    return {...h,
+      nombrePersona:persona?.nombre||'(persona no encontrada)',
+      nombreEvento:evento?evento.nombre+(evento.fecha?' · '+evento.fecha:''):'(evento no encontrado)',
+      seccionPersona:persona?.seccion||'',
+      liderPersona:seccionInfo?.encargado||''
+    };
   });
   if(q) filas=filas.filter(f=>f.nombrePersona.toLowerCase().includes(q)||(f.modificado_por||'').toLowerCase().includes(q));
+  if(seccionFiltro) filas=filas.filter(f=>f.seccionPersona===seccionFiltro);
+  if(liderFiltro) filas=filas.filter(f=>f.liderPersona===liderFiltro);
   if(!filas.length){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin resultados.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin resultados.</td></tr>';
     return;
   }
   tbody.innerHTML=filas.map(f=>`<tr>
       <td>${new Date(f.modificado_en).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
       <td>${f.nombreEvento}</td>
       <td>${f.nombrePersona}</td>
+      <td>${f.seccionPersona?`${f.seccionPersona}${f.liderPersona?' · '+f.liderPersona:''}`:'—'}</td>
       <td>${f.estado_anterior?ESTADO_LABEL[f.estado_anterior]:'sin capturar'}</td>
       <td><b>${ESTADO_LABEL[f.estado_nuevo]||f.estado_nuevo}</b></td>
       <td>${f.modificado_por||''}</td>

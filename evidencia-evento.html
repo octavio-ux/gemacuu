@@ -35,6 +35,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);margin-bottom:24px}
 .card-title{font-size:17px;font-weight:800;color:var(--pan);margin-bottom:14px;display:flex;align-items:center;gap:8px}
 
+/* ── TOP 3 ── */
+.top3-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.top3-item{display:flex;align-items:center;gap:14px;padding:16px;border-radius:var(--radius-sm);border:1px solid #fac775;background:linear-gradient(135deg,#fffbea 0%,#fff 100%)}
+.top3-medalla{font-size:34px;line-height:1;flex-shrink:0}
+.top3-info{flex:1;min-width:0}
+.top3-seccion{font-size:15px;font-weight:800;color:var(--pan)}
+.top3-lider{font-size:12px;font-weight:600;color:var(--text)}
+.top3-padrino{font-size:11px;color:var(--muted)}
+.top3-num{font-size:28px;font-weight:800;color:var(--amber);text-align:right;flex-shrink:0}
+
 /* ── FALTARON ── */
 .faltaron-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
 .faltaron-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#fce8e8;border:1px solid #f5c2c2;border-radius:var(--radius-sm)}
@@ -112,6 +122,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div class="stat-card"><div class="stat-num" id="st-incapacidad" style="color:var(--amber)">0</div><div class="stat-label">Incapacidad</div></div>
       <div class="stat-card"><div class="stat-num" id="st-total" style="color:var(--text)">0</div><div class="stat-label">Total personal</div></div>
       <div class="stat-card"><div class="stat-num" id="st-encuestas" style="color:var(--pan2)">0</div><div class="stat-label">Encuestas totales</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 Top 3 secciones — Encuestas/puertas</div>
+      <div id="top3-cont"></div>
     </div>
 
     <div class="card">
@@ -244,6 +259,7 @@ async function init(){
   document.getElementById('d-fecha').textContent=evento.fecha||'—';
 
   renderStats();
+  renderTop3();
   renderFaltaron();
   renderSecciones();
 }
@@ -261,6 +277,30 @@ function renderStats(){
   document.getElementById('st-incapacidad').textContent=conteo.INCAPACIDAD;
   document.getElementById('st-total').textContent=personalCache.length;
   document.getElementById('st-encuestas').textContent=encuestasTotales;
+}
+
+function renderTop3(){
+  const cont=document.getElementById('top3-cont');
+  const medallas=['🥇','🥈','🥉'];
+  const ranking=SECCIONES
+    .map(s=>({...s, total:encuestasPorSeccion[s.num]||0}))
+    .filter(s=>s.total>0)
+    .sort((a,b)=>b.total-a.total)
+    .slice(0,3);
+  if(!ranking.length){
+    cont.innerHTML='<div class="vacio">Aún no hay encuestas registradas para este evento.</div>';
+    return;
+  }
+  cont.innerHTML=`<div class="top3-grid">${ranking.map((s,i)=>`
+    <div class="top3-item">
+      <div class="top3-medalla">${medallas[i]}</div>
+      <div class="top3-info">
+        <div class="top3-seccion">Sec. ${s.num}</div>
+        <div class="top3-lider">${s.encargado||'—'}</div>
+        <div class="top3-padrino">${s.padrino||''}</div>
+      </div>
+      <div class="top3-num">${s.total}</div>
+    </div>`).join('')}</div>`;
 }
 
 function renderFaltaron(){
