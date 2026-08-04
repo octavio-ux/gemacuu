@@ -373,22 +373,22 @@ tr:hover td{background:#f8faff}
         <div class="org-line"></div>
         <div class="org-branches">
           <div class="org-branch">
-            <div class="org-pad org-f">Fernando Amezcua<div class="org-pad-sub">39 personas · 8 secciones</div></div>
+            <div class="org-pad org-f">Fernando Amezcua<div class="org-pad-sub" id="org-sub-f">cargando…</div></div>
             <div class="org-line" style="background:#003399"></div>
             <div style="background:#e6eeff;border:1px solid #b3c6ff;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#003399;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Vianey</div>
-            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2">855 · Karen Alarcón<br>856 · Jorge Lom<br>908 · Ernesto Ruiz<br>3227 · Rubí Jurado<br>3231 · Mayela Chavira<br>3232 · Sofía Mejía<br>3233 · Luis R. Vargas</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-f"></div>
           </div>
           <div class="org-branch">
-            <div class="org-pad org-m">Martin Yáñez<div class="org-pad-sub">57 personas · 9 secciones</div></div>
+            <div class="org-pad org-m">Martin Yáñez<div class="org-pad-sub" id="org-sub-m">cargando…</div></div>
             <div class="org-line" style="background:#2d6a4f"></div>
             <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#2d6a4f;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Karen</div>
-            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2">909 · Saúl Bustillo<br>3244 · Carlos D. Pérez<br>3246 · Sergio Carreón<br>3255 · Félix Vázquez<br>3256 · José L. Sánchez<br>3259 · Jesús Borruel<br>3261 · Yesenia Aróstegui<br>3263 · Pedro Hernández</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-m"></div>
           </div>
           <div class="org-branch">
-            <div class="org-pad org-r">Rene Espinoza<div class="org-pad-sub">39 personas · 7 secciones</div></div>
+            <div class="org-pad org-r">Rene Espinoza<div class="org-pad-sub" id="org-sub-r">cargando…</div></div>
             <div class="org-line" style="background:#854f0b"></div>
             <div style="background:#fef3c7;border:1px solid #fac775;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#854f0b;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Lluvia</div>
-            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2">3228 · Lluvia Aceves<br>3234 · Alberto Favela<br>3235 · Fabián González<br>3236 · Noé Morales<br>3237 · Víctor TG<br>3238 · Ana Payán<br>3245 · Jesús González</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-r"></div>
           </div>
         </div>
       </div>
@@ -1280,7 +1280,23 @@ async function cargarPersonal(){
     const secs=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))].sort();
     const sel=document.getElementById('p-sec');
     sel.innerHTML='<option value="">todas</option><option value="sin">sin sección</option>'+secs.map(s=>`<option value="${s}">Sec. ${s}</option>`).join('');
+    construirLiderPorSeccion();
   }catch(e){personalCache=[];console.error(e);}
+}
+
+// ── LÍDER DE SECCIÓN (en vivo) ──
+// El líder de cada sección es quien tiene es_lider_seccion=true y está activo,
+// leído de personalCache (que ya viene filtrado a status=activo) — no del
+// catálogo fijo SECCIONES, que solo conserva número de sección y padrino.
+let liderPorSeccionMap={};
+function construirLiderPorSeccion(){
+  liderPorSeccionMap={};
+  personalCache
+    .filter(p=>p.es_lider_seccion===true && p.seccion)
+    .forEach(p=>{ if(!liderPorSeccionMap[p.seccion]) liderPorSeccionMap[p.seccion]=p.nombre; });
+}
+function liderDe(seccionNum){
+  return liderPorSeccionMap[seccionNum]||'— sin líder activo —';
 }
 
 // ── STATS ──
@@ -1307,6 +1323,21 @@ function renderStats(){
     <div class="stat"><div class="stat-n" style="color:#854f0b">${cr.personas}</div><div class="stat-l">Rene</div></div>
     <div class="stat"><div class="stat-n" style="color:#cc0000">${BAJAS.length}</div><div class="stat-l">Bajas</div></div>
   `;
+  renderOrganigrama();
+}
+
+function renderOrganigrama(){
+  const PADRINOS=[
+    {clave:'Fernando', nombre:'Fernando Amezcua', subId:'org-sub-f', secsId:'org-secs-f'},
+    {clave:'Martin', nombre:'Martin Yáñez', subId:'org-sub-m', secsId:'org-secs-m'},
+    {clave:'Rene', nombre:'Rene Espinoza', subId:'org-sub-r', secsId:'org-secs-r'}
+  ];
+  PADRINOS.forEach(pad=>{
+    const c=conteoPadrino(pad.clave);
+    document.getElementById(pad.subId).textContent=`${c.personas} personas · ${c.secciones} secciones`;
+    const secciones=SECCIONES.filter(s=>s.padrino===pad.nombre);
+    document.getElementById(pad.secsId).innerHTML=secciones.map(s=>`${s.num} · ${liderDe(s.num)}`).join('<br>');
+  });
 }
 
 // ── PERSONAL ──
@@ -1431,7 +1462,7 @@ function renderSecciones(){
         <div class="sec-num">Sec. ${s.num}</div>
         <span class="badge" style="background:${PAD_COLOR[s.padrino]}20;color:${PAD_COLOR[s.padrino]};font-size:10px">${s.padrino.split(' ')[0]}</span>
       </div>
-      <div class="sec-enc">🗝 ${s.encargado}</div>
+      <div class="sec-enc">🗝 ${liderDe(s.num)}</div>
       <div class="sec-chips">${personas.map(p=>`<span class="chip">${(p.nombre||'').split(' ').slice(0,2).join(' ')}</span>`).join('')||'<span style="font-size:11px;color:var(--muted)">sin asignados</span>'}</div>
     </div>`;
   }).join('');
@@ -2335,7 +2366,7 @@ async function renderResumenPadrinoSeccion(eventoId,miToken){
   tbody.innerHTML=SECCIONES.map(s=>`<tr>
       <td>${s.padrino||'—'}</td>
       <td><b>${s.num}</b></td>
-      <td>${s.encargado||'—'}</td>
+      <td>${liderDe(s.num)}</td>
       <td>${participaronPorSeccion[s.num]||0}</td>
       <td>${encuestasPorSeccion[s.num]||0}</td>
       <td>${fotosPorSeccion[s.num]||0}</td>
@@ -2589,10 +2620,11 @@ async function cargarHistorial(){
   const selSeccion=document.getElementById('hist-filtro-seccion');
   const selLider=document.getElementById('hist-filtro-lider');
   selSeccion.innerHTML='<option value="">todas las secciones</option>'+
-    SECCIONES.map(s=>`<option value="${s.num}">Sec. ${s.num} — ${s.encargado}</option>`).join('');
-  const lideresOrdenados=[...SECCIONES].sort((a,b)=>(a.encargado||'').localeCompare(b.encargado||'','es'));
+    SECCIONES.map(s=>`<option value="${s.num}">Sec. ${s.num} — ${liderDe(s.num)}</option>`).join('');
+  // Solo líderes realmente activos ahora mismo — no todo el catálogo de secciones.
+  const lideresActivos=[...new Set(Object.values(liderPorSeccionMap))].sort((a,b)=>a.localeCompare(b,'es'));
   selLider.innerHTML='<option value="">todos los líderes</option>'+
-    lideresOrdenados.map(s=>`<option value="${s.encargado}">${s.encargado}</option>`).join('');
+    lideresActivos.map(nombre=>`<option value="${nombre}">${nombre}</option>`).join('');
   selSeccion.value='';
   selLider.value='';
   const data=await sbGet('asistencia_historial','?order=modificado_en.desc&limit=200');
@@ -2612,12 +2644,11 @@ function renderHistorial(){
   let filas=historialCache.map(h=>{
     const persona=personalCache.find(p=>p.id===h.personal_id);
     const evento=eventosCache.find(e=>e.id===h.evento_id);
-    const seccionInfo=persona?.seccion?SECCIONES.find(s=>s.num===persona.seccion):null;
     return {...h,
       nombrePersona:persona?.nombre||'(persona no encontrada)',
       nombreEvento:evento?evento.nombre+(evento.fecha?' · '+evento.fecha:''):'(evento no encontrado)',
       seccionPersona:persona?.seccion||'',
-      liderPersona:seccionInfo?.encargado||''
+      liderPersona:persona?.seccion?liderDe(persona.seccion):''
     };
   });
   if(q) filas=filas.filter(f=>f.nombrePersona.toLowerCase().includes(q)||(f.modificado_por||'').toLowerCase().includes(q));

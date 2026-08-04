@@ -144,7 +144,7 @@ async function init(){
   const seccion=params.get('seccion');
   if(!eventoId||!seccion){ mostrarError('Este enlace no incluye evento o sección válidos.'); return; }
 
-  let evento,fotos,asisRows;
+  let evento,fotos,asisRows,liderRows;
   try{
     const eventoRows=await sbGet('eventos',`?id=eq.${encodeURIComponent(eventoId)}`);
     evento=Array.isArray(eventoRows)?eventoRows[0]:null;
@@ -153,6 +153,9 @@ async function init(){
     // Personal cuya sección real es esta, para cruzar con asistencia_eventos
     const personalRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(seccion)}&select=id`);
     const idsPropios=(Array.isArray(personalRows)?personalRows:[]).map(p=>p.id);
+
+    // Líder en vivo: quien tiene es_lider_seccion=true y sigue activo en esta sección.
+    liderRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(seccion)}&es_lider_seccion=eq.true&status=eq.activo&select=nombre&order=nombre.asc&limit=1`);
 
     // "Capturado" = existe asistencia guardada para esta sección en este evento,
     // ya sea de su gente propia o de alguien marcado aquí desde otra sección.
@@ -183,11 +186,10 @@ async function init(){
     banner.textContent='⏳ Aún sin asistencia registrada para esta sección en este evento';
   }
 
-  const seccionInfo=SECCIONES.find(s=>s.num===seccion);
   document.getElementById('d-seccion').textContent=seccion;
   document.getElementById('d-evento').textContent=evento.nombre||'—';
   document.getElementById('d-fecha').textContent=evento.fecha||'—';
-  document.getElementById('d-lider').textContent=seccionInfo?.encargado||'—';
+  document.getElementById('d-lider').textContent=(Array.isArray(liderRows)&&liderRows[0]?.nombre)||'— sin líder activo —';
 
   document.getElementById('fotos-titulo').textContent=`📸 Evidencia fotográfica (${fotos.length})`;
   const fotosCont=document.getElementById('fotos-cont');
