@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GEMACUU · Reporte combinado</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pan:#003399;--pan2:#1a4fc4;--red:#cc0000;--green:#2d6a4f;--amber:#854f0b;
+  --bg:#f0f4ff;--text:#1a1a2e;--muted:#6b7280;
+  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --radius:16px;--radius-sm:9px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
+.hidden{display:none!important}
+.center-msg{text-align:center;padding:4rem 1.5rem;color:var(--muted);font-size:16px}
+.center-msg .ico{font-size:48px;margin-bottom:12px}
+
+/* ── BANNER ── */
+.banner{background:linear-gradient(135deg,var(--pan) 0%,var(--pan2) 100%);color:#fff;padding:32px 24px;text-align:center;box-shadow:0 4px 16px rgba(0,0,102,.25)}
+.banner-logo{font-size:14px;font-weight:700;letter-spacing:.12em;opacity:.75;margin-bottom:10px}
+.banner-nombre{font-size:clamp(22px,4vw,36px);font-weight:800;line-height:1.2}
+.banner-fecha{font-size:16px;opacity:.85;margin-top:8px;font-weight:600}
+.banner-dias{font-size:13px;opacity:.7;margin-top:6px}
+
+.wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;text-align:center;box-shadow:var(--shadow)}
+.stat-num{font-size:clamp(30px,4vw,42px);font-weight:800;line-height:1}
+.stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-top:6px}
+
+/* ── CARD ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);margin-bottom:24px}
+.card-title{font-size:17px;font-weight:800;color:var(--pan);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* ── TOP 3 ── */
+.top3-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.top3-item{display:flex;align-items:center;gap:14px;padding:16px;border-radius:var(--radius-sm);border:1px solid #fac775;background:linear-gradient(135deg,#fffbea 0%,#fff 100%)}
+.top3-medalla{font-size:34px;line-height:1;flex-shrink:0}
+.top3-info{flex:1;min-width:0}
+.top3-seccion{font-size:15px;font-weight:800;color:var(--pan)}
+.top3-lider{font-size:12px;font-weight:600;color:var(--text)}
+.top3-padrino{font-size:11px;color:var(--muted)}
+.top3-num{font-size:28px;font-weight:800;color:var(--amber);text-align:right;flex-shrink:0}
+
+/* ── FALTARON POR DÍA ── */
+.dia-bloque{margin-bottom:18px}
+.dia-bloque:last-child{margin-bottom:0}
+.dia-bloque-titulo{font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.faltaron-chip{display:inline-block;padding:7px 14px;background:#fce8e8;border:1px solid #f5c2c2;border-radius:20px;font-size:13px;font-weight:700;color:var(--red);margin:3px 4px 3px 0}
+.vacio{text-align:center;color:var(--muted);font-size:14px;padding:.6rem 0}
+
+.footer{text-align:center;font-size:11px;color:var(--muted);margin-top:16px}
+</style>
+</head>
+<body>
+
+<div id="loading" class="center-msg">
+  <div class="ico">⏳</div>
+  Cargando…
+</div>
+
+<div id="error-box" class="wrap hidden">
+  <div class="card center-msg">
+    <div class="ico">⚠️</div>
+    <div id="error-msg"></div>
+  </div>
+</div>
+
+<div id="revocado-box" class="wrap hidden">
+  <div class="card center-msg">
+    <div class="ico">🔒</div>
+    <div>Esta evidencia ya no está disponible públicamente.</div>
+  </div>
+</div>
+
+<div id="no-multidia-box" class="wrap hidden">
+  <div class="card center-msg">
+    <div class="ico">ℹ️</div>
+    <div>Este evento no es parte de una actividad de varios días.</div>
+  </div>
+</div>
+
+<div id="contenido" class="hidden">
+
+  <div class="banner">
+    <div class="banner-logo">🧹 GEMACUU · Reporte combinado</div>
+    <div class="banner-nombre" id="d-base"></div>
+    <div class="banner-fecha" id="d-rango"></div>
+    <div class="banner-dias" id="d-dias-capturados"></div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" id="st-asistencia" style="color:var(--green)">0</div><div class="stat-label">Asistencia</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-falta" style="color:var(--red)">0</div><div class="stat-label">Falta</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-vacaciones" style="color:var(--pan)">0</div><div class="stat-label">Vacaciones</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-incapacidad" style="color:var(--amber)">0</div><div class="stat-label">Incapacidad</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-total" style="color:var(--text)">0</div><div class="stat-label">Total personal</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-encuestas" style="color:var(--pan2)">0</div><div class="stat-label">Encuestas totales</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 Top 3 secciones combinado — Encuestas/puertas</div>
+      <div id="top3-cont"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">❌ Faltaron (<span id="faltaron-count">0</span>)</div>
+      <div id="faltaron-cont"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">Documento generado por GEMACUU</div>
+</div>
+
+<script>
+const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+const SECCIONES=[
+  {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
+  {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
+  {num:'908',encargado:'Ernesto Alonso Ruiz',padrino:'Fernando Amezcua'},
+  {num:'3227',encargado:'Rubí Jurado',padrino:'Fernando Amezcua'},
+  {num:'3231',encargado:'Mayela Chavira',padrino:'Fernando Amezcua'},
+  {num:'3232',encargado:'Sofia Mejia',padrino:'Fernando Amezcua'},
+  {num:'3233',encargado:'Luis Raúl Vargas Ortega',padrino:'Fernando Amezcua'},
+  {num:'3228',encargado:'Lluvia Aceves',padrino:'Rene Espinoza'},
+  {num:'3234',encargado:'Alberto Yahir Favela',padrino:'Rene Espinoza'},
+  {num:'3235',encargado:'Fabián González',padrino:'Rene Espinoza'},
+  {num:'3236',encargado:'Noé Morales',padrino:'Rene Espinoza'},
+  {num:'3237',encargado:'Víctor TG',padrino:'Rene Espinoza'},
+  {num:'3238',encargado:'Ana Payán',padrino:'Rene Espinoza'},
+  {num:'3245',encargado:'Jesús González',padrino:'Rene Espinoza'},
+  {num:'3239',encargado:'Elizabeth Chalaca',padrino:'Rene Espinoza'},
+  {num:'909',encargado:'Saúl Bustillo',padrino:'Martin Yáñez'},
+  {num:'3244',encargado:'Carlos Daniel Pérez',padrino:'Martin Yáñez'},
+  {num:'3246',encargado:'Sergio Carreón',padrino:'Martin Yáñez'},
+  {num:'3255',encargado:'Félix Vázquez',padrino:'Martin Yáñez'},
+  {num:'3256',encargado:'José Luis Sánchez',padrino:'Martin Yáñez'},
+  {num:'3259',encargado:'Jesús Borruel',padrino:'Martin Yáñez'},
+  {num:'3261',encargado:'Yesenia Aróstegui',padrino:'Martin Yáñez'},
+  {num:'3263',encargado:'Pedro Hernández',padrino:'Martin Yáñez'},
+];
+
+async function sbGet(table,params=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+function mostrarError(msg){
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('error-msg').textContent=msg;
+  document.getElementById('error-box').classList.remove('hidden');
+}
+function mostrarRevocado(){
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('revocado-box').classList.remove('hidden');
+}
+function mostrarNoMultidia(){
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('no-multidia-box').classList.remove('hidden');
+}
+
+// "VOLANTEO Día 2" -> "VOLANTEO" / null si el nombre no trae el sufijo " Día N"
+function extraerBase(nombre){
+  const m=(nombre||'').match(/^(.*) Día \d+$/);
+  return m?m[1]:null;
+}
+// "VOLANTEO Día 2" -> 2
+function extraerNumDia(nombre){
+  const m=(nombre||'').match(/ Día (\d+)$/);
+  return m?parseInt(m[1],10):0;
+}
+
+async function init(){
+  const params=new URLSearchParams(location.search);
+  const eventoId=params.get('evento');
+  if(!eventoId){ mostrarError('Este enlace no incluye un evento válido.'); return; }
+
+  let diasEventos,personalCache,asisRows,encuestasRows;
+  try{
+    const anclaRows=await sbGet('eventos',`?id=eq.${encodeURIComponent(eventoId)}`);
+    const ancla=Array.isArray(anclaRows)?anclaRows[0]:null;
+    if(!ancla){ mostrarError('No se encontró el evento indicado en este enlace.'); return; }
+    if(ancla.evidencia_publica===false){ mostrarRevocado(); return; }
+
+    const base=extraerBase(ancla.nombre);
+    if(!base){ mostrarNoMultidia(); return; }
+
+    const todosLosDias=await sbGet('eventos',`?nombre=ilike.${encodeURIComponent(base+' Día ')}*`);
+    diasEventos=(Array.isArray(todosLosDias)?todosLosDias:[])
+      .filter(ev=>ev.evidencia_publica!==false) // días individuales desactivados no entran al combinado
+      .sort((a,b)=>extraerNumDia(a.nombre)-extraerNumDia(b.nombre));
+    if(!diasEventos.length){ mostrarNoMultidia(); return; }
+
+    const ids=diasEventos.map(ev=>ev.id);
+    const [personal,asis,encuestas]=await Promise.all([
+      sbGet('personal','?status=eq.activo&select=id,nombre&order=nombre.asc'),
+      sbGet('asistencia_eventos',`?evento_id=in.(${ids.join(',')})&select=evento_id,personal_id,estado`),
+      sbGet('encuestas_seccion',`?evento_id=in.(${ids.join(',')})&select=evento_id,seccion,total_encuestas`)
+    ]);
+    personalCache=Array.isArray(personal)?personal:[];
+    asisRows=Array.isArray(asis)?asis:[];
+    encuestasRows=Array.isArray(encuestas)?encuestas:[];
+  }catch(e){
+    console.error(e);
+    mostrarError('No se pudo cargar el reporte combinado. Intenta de nuevo más tarde.');
+    return;
+  }
+
+  const base=extraerBase(diasEventos[0].nombre);
+  const personalById={};
+  personalCache.forEach(p=>{ personalById[p.id]=p; });
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('contenido').classList.remove('hidden');
+  document.getElementById('d-base').textContent=base;
+  const fechas=diasEventos.map(ev=>ev.fecha).filter(Boolean).sort();
+  const rango=fechas.length?(fechas[0]===fechas[fechas.length-1]?fechas[0]:`${fechas[0]} al ${fechas[fechas.length-1]}`):'—';
+  document.getElementById('d-rango').textContent=rango;
+  document.getElementById('d-dias-capturados').textContent=
+    `Días capturados: ${diasEventos.map(ev=>extraerNumDia(ev.nombre)).join(', ')}`;
+
+  renderStats(personalCache,asisRows,encuestasRows);
+  renderTop3(encuestasRows);
+  renderFaltaron(diasEventos,asisRows,personalById);
+}
+
+function renderStats(personalCache,asisRows,encuestasRows){
+  const conteo={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
+  asisRows.forEach(a=>{ if(a.estado&&conteo.hasOwnProperty(a.estado)) conteo[a.estado]++; });
+  const encuestasTotales=encuestasRows.reduce((s,e)=>s+(typeof e.total_encuestas==='number'?e.total_encuestas:0),0);
+  document.getElementById('st-asistencia').textContent=conteo.ASISTENCIA;
+  document.getElementById('st-falta').textContent=conteo.FALTA;
+  document.getElementById('st-vacaciones').textContent=conteo.VACACIONES;
+  document.getElementById('st-incapacidad').textContent=conteo.INCAPACIDAD;
+  document.getElementById('st-total').textContent=personalCache.length; // no se suma: total de nómina, una sola vez
+  document.getElementById('st-encuestas').textContent=encuestasTotales;
+}
+
+function renderTop3(encuestasRows){
+  const encuestasPorSeccion={};
+  encuestasRows.forEach(e=>{
+    encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
+  });
+  const cont=document.getElementById('top3-cont');
+  const medallas=['🥇','🥈','🥉'];
+  const ranking=SECCIONES
+    .map(s=>({...s, total:encuestasPorSeccion[s.num]||0}))
+    .filter(s=>s.total>0)
+    .sort((a,b)=>b.total-a.total)
+    .slice(0,3);
+  if(!ranking.length){
+    cont.innerHTML='<div class="vacio">Aún no hay encuestas registradas para esta actividad.</div>';
+    return;
+  }
+  cont.innerHTML=`<div class="top3-grid">${ranking.map((s,i)=>`
+    <div class="top3-item">
+      <div class="top3-medalla">${medallas[i]}</div>
+      <div class="top3-info">
+        <div class="top3-seccion">Sec. ${s.num}</div>
+        <div class="top3-lider">${s.encargado||'—'}</div>
+        <div class="top3-padrino">${s.padrino||''}</div>
+      </div>
+      <div class="top3-num">${s.total}</div>
+    </div>`).join('')}</div>`;
+}
+
+function renderFaltaron(diasEventos,asisRows,personalById){
+  const faltaronPorEvento={};
+  asisRows.forEach(a=>{
+    if(a.estado!=='FALTA') return;
+    if(!faltaronPorEvento[a.evento_id]) faltaronPorEvento[a.evento_id]=[];
+    const persona=personalById[a.personal_id];
+    faltaronPorEvento[a.evento_id].push(persona?persona.nombre:'(persona no encontrada)');
+  });
+
+  const totalFaltaron=Object.values(faltaronPorEvento).reduce((s,arr)=>s+arr.length,0);
+  document.getElementById('faltaron-count').textContent=totalFaltaron;
+
+  const cont=document.getElementById('faltaron-cont');
+  cont.innerHTML=diasEventos.map(ev=>{
+    const num=extraerNumDia(ev.nombre);
+    const lista=(faltaronPorEvento[ev.id]||[]).sort((a,b)=>a.localeCompare(b,'es'));
+    const contenido=lista.length
+      ? lista.map(n=>`<span class="faltaron-chip">${n}</span>`).join('')
+      : '<div class="vacio">Nadie faltó este día.</div>';
+    return `<div class="dia-bloque">
+      <div class="dia-bloque-titulo">Día ${num} — Faltaron (${lista.length})</div>
+      ${contenido}
+    </div>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>
