@@ -290,18 +290,18 @@ tr:hover td{background:#f8faff}
 
   <!-- RESUMEN BAR -->
   <div class="rbar" id="rbar">
-    <div class="rblock"><div class="rnum" id="rb-total">135</div><div class="rlbl">Total</div></div>
+    <div class="rblock"><div class="rnum" id="rb-total">cargando…</div><div class="rlbl">Total</div></div>
     <div class="rblock">
       <div class="rtag">Fernando Amezcua</div>
-      <div class="rlbl" id="rb-f">39 personas · 8 secciones</div>
+      <div class="rlbl" id="rb-f">cargando…</div>
     </div>
     <div class="rblock">
       <div class="rtag">Martin Yáñez</div>
-      <div class="rlbl" id="rb-m">57 personas · 9 secciones</div>
+      <div class="rlbl" id="rb-m">cargando…</div>
     </div>
     <div class="rblock">
       <div class="rtag">Rene Espinoza</div>
-      <div class="rlbl" id="rb-r">39 personas · 7 secciones</div>
+      <div class="rlbl" id="rb-r">cargando…</div>
     </div>
   </div>
 
@@ -1284,17 +1284,27 @@ async function cargarPersonal(){
 }
 
 // ── STATS ──
+// Personas y secciones por padrino: ambos en vivo desde personalCache
+// (mismo dato que ya usa Base Operativa), no de un catálogo fijo.
+function conteoPadrino(nombreClave){
+  const personas=personalCache.filter(p=>(p.padrino||'').includes(nombreClave));
+  const secciones=new Set(personas.filter(p=>p.seccion).map(p=>p.seccion));
+  return {personas:personas.length, secciones:secciones.size};
+}
 function renderStats(){
-  const f=personalCache.filter(p=>(p.padrino||'').includes('Fernando')).length;
-  const m=personalCache.filter(p=>(p.padrino||'').includes('Martin')).length;
-  const r=personalCache.filter(p=>(p.padrino||'').includes('Rene')).length;
+  const cf=conteoPadrino('Fernando');
+  const cm=conteoPadrino('Martin');
+  const cr=conteoPadrino('Rene');
   const total=personalCache.length;
   document.getElementById('rb-total').textContent=total;
+  document.getElementById('rb-f').textContent=`${cf.personas} personas · ${cf.secciones} secciones`;
+  document.getElementById('rb-m').textContent=`${cm.personas} personas · ${cm.secciones} secciones`;
+  document.getElementById('rb-r').textContent=`${cr.personas} personas · ${cr.secciones} secciones`;
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Total activos</div></div>
-    <div class="stat"><div class="stat-n" style="color:#003399">${f}</div><div class="stat-l">Fernando</div></div>
-    <div class="stat"><div class="stat-n" style="color:#2d6a4f">${m}</div><div class="stat-l">Martin</div></div>
-    <div class="stat"><div class="stat-n" style="color:#854f0b">${r}</div><div class="stat-l">Rene</div></div>
+    <div class="stat"><div class="stat-n" style="color:#003399">${cf.personas}</div><div class="stat-l">Fernando</div></div>
+    <div class="stat"><div class="stat-n" style="color:#2d6a4f">${cm.personas}</div><div class="stat-l">Martin</div></div>
+    <div class="stat"><div class="stat-n" style="color:#854f0b">${cr.personas}</div><div class="stat-l">Rene</div></div>
     <div class="stat"><div class="stat-n" style="color:#cc0000">${BAJAS.length}</div><div class="stat-l">Bajas</div></div>
   `;
 }
