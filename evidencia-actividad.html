@@ -148,6 +148,11 @@ const SECCIONES=[
   {num:'3263',encargado:'Pedro Hernández',padrino:'Martin Yáñez'},
 ];
 
+let liderPorSeccion={};     // seccion -> nombre de quien tiene es_lider_seccion=true (activo)
+function liderDe(seccionNum){
+  return liderPorSeccion[seccionNum]||'— sin líder activo —';
+}
+
 async function sbGet(table,params=''){
   const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
   if(!r.ok) throw new Error(await r.text());
@@ -202,11 +207,14 @@ async function init(){
 
     const ids=diasEventos.map(ev=>ev.id);
     const [personal,asis,encuestas]=await Promise.all([
-      sbGet('personal','?status=eq.activo&select=id,nombre&order=nombre.asc'),
+      sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion&order=nombre.asc'),
       sbGet('asistencia_eventos',`?evento_id=in.(${ids.join(',')})&select=evento_id,personal_id,estado`),
       sbGet('encuestas_seccion',`?evento_id=in.(${ids.join(',')})&select=evento_id,seccion,total_encuestas`)
     ]);
     personalCache=Array.isArray(personal)?personal:[];
+    personalCache
+      .filter(p=>p.es_lider_seccion===true && p.seccion)
+      .forEach(p=>{ if(!liderPorSeccion[p.seccion]) liderPorSeccion[p.seccion]=p.nombre; });
     asisRows=Array.isArray(asis)?asis:[];
     encuestasRows=Array.isArray(encuestas)?encuestas:[];
   }catch(e){
@@ -266,7 +274,7 @@ function renderTop3(encuestasRows){
       <div class="top3-medalla">${medallas[i]}</div>
       <div class="top3-info">
         <div class="top3-seccion">Sec. ${s.num}</div>
-        <div class="top3-lider">${s.encargado||'—'}</div>
+        <div class="top3-lider">${liderDe(s.num)}</div>
         <div class="top3-padrino">${s.padrino||''}</div>
       </div>
       <div class="top3-num">${s.total}</div>

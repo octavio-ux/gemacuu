@@ -301,11 +301,14 @@ async function confirmarAcceso(){
   const btn=document.getElementById('btn-entrar-gate');
   btn.disabled=true;
   btn.textContent='Verificando…';
-  let personas;
+  let personas,liderRows;
   try{
-    personas=await sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&status=eq.activo&select=id&limit=1`);
+    [personas,liderRows]=await Promise.all([
+      sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&status=eq.activo&select=id&limit=1`),
+      sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&es_lider_seccion=eq.true&status=eq.activo&select=nombre&order=nombre.asc&limit=1`)
+    ]);
   }catch(e){
-    personas=null;
+    personas=null;liderRows=null;
   }
   btn.disabled=false;
   btn.textContent='Entrar →';
@@ -321,7 +324,10 @@ async function confirmarAcceso(){
     localStorage.setItem('gemacuu_asis_nombre',registradoPor);
   }
 
-  seccionActual=SECCIONES.find(s=>s.num===numSeccion)||{num:numSeccion,encargado:'',padrino:''};
+  // Líder en vivo (es_lider_seccion=true, activo) — no del catálogo fijo.
+  const catalogo=SECCIONES.find(s=>s.num===numSeccion)||{num:numSeccion,padrino:''};
+  const liderNombre=(Array.isArray(liderRows)&&liderRows[0]?.nombre)||'— sin líder activo —';
+  seccionActual={...catalogo,num:numSeccion,encargado:liderNombre};
   document.getElementById('acceso-gate').classList.add('hidden');
   cargarYRenderizar();
 }

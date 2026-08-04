@@ -186,7 +186,12 @@ let estadoPorSeccion={};    // seccion -> { personal_id: estado } — según cap
 let faltasAcumuladas={};    // personal_id -> total de FALTA en todos los eventos
 let fotosPorSeccion={};
 let encuestasPorSeccion={};
+let liderPorSeccion={};     // seccion -> nombre de quien tiene es_lider_seccion=true (activo)
 const seccionesExpandidas=new Set();
+
+function liderDe(seccionNum){
+  return liderPorSeccion[seccionNum]||'— sin líder activo —';
+}
 
 async function sbGet(table,params=''){
   const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
@@ -223,7 +228,7 @@ async function init(){
     if(evento.evidencia_publica===false){ mostrarRevocado(); return; }
 
     const [personal,asisEvento,faltasTodas,fotos,encuestas]=await Promise.all([
-      sbGet('personal','?status=eq.activo&select=id,nombre,seccion&order=nombre.asc'),
+      sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion&order=nombre.asc'),
       sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado,capturado_en_seccion`),
       sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id'),
       sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`),
@@ -231,6 +236,9 @@ async function init(){
     ]);
 
     personalCache=Array.isArray(personal)?personal:[];
+    personalCache
+      .filter(p=>p.es_lider_seccion===true && p.seccion)
+      .forEach(p=>{ if(!liderPorSeccion[p.seccion]) liderPorSeccion[p.seccion]=p.nombre; });
     (Array.isArray(asisEvento)?asisEvento:[]).forEach(a=>{
       asisMap[a.personal_id]=a.estado||null;
       const persona=personalCache.find(p=>p.id===a.personal_id);
@@ -296,7 +304,7 @@ function renderTop3(){
       <div class="top3-medalla">${medallas[i]}</div>
       <div class="top3-info">
         <div class="top3-seccion">Sec. ${s.num}</div>
-        <div class="top3-lider">${s.encargado||'—'}</div>
+        <div class="top3-lider">${liderDe(s.num)}</div>
         <div class="top3-padrino">${s.padrino||''}</div>
       </div>
       <div class="top3-num">${s.total}</div>
@@ -333,7 +341,7 @@ function renderSecciones(){
       <div class="seccion-hdr" onclick="toggleSeccion('${s.num}')">
         <div class="seccion-hdr-num">Sec. ${s.num}</div>
         <div class="seccion-hdr-lider">
-          <div class="nombre">${s.encargado||'—'}</div>
+          <div class="nombre">${liderDe(s.num)}</div>
           <div class="padrino">${s.padrino||''}</div>
         </div>
         <div class="seccion-hdr-metric"><div class="n">${participaron}</div><div class="l">Participaron</div></div>
