@@ -67,6 +67,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .visor-mapa-item{background:#fff;border-radius:10px;padding:12px;margin-bottom:14px}
 .visor-mapa-item img{width:100%;border-radius:8px;display:block;margin-bottom:10px}
 .visor-mapa-pdf{display:block;text-align:center;padding:40px 12px;background:var(--bg);border-radius:8px;margin-bottom:10px;font-size:40px}
+.visor-mapa-pdf-link{display:block;text-align:center;margin-bottom:10px;text-decoration:none}
+.visor-mapa-pdf-link img{width:100%;border-radius:8px;display:block;margin-bottom:6px;background:var(--bg)}
+.visor-mapa-pdf-link span{font-size:13px}
 .buscar-otra{position:relative;margin:10px 0}
 .buscar-otra input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none}
 .buscar-otra-resultados{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);margin-top:4px;max-height:220px;overflow-y:auto;z-index:20}
@@ -234,6 +237,13 @@ const pendientesAutosave=new Map(); // personal_id -> Promise en curso
 // la descarga real del archivo en vez de solo abrir la imagen/PDF en el navegador.
 function urlDescarga(cloudinaryUrl){
   return cloudinaryUrl.replace('/upload/','/upload/fl_attachment/');
+}
+
+// Los PDF se suben con /auto/upload, así que Cloudinary los guarda como
+// resource_type "image" y puede rasterizar la página 1 como JPG sin volver
+// a subir el archivo: pg_1 = página 1, f_jpg = formato de salida.
+function urlPreviewPdf(cloudinaryUrl){
+  return cloudinaryUrl.replace('/upload/','/upload/f_jpg,pg_1/');
 }
 
 function mayusculizarInput(input){
@@ -422,7 +432,7 @@ function renderSeccion(){
     ${mapasSeccion.length?`
     <div class="mapa-preview" onclick="abrirVisorMapas()">
       ${mapasSeccion[0].tipo_archivo==='pdf'
-        ?'<div class="mapa-preview-pdf">📄</div>'
+        ?`<img class="mapa-preview-thumb" src="${urlPreviewPdf(mapasSeccion[0].cloudinary_url)}" onerror="this.outerHTML='<div class=&quot;mapa-preview-pdf&quot;>📄</div>'">`
         :`<img class="mapa-preview-thumb" src="${mapasSeccion[0].cloudinary_url}">`}
       <button type="button" class="btn btn-secondary btn-sm">🔍 Ver mapas (${mapasSeccion.length})</button>
     </div>`:''}
@@ -484,7 +494,10 @@ function cerrarVisorMapas(){
 function renderVisorMapas(){
   document.getElementById('visor-mapas-lista').innerHTML=mapasSeccion.map((m,i)=>{
     const preview=m.tipo_archivo==='pdf'
-      ? `<a href="${m.cloudinary_url}" target="_blank" class="visor-mapa-pdf">📄<br><span style="font-size:13px">Ver PDF ${i+1} (nueva pestaña)</span></a>`
+      ? `<a href="${m.cloudinary_url}" target="_blank" class="visor-mapa-pdf-link">
+           <img src="${urlPreviewPdf(m.cloudinary_url)}" alt="Mapa ${i+1} (PDF, página 1)" onerror="this.parentElement.outerHTML='&lt;a href=&quot;${m.cloudinary_url}&quot; target=&quot;_blank&quot; class=&quot;visor-mapa-pdf&quot;&gt;📄&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;Ver PDF ${i+1} (nueva pestaña)&lt;/span&gt;&lt;/a&gt;'">
+           <span>Ver PDF ${i+1} (nueva pestaña)</span>
+         </a>`
       : `<img src="${m.cloudinary_url}" alt="Mapa ${i+1}">`;
     return `<div class="visor-mapa-item">
       ${preview}

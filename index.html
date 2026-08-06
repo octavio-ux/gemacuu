@@ -157,6 +157,9 @@ tr:hover td{background:#f8faff}
 .mapa-card{border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;background:#f8faff}
 .mapa-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:#fff;display:block;margin-bottom:6px;cursor:pointer}
 .mapa-pdf-icon{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:28px;background:#fff;border-radius:6px;margin-bottom:6px;border:1px solid var(--border);cursor:pointer;text-decoration:none}
+.mapa-pdf-thumb-wrap{position:relative;display:block;margin-bottom:6px}
+.mapa-pdf-thumb-wrap .mapa-thumb{margin-bottom:0}
+.mapa-pdf-thumb-wrap .mapa-pdf-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(0,51,153,.8);color:#fff;font-size:9px;text-align:center;padding:2px;border-radius:0 0 6px 6px;pointer-events:none}
 .mapa-fecha{font-size:9px;color:var(--muted);margin-bottom:4px}
 
 /* ── BAJAS ── */
@@ -1483,6 +1486,13 @@ async function guardarPersona(){
   renderStats();
 }
 
+// Los PDF se suben con /auto/upload, así que Cloudinary los guarda como
+// resource_type "image" y puede rasterizar la página 1 como JPG sin volver
+// a subir el archivo: pg_1 = página 1, f_jpg = formato de salida.
+function urlPreviewPdf(cloudinaryUrl){
+  return cloudinaryUrl.replace('/upload/','/upload/f_jpg,pg_1/');
+}
+
 // ── SECCIONES ──
 let secFiltro='';
 let mapasPorSeccion={}; // seccion -> [{id,seccion,cloudinary_url,cloudinary_public_id,tipo_archivo,subido_por,subido_en}]
@@ -1541,7 +1551,10 @@ function renderMapasModalLista(){
     ? lista.map(m=>{
         const fecha=m.subido_en?new Date(m.subido_en).toLocaleDateString('es-MX',{day:'2-digit',month:'short'}):'';
         const preview=m.tipo_archivo==='pdf'
-          ? `<a href="${m.cloudinary_url}" target="_blank" class="mapa-pdf-icon" title="Ver PDF">📄</a>`
+          ? `<div class="mapa-pdf-thumb-wrap">
+               <img class="mapa-thumb" src="${urlPreviewPdf(m.cloudinary_url)}" onclick="window.open('${m.cloudinary_url}','_blank')" title="Ver PDF" onerror="this.parentElement.outerHTML='&lt;a href=&quot;${m.cloudinary_url}&quot; target=&quot;_blank&quot; class=&quot;mapa-pdf-icon&quot; title=&quot;Ver PDF&quot;&gt;📄&lt;/a&gt;'">
+               <div class="mapa-pdf-badge">PDF</div>
+             </div>`
           : `<img class="mapa-thumb" src="${m.cloudinary_url}" onclick="window.open('${m.cloudinary_url}','_blank')" title="Ver imagen">`;
         return `<div class="mapa-card">
           ${preview}
