@@ -59,10 +59,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .rtag{font-size:11px;color:#7aabf7;font-weight:600}
 
 /* ── NAV TABS ── */
-.nav{background:#fff;border-bottom:2px solid var(--border);display:flex;padding:0 1.5rem;overflow-x:auto;gap:0}
-.ntab{padding:13px 18px;color:var(--muted);font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:.15s;white-space:nowrap;margin-bottom:-2px}
-.ntab:hover{color:var(--pan)}
-.ntab.on{color:var(--pan);border-bottom-color:var(--pan)}
+.nav{background:#fff;border-bottom:2px solid var(--border);display:flex;flex-wrap:wrap;padding:6px 1rem;gap:2px}
+.ntab{
+  --c:var(--pan);--c-bg:var(--pan-light);
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 14px;color:var(--muted);font-size:13px;font-weight:700;
+  border:none;border-radius:9px;background:none;cursor:pointer;
+  transition:background .15s,color .15s;white-space:nowrap;font-family:inherit;
+}
+.ntab .ntab-ico{font-size:15px;filter:grayscale(45%) opacity(.75);transition:filter .15s}
+.ntab:hover{background:var(--bg)}
+.ntab.on{color:var(--c);background:var(--c-bg)}
+.ntab.on .ntab-ico{filter:none}
 
 /* ── PANELS ── */
 .panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
@@ -229,6 +237,11 @@ tr:hover td{background:#f8faff}
   .rbar{gap:0}
   .rblock{padding:6px 12px}
   .persona-form-grid{grid-template-columns:1fr}
+  .nav{display:grid;grid-template-columns:repeat(2,1fr);padding:8px}
+  .ntab{padding:10px;font-size:12px;white-space:normal}
+}
+@media(min-width:421px) and (max-width:640px){
+  .nav{grid-template-columns:repeat(3,1fr)}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -314,18 +327,18 @@ tr:hover td{background:#f8faff}
 
   <!-- NAV -->
   <div class="nav" id="nav-bar">
-    <button class="ntab on" onclick="goTab('operativa',this)">👥 Base Operativa</button>
-    <button class="ntab" onclick="goTab('organigrama',this)">🏛 Organigrama</button>
-    <button class="ntab" onclick="goTab('secciones',this)">🗳 Secciones</button>
-    <button class="ntab" onclick="goTab('ines',this)">🪪 INEs</button>
-    <button class="ntab" id="tab-red" onclick="goTab('red',this)">🤝 Red de Amigos</button>
-    <button class="ntab" id="tab-eventos" onclick="goTab('eventos',this)">📅 Eventos</button>
-    <button class="ntab" id="tab-correccion" onclick="goTab('correccion',this)">✏️ Corregir asistencia</button>
-    <button class="ntab" id="tab-nuevos" onclick="goTab('nuevos',this)">➕ Nuevos Amigos</button>
-    <button class="ntab" id="tab-incidencias" onclick="goTab('incidencias',this)">⚠️ Incidencias</button>
-    <button class="ntab" id="tab-control" onclick="goTab('control',this)">⚙️ Control</button>
-    <button class="ntab" id="tab-bajas" onclick="goTab('bajas',this)">🚫 Bajas (30)</button>
-    <button class="ntab" id="tab-historial" onclick="goTab('historial',this)">📜 Historial de cambios</button>
+    <button class="ntab on" style="--c:#1d4ed8;--c-bg:#e2e8fa" onclick="goTab('operativa',this)"><span class="ntab-ico">👥</span>Base Operativa</button>
+    <button class="ntab" style="--c:#6d28d9;--c-bg:#ece3fa" onclick="goTab('organigrama',this)"><span class="ntab-ico">🏛</span>Organigrama</button>
+    <button class="ntab" style="--c:#0e7490;--c-bg:#e0edf1" onclick="goTab('secciones',this)"><span class="ntab-ico">🗳</span>Secciones</button>
+    <button class="ntab" style="--c:#a21caf;--c-bg:#f3e1f5" onclick="goTab('ines',this)"><span class="ntab-ico">🪪</span>INEs</button>
+    <button class="ntab" style="--c:#be185d;--c-bg:#f7e1ea" id="tab-red" onclick="goTab('red',this)"><span class="ntab-ico">🤝</span>Red de Amigos</button>
+    <button class="ntab" style="--c:#15803d;--c-bg:#e1eee6" id="tab-eventos" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
+    <button class="ntab" style="--c:#c2410c;--c-bg:#f7e6df" id="tab-correccion" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
+    <button class="ntab" style="--c:#4d7c0f;--c-bg:#e8eee0" id="tab-nuevos" onclick="goTab('nuevos',this)"><span class="ntab-ico">➕</span>Nuevos Amigos</button>
+    <button class="ntab" style="--c:#b91c1c;--c-bg:#f6e1e1" id="tab-incidencias" onclick="goTab('incidencias',this)"><span class="ntab-ico">⚠️</span>Incidencias</button>
+    <button class="ntab" style="--c:#334155;--c-bg:#e4e6e9" id="tab-control" onclick="goTab('control',this)"><span class="ntab-ico">⚙️</span>Control</button>
+    <button class="ntab" style="--c:#92400e;--c-bg:#f1e6e0" id="tab-bajas" onclick="goTab('bajas',this)"><span class="ntab-ico">🚫</span>Bajas (30)</button>
+    <button class="ntab" style="--c:#3730a3;--c-bg:#e5e4f3" id="tab-historial" onclick="goTab('historial',this)"><span class="ntab-ico">📜</span>Historial de cambios</button>
   </div>
 
   <!-- PANEL: BASE OPERATIVA -->
