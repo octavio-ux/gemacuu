@@ -212,6 +212,7 @@ tr:hover td{background:#f8faff}
 .inc-search-item:last-child{border-bottom:none}
 .evento-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)}
 .evento-chip.sel{background:#e6f1fb;border-color:#185fa5;color:#0c447c;font-weight:700}
+.evento-chip.sel-faltas{background:#fce4ea;border-color:#e11d48;color:#e11d48;font-weight:700}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .corr-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
 .corr-row:last-child{border-bottom:none}
@@ -640,9 +641,15 @@ tr:hover td{background:#f8faff}
     </div>
   </div>
 
-  <!-- PANEL: FALTAS ACUMULADAS POR PERSONA -->
+  <!-- PANEL: FALTAS -->
   <div id="panel-faltas" class="panel">
     <div class="card" style="margin-bottom:1rem">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📉 Faltas</div>
+      <div id="faltas-subtabs" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+
+    <!-- Vista: Acumulado (todos los eventos) -->
+    <div id="faltas-vista-acumulado" class="card" style="margin-bottom:1rem">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
         <div>
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📉 Faltas acumuladas por persona</div>
@@ -654,6 +661,23 @@ tr:hover td{background:#f8faff}
         <table>
           <thead><tr><th>Nombre</th><th>Sección</th><th>Padrino</th><th>Total de faltas</th><th>Detalle</th></tr></thead>
           <tbody id="faltas-acumuladas-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Vista: faltas de un evento específico -->
+    <div id="faltas-vista-evento" class="card" style="margin-bottom:1rem;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div>
+          <div id="faltas-evento-titulo" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📉 Faltas</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Personas con "Falta" marcada en este evento.</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportarFaltasEvento()">↓ Excel</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Sección</th><th>Padrino</th></tr></thead>
+          <tbody id="faltas-evento-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -2415,29 +2439,71 @@ async function toggleEvidenciaPublica(eventoId){
 }
 
 let faltasAcumuladasCache=[]; // [{persona, total, eventos:[{id,nombre,fecha}]}]
+let faltasEventosCache=[];    // todos los eventos (para las sub-pestañas), desc por fecha
+let faltasPorEventoCache={};  // evento_id -> [personal_id, ...] con FALTA en ese evento
+let faltasVista='acumulado';  // 'acumulado' o el id de un evento — se conserva entre visitas a la pestaña
+let faltasEventoActualCache=[]; // personas mostradas en la sub-pestaña de evento actual (para exportar)
 
 async function cargarFaltasAcumuladas(){
-  const tbody=document.getElementById('faltas-acumuladas-tbody');
   // Se pide evento_id (antes solo personal_id) y se trae "eventos" en paralelo,
   // sin depender de que la pestaña Eventos se haya visitado antes, para poder
-  // mostrar nombre y fecha de cada falta en el detalle por persona.
+  // mostrar nombre y fecha de cada falta en el detalle por persona y armar las
+  // sub-pestañas por evento.
   const [faltasData,evData]=await Promise.all([
     sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id,evento_id'),
     sbGet('eventos','?order=fecha.desc')
   ]);
+  faltasEventosCache=Array.isArray(evData)?evData:[];
   const eventosPorId={};
-  (Array.isArray(evData)?evData:[]).forEach(ev=>{ eventosPorId[ev.id]=ev; });
+  faltasEventosCache.forEach(ev=>{ eventosPorId[ev.id]=ev; });
+  const faltasDetalle=Array.isArray(faltasData)?faltasData:[];
+
   const porPersona={};
-  (Array.isArray(faltasData)?faltasData:[]).forEach(a=>{
+  faltasPorEventoCache={};
+  faltasDetalle.forEach(a=>{
     if(!porPersona[a.personal_id]) porPersona[a.personal_id]={total:0,eventos:[]};
     porPersona[a.personal_id].total++;
     const ev=eventosPorId[a.evento_id];
     porPersona[a.personal_id].eventos.push({id:a.evento_id, nombre:ev?.nombre||'(evento eliminado)', fecha:ev?.fecha||''});
+    if(!faltasPorEventoCache[a.evento_id]) faltasPorEventoCache[a.evento_id]=[];
+    faltasPorEventoCache[a.evento_id].push(a.personal_id);
   });
   faltasAcumuladasCache=personalCache
     .filter(p=>porPersona[p.id]?.total>0)
     .map(p=>({persona:p, total:porPersona[p.id].total, eventos:porPersona[p.id].eventos.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''))}))
     .sort((a,b)=>b.total-a.total);
+
+  renderFaltasSubtabs();
+  renderFaltasVista();
+}
+
+function renderFaltasSubtabs(){
+  const chips=[`<div class="evento-chip ${faltasVista==='acumulado'?'sel-faltas':''}" onclick="seleccionarVistaFaltas('acumulado')">📊 Acumulado</div>`]
+    .concat(faltasEventosCache.map(ev=>`<div class="evento-chip ${faltasVista===ev.id?'sel-faltas':''}" onclick="seleccionarVistaFaltas('${ev.id}')">${ev.nombre||''}${ev.fecha?' · '+ev.fecha:''}</div>`));
+  document.getElementById('faltas-subtabs').innerHTML=chips.join('');
+}
+
+function seleccionarVistaFaltas(v){
+  faltasVista=v;
+  renderFaltasSubtabs();
+  renderFaltasVista();
+}
+
+function renderFaltasVista(){
+  // Si la sub-pestaña de evento seleccionada ya no existe (evento eliminado), regresa a Acumulado.
+  if(faltasVista!=='acumulado'&&!faltasEventosCache.some(ev=>ev.id===faltasVista)){
+    faltasVista='acumulado';
+    renderFaltasSubtabs();
+  }
+  const esAcumulado=faltasVista==='acumulado';
+  document.getElementById('faltas-vista-acumulado').style.display=esAcumulado?'':'none';
+  document.getElementById('faltas-vista-evento').style.display=esAcumulado?'none':'';
+  if(esAcumulado){ renderFaltasAcumuladasTabla(); }
+  else{ renderFaltasEventoTabla(faltasVista); }
+}
+
+function renderFaltasAcumuladasTabla(){
+  const tbody=document.getElementById('faltas-acumuladas-tbody');
   if(!faltasAcumuladasCache.length){
     tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nadie tiene faltas registradas todavía.</td></tr>';
     return;
@@ -2449,6 +2515,37 @@ async function cargarFaltasAcumuladas(){
       <td style="color:#cc0000;font-weight:700">${r.total}</td>
       <td><button class="btn btn-secondary btn-xs" onclick="verDetalleFaltas(${i})">🔍 Ver detalle</button></td>
     </tr>`).join('');
+}
+
+function renderFaltasEventoTabla(eventoId){
+  const ev=faltasEventosCache.find(e=>e.id===eventoId);
+  document.getElementById('faltas-evento-titulo').textContent=`📉 Faltas — ${ev?.nombre||''}${ev?.fecha?' · '+ev.fecha:''}`;
+  const idsConFalta=new Set(faltasPorEventoCache[eventoId]||[]);
+  faltasEventoActualCache=personalCache.filter(p=>idsConFalta.has(p.id));
+  const tbody=document.getElementById('faltas-evento-tbody');
+  if(!faltasEventoActualCache.length){
+    tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--muted)">Nadie tiene falta marcada en este evento.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=faltasEventoActualCache.map(p=>`<tr>
+      <td><b>${p.nombre||''}</b></td>
+      <td>${p.seccion?'Sec. '+p.seccion:'—'}</td>
+      <td>${p.padrino||'—'}</td>
+    </tr>`).join('');
+}
+
+function exportarFaltasEvento(){
+  if(!faltasEventoActualCache.length){ showToast('⚠️ No hay faltas registradas en este evento'); return; }
+  const ev=faltasEventosCache.find(e=>e.id===faltasVista);
+  let csv='\uFEFF'+'NOMBRE,SECCIÓN,PADRINO\n';
+  faltasEventoActualCache.forEach(p=>{
+    csv+=`"${p.nombre||''}","${p.seccion||''}","${p.padrino||''}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`GEMACUU_faltas_${(ev?.nombre||'evento').replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Faltas del evento descargadas');
 }
 
 function verDetalleFaltas(i){
