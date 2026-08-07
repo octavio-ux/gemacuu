@@ -336,6 +336,7 @@ tr:hover td{background:#f8faff}
     <button class="ntab" style="--c:#a21caf;--c-bg:#f3e1f5" onclick="goTab('ines',this)"><span class="ntab-ico">🪪</span>INEs</button>
     <button class="ntab" style="--c:#be185d;--c-bg:#f7e1ea" id="tab-red" onclick="goTab('red',this)"><span class="ntab-ico">🤝</span>Red de Amigos</button>
     <button class="ntab" style="--c:#15803d;--c-bg:#e1eee6" id="tab-eventos" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
+    <button class="ntab" style="--c:#003399;--c-bg:#dde6f6" id="tab-mapasd17" onclick="goTab('mapasd17',this)"><span class="ntab-ico">📍</span>MapasD17</button>
     <button class="ntab" style="--c:#c2410c;--c-bg:#f7e6df" id="tab-correccion" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
     <button class="ntab" style="--c:#4d7c0f;--c-bg:#e8eee0" id="tab-nuevos" onclick="goTab('nuevos',this)"><span class="ntab-ico">➕</span>Nuevos Amigos</button>
     <button class="ntab" style="--c:#b91c1c;--c-bg:#f6e1e1" id="tab-incidencias" onclick="goTab('incidencias',this)"><span class="ntab-ico">⚠️</span>Incidencias</button>
@@ -641,6 +642,17 @@ tr:hover td{background:#f8faff}
       <div style="border-top:1px solid var(--border);margin:16px 0"></div>
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
       <div id="enl-lista"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: MAPAS DEL INE POR SECCIÓN (D17) -->
+  <div id="panel-mapasd17" class="panel">
+    <div class="card" style="text-align:center;padding:32px 20px">
+      <div style="font-size:14px;font-weight:700;color:var(--pan);margin-bottom:18px">📍 MapasD17</div>
+      <a href="https://cartografia.ine.mx/sige8/productosCartograficos/planos-mapas" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:16px;padding:16px 28px;display:inline-flex">🗺️ Descargar mapas del INE (Plano por Sección Individual)</a>
+      <div style="font-size:13px;color:var(--muted);margin-top:16px;max-width:480px;margin-left:auto;margin-right:auto">
+        Ahí puedes buscar y descargar el plano de cualquier sección electoral. Filtra por estado (Chihuahua) y municipio (Chihuahua), y busca por el número de sección.
+      </div>
     </div>
   </div>
 
@@ -1303,6 +1315,7 @@ async function doLogin(){
   document.getElementById('btn-nueva-persona').style.display=(isAdmin||isEditor)?'inline-flex':'none';
   document.getElementById('tab-red').style.display='block';
   document.getElementById('tab-eventos').style.display='block';
+  document.getElementById('tab-mapasd17').style.display='block';
   document.getElementById('tab-incidencias').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-nuevos').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-control').style.display=(isAdmin||isEditor)?'block':'none';
