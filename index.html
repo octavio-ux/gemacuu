@@ -2375,6 +2375,7 @@ function renderResumenEventosTbody(){
       <td>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <a href="evidencia-evento.html?evento=${r.evento.id}" target="_blank" class="btn btn-secondary btn-xs">🔗 Ver</a>
+          <button class="btn btn-secondary btn-xs" onclick="exportarEventos('${r.evento.id}')">↓ Excel</button>
           ${isAdmin?`<button class="btn btn-xs ${activa?'btn-danger':'btn-secondary'}" onclick="toggleEvidenciaPublica('${r.evento.id}')">${activa?'🔒 Desactivar':'🔓 Activar'}</button>`:''}
           ${isAdmin?`<button class="btn btn-danger btn-xs" onclick="abrirConfirmEliminarEvento('${r.evento.id}')">🗑️ Eliminar</button>`:''}
         </div>
@@ -2693,10 +2694,10 @@ async function confirmarEliminarEvento(){
   await cargarEventos();
 }
 
-async function exportarEventos(){
+async function exportarEventos(eventoId){
+  eventoId=eventoId||eventoActualId;
   showToast('⏳ Preparando Excel...');
-  if(!eventoActualId){showToast('⚠️ Selecciona un evento primero');return;}
-  const eventoId=eventoActualId;
+  if(!eventoId){showToast('⚠️ Selecciona un evento primero');return;}
   const ev=eventosCache.find(e=>e.id===eventoId);
   const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoId}`);
   const asisMap={};
