@@ -337,6 +337,7 @@ tr:hover td{background:#f8faff}
     <button class="ntab" style="--c:#be185d;--c-bg:#f7e1ea" id="tab-red" onclick="goTab('red',this)"><span class="ntab-ico">🤝</span>Red de Amigos</button>
     <button class="ntab" style="--c:#15803d;--c-bg:#e1eee6" id="tab-eventos" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
     <button class="ntab" style="--c:#003399;--c-bg:#dde6f6" id="tab-mapasd17" onclick="goTab('mapasd17',this)"><span class="ntab-ico">📍</span>MapasD17</button>
+    <button class="ntab" style="--c:#e11d48;--c-bg:#fce4ea" id="tab-faltas" onclick="goTab('faltas',this)"><span class="ntab-ico">📊</span>Faltas</button>
     <button class="ntab" style="--c:#c2410c;--c-bg:#f7e6df" id="tab-correccion" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
     <button class="ntab" style="--c:#4d7c0f;--c-bg:#e8eee0" id="tab-nuevos" onclick="goTab('nuevos',this)"><span class="ntab-ico">➕</span>Nuevos Amigos</button>
     <button class="ntab" style="--c:#b91c1c;--c-bg:#f6e1e1" id="tab-incidencias" onclick="goTab('incidencias',this)"><span class="ntab-ico">⚠️</span>Incidencias</button>
@@ -544,23 +545,6 @@ tr:hover td{background:#f8faff}
       </div>
     </div>
 
-    <!-- Faltas acumuladas por persona (todos los eventos) -->
-    <div class="card" style="margin-bottom:1rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
-        <div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📉 Faltas acumuladas por persona</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">Suma de "Falta" en todos los eventos registrados. Solo se listan personas con al menos una falta.</div>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="exportarFaltasAcumuladas()">↓ Excel</button>
-      </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>Nombre</th><th>Sección</th><th>Padrino</th><th>Total de faltas</th></tr></thead>
-          <tbody id="faltas-acumuladas-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
     <!-- Panel asistencia del evento seleccionado -->
     <div id="panel-asistencia" style="display:none">
       <div class="card" style="margin-bottom:1rem">
@@ -653,6 +637,38 @@ tr:hover td{background:#f8faff}
       <div style="font-size:13px;color:var(--muted);margin-top:16px;max-width:480px;margin-left:auto;margin-right:auto">
         Ahí puedes buscar y descargar el plano de cualquier sección electoral. Filtra por estado (Chihuahua) y municipio (Chihuahua), y busca por el número de sección.
       </div>
+    </div>
+  </div>
+
+  <!-- PANEL: FALTAS ACUMULADAS POR PERSONA -->
+  <div id="panel-faltas" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📉 Faltas acumuladas por persona</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Suma de "Falta" en todos los eventos registrados. Solo se listan personas con al menos una falta.</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportarFaltasAcumuladas()">↓ Excel</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Sección</th><th>Padrino</th><th>Total de faltas</th><th>Detalle</th></tr></thead>
+          <tbody id="faltas-acumuladas-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE DE FALTAS POR PERSONA -->
+  <div id="modal-detalle-faltas" class="modal-bg" style="display:none">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-hdr">
+        <h3>📉 Detalle de faltas</h3>
+        <button class="close-btn" onclick="closeModal('modal-detalle-faltas')">✕</button>
+      </div>
+      <div id="df-nombre" style="font-weight:800;color:var(--pan);font-size:15px"></div>
+      <div id="df-meta" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+      <div id="df-lista" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
   </div>
 
@@ -1316,6 +1332,7 @@ async function doLogin(){
   document.getElementById('tab-red').style.display='block';
   document.getElementById('tab-eventos').style.display='block';
   document.getElementById('tab-mapasd17').style.display='block';
+  document.getElementById('tab-faltas').style.display='block';
   document.getElementById('tab-incidencias').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-nuevos').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-control').style.display=(isAdmin||isEditor)?'block':'none';
@@ -2324,7 +2341,6 @@ async function cargarEventos(){
     seleccionarEvento(eventosCache[0].id);
   }
   await cargarResumenEventos();
-  await cargarFaltasAcumuladas();
 }
 
 let resumenEventosCache=[]; // [{evento, asistencia, falta, vacaciones, incapacidad, sinCapturar, total}]
@@ -2398,29 +2414,54 @@ async function toggleEvidenciaPublica(eventoId){
   showToast(nuevo?'🔓 Link de evidencia activado':'🔒 Link de evidencia desactivado');
 }
 
-let faltasAcumuladasCache=[]; // [{persona, total}]
+let faltasAcumuladasCache=[]; // [{persona, total, eventos:[{id,nombre,fecha}]}]
 
 async function cargarFaltasAcumuladas(){
   const tbody=document.getElementById('faltas-acumuladas-tbody');
-  const faltasData=await sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id');
-  const conteoPorPersona={};
+  // Se pide evento_id (antes solo personal_id) y se trae "eventos" en paralelo,
+  // sin depender de que la pestaña Eventos se haya visitado antes, para poder
+  // mostrar nombre y fecha de cada falta en el detalle por persona.
+  const [faltasData,evData]=await Promise.all([
+    sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id,evento_id'),
+    sbGet('eventos','?order=fecha.desc')
+  ]);
+  const eventosPorId={};
+  (Array.isArray(evData)?evData:[]).forEach(ev=>{ eventosPorId[ev.id]=ev; });
+  const porPersona={};
   (Array.isArray(faltasData)?faltasData:[]).forEach(a=>{
-    conteoPorPersona[a.personal_id]=(conteoPorPersona[a.personal_id]||0)+1;
+    if(!porPersona[a.personal_id]) porPersona[a.personal_id]={total:0,eventos:[]};
+    porPersona[a.personal_id].total++;
+    const ev=eventosPorId[a.evento_id];
+    porPersona[a.personal_id].eventos.push({id:a.evento_id, nombre:ev?.nombre||'(evento eliminado)', fecha:ev?.fecha||''});
   });
   faltasAcumuladasCache=personalCache
-    .filter(p=>conteoPorPersona[p.id]>0)
-    .map(p=>({persona:p, total:conteoPorPersona[p.id]}))
+    .filter(p=>porPersona[p.id]?.total>0)
+    .map(p=>({persona:p, total:porPersona[p.id].total, eventos:porPersona[p.id].eventos.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''))}))
     .sort((a,b)=>b.total-a.total);
   if(!faltasAcumuladasCache.length){
-    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted)">Nadie tiene faltas registradas todavía.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nadie tiene faltas registradas todavía.</td></tr>';
     return;
   }
-  tbody.innerHTML=faltasAcumuladasCache.map(r=>`<tr>
+  tbody.innerHTML=faltasAcumuladasCache.map((r,i)=>`<tr>
       <td><b>${r.persona.nombre||''}</b></td>
       <td>${r.persona.seccion?'Sec. '+r.persona.seccion:'—'}</td>
       <td>${r.persona.padrino||'—'}</td>
       <td style="color:#cc0000;font-weight:700">${r.total}</td>
+      <td><button class="btn btn-secondary btn-xs" onclick="verDetalleFaltas(${i})">🔍 Ver detalle</button></td>
     </tr>`).join('');
+}
+
+function verDetalleFaltas(i){
+  const r=faltasAcumuladasCache[i];
+  if(!r) return;
+  document.getElementById('df-nombre').textContent=r.persona.nombre||'';
+  document.getElementById('df-meta').textContent=`${r.persona.seccion?'Sec. '+r.persona.seccion+' · ':''}${r.persona.padrino||''}`;
+  document.getElementById('df-lista').innerHTML=r.eventos.map(e=>`
+    <div style="display:flex;justify-content:space-between;gap:10px;padding:8px 10px;background:var(--bg);border-radius:8px;font-size:13px">
+      <span>${e.nombre}</span>
+      <span style="color:var(--muted);white-space:nowrap">${e.fecha||'—'}</span>
+    </div>`).join('');
+  document.getElementById('modal-detalle-faltas').style.display='flex';
 }
 
 function exportarFaltasAcumuladas(){
@@ -3346,6 +3387,7 @@ function goTab(name,btn){
   document.getElementById('panel-'+name).classList.add('on');
   btn.classList.add('on');
   if(name==='eventos'){cargarEventos();}
+  if(name==='faltas'){cargarFaltasAcumuladas();}
   if(name==='correccion'){cargarCorreccion();}
   if(name==='historial'){cargarHistorial();}
   if(name==='incidencias'){cargarIncidencias();}
