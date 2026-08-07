@@ -157,6 +157,9 @@ tr:hover td{background:#f8faff}
 .mapa-card{border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;background:#f8faff}
 .mapa-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:#fff;display:block;margin-bottom:6px;cursor:pointer}
 .mapa-pdf-icon{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:28px;background:#fff;border-radius:6px;margin-bottom:6px;border:1px solid var(--border);cursor:pointer;text-decoration:none}
+.mapa-pdf-thumb-wrap{position:relative;display:block;margin-bottom:6px}
+.mapa-pdf-thumb-wrap .mapa-thumb{margin-bottom:0}
+.mapa-pdf-thumb-wrap .mapa-pdf-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(0,51,153,.8);color:#fff;font-size:9px;text-align:center;padding:2px;border-radius:0 0 6px 6px;pointer-events:none}
 .mapa-fecha{font-size:9px;color:var(--muted);margin-bottom:4px}
 
 /* ── BAJAS ── */
@@ -333,6 +336,7 @@ tr:hover td{background:#f8faff}
     <button class="ntab" style="--c:#a21caf;--c-bg:#f3e1f5" onclick="goTab('ines',this)"><span class="ntab-ico">🪪</span>INEs</button>
     <button class="ntab" style="--c:#be185d;--c-bg:#f7e1ea" id="tab-red" onclick="goTab('red',this)"><span class="ntab-ico">🤝</span>Red de Amigos</button>
     <button class="ntab" style="--c:#15803d;--c-bg:#e1eee6" id="tab-eventos" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
+    <button class="ntab" style="--c:#003399;--c-bg:#dde6f6" id="tab-mapasd17" onclick="goTab('mapasd17',this)"><span class="ntab-ico">📍</span>MapasD17</button>
     <button class="ntab" style="--c:#c2410c;--c-bg:#f7e6df" id="tab-correccion" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
     <button class="ntab" style="--c:#4d7c0f;--c-bg:#e8eee0" id="tab-nuevos" onclick="goTab('nuevos',this)"><span class="ntab-ico">➕</span>Nuevos Amigos</button>
     <button class="ntab" style="--c:#b91c1c;--c-bg:#f6e1e1" id="tab-incidencias" onclick="goTab('incidencias',this)"><span class="ntab-ico">⚠️</span>Incidencias</button>
@@ -510,7 +514,8 @@ tr:hover td{background:#f8faff}
           <div class="card-title">📅 Eventos</div>
           <div style="font-size:12px;color:var(--muted)">Selecciona un evento para tomar asistencia.</div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="https://cartografia.ine.mx/sige8/productosCartograficos/planos-mapas" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🗺️ Descargar mapas del INE</a>
           <button class="btn btn-secondary btn-sm" onclick="exportarEventos()">↓ Excel</button>
           <button class="btn btn-primary btn-sm" id="btn-nuevo-evento" onclick="abrirFormEvento()" style="display:none">➕ Nuevo evento</button>
         </div>
@@ -637,6 +642,17 @@ tr:hover td{background:#f8faff}
       <div style="border-top:1px solid var(--border);margin:16px 0"></div>
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
       <div id="enl-lista"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: MAPAS DEL INE POR SECCIÓN (D17) -->
+  <div id="panel-mapasd17" class="panel">
+    <div class="card" style="text-align:center;padding:32px 20px">
+      <div style="font-size:14px;font-weight:700;color:var(--pan);margin-bottom:18px">📍 MapasD17</div>
+      <a href="https://cartografia.ine.mx/sige8/productosCartograficos/planos-mapas" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:16px;padding:16px 28px;display:inline-flex">🗺️ Descargar mapas del INE (Plano por Sección Individual)</a>
+      <div style="font-size:13px;color:var(--muted);margin-top:16px;max-width:480px;margin-left:auto;margin-right:auto">
+        Ahí puedes buscar y descargar el plano de cualquier sección electoral. Filtra por estado (Chihuahua) y municipio (Chihuahua), y busca por el número de sección.
+      </div>
     </div>
   </div>
 
@@ -1030,6 +1046,33 @@ tr:hover td{background:#f8faff}
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR ELIMINAR EVENTO -->
+<div id="modal-confirmar-eliminar-evento" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hdr">
+      <h3>⚠️ Eliminar evento</h3>
+      <button class="close-btn" onclick="closeModal('modal-confirmar-eliminar-evento')">✕</button>
+    </div>
+    <div style="font-size:13px;margin-bottom:10px">Vas a eliminar permanentemente el evento:</div>
+    <div style="background:#fce8e8;border:1px solid #f5c2c2;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+      <div id="cee-nombre" style="font-weight:800;color:#cc0000"></div>
+      <div id="cee-fecha" style="font-size:12px;color:var(--muted)"></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
+      Esto borra también toda su asistencia, historial de cambios y enlaces temporales asociados a este evento.
+      <b>No se puede deshacer y no hay respaldo.</b>
+    </div>
+    <div class="fg">
+      <label>Escribe <b>ELIMINAR</b> para confirmar</label>
+      <input type="text" id="cee-input" placeholder="ELIMINAR" autocomplete="off" oninput="validarConfirmEliminarEvento()">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-confirmar-eliminar-evento')">Cancelar</button>
+      <button class="btn btn-danger w-full" id="cee-btn-confirmar" onclick="confirmarEliminarEvento()" disabled>🗑️ Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL INCIDENCIA -->
 <div id="modal-incidencia" class="modal-bg" style="display:none">
   <div class="modal" style="max-width:560px">
@@ -1272,6 +1315,7 @@ async function doLogin(){
   document.getElementById('btn-nueva-persona').style.display=(isAdmin||isEditor)?'inline-flex':'none';
   document.getElementById('tab-red').style.display='block';
   document.getElementById('tab-eventos').style.display='block';
+  document.getElementById('tab-mapasd17').style.display='block';
   document.getElementById('tab-incidencias').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-nuevos').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-control').style.display=(isAdmin||isEditor)?'block':'none';
@@ -1302,6 +1346,9 @@ async function sbPatch(table,params,body){
 }
 async function sbPost(table,body){
   return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
+}
+async function sbDelete(table,params){
+  return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
 }
 
 // ── CARGAR PERSONAL ──
@@ -1483,6 +1530,13 @@ async function guardarPersona(){
   renderStats();
 }
 
+// Los PDF se suben con /auto/upload, así que Cloudinary los guarda como
+// resource_type "image" y puede rasterizar la página 1 como JPG sin volver
+// a subir el archivo: pg_1 = página 1, f_jpg = formato de salida.
+function urlPreviewPdf(cloudinaryUrl){
+  return cloudinaryUrl.replace('/upload/','/upload/f_jpg,pg_1/');
+}
+
 // ── SECCIONES ──
 let secFiltro='';
 let mapasPorSeccion={}; // seccion -> [{id,seccion,cloudinary_url,cloudinary_public_id,tipo_archivo,subido_por,subido_en}]
@@ -1541,7 +1595,10 @@ function renderMapasModalLista(){
     ? lista.map(m=>{
         const fecha=m.subido_en?new Date(m.subido_en).toLocaleDateString('es-MX',{day:'2-digit',month:'short'}):'';
         const preview=m.tipo_archivo==='pdf'
-          ? `<a href="${m.cloudinary_url}" target="_blank" class="mapa-pdf-icon" title="Ver PDF">📄</a>`
+          ? `<div class="mapa-pdf-thumb-wrap">
+               <img class="mapa-thumb" src="${urlPreviewPdf(m.cloudinary_url)}" onclick="window.open('${m.cloudinary_url}','_blank')" title="Ver PDF" onerror="this.parentElement.outerHTML='&lt;a href=&quot;${m.cloudinary_url}&quot; target=&quot;_blank&quot; class=&quot;mapa-pdf-icon&quot; title=&quot;Ver PDF&quot;&gt;📄&lt;/a&gt;'">
+               <div class="mapa-pdf-badge">PDF</div>
+             </div>`
           : `<img class="mapa-thumb" src="${m.cloudinary_url}" onclick="window.open('${m.cloudinary_url}','_blank')" title="Ver imagen">`;
         return `<div class="mapa-card">
           ${preview}
@@ -2318,7 +2375,9 @@ function renderResumenEventosTbody(){
       <td>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <a href="evidencia-evento.html?evento=${r.evento.id}" target="_blank" class="btn btn-secondary btn-xs">🔗 Ver</a>
+          <button class="btn btn-secondary btn-xs" onclick="exportarEventos('${r.evento.id}')">↓ Excel</button>
           ${isAdmin?`<button class="btn btn-xs ${activa?'btn-danger':'btn-secondary'}" onclick="toggleEvidenciaPublica('${r.evento.id}')">${activa?'🔒 Desactivar':'🔓 Activar'}</button>`:''}
+          ${isAdmin?`<button class="btn btn-danger btn-xs" onclick="abrirConfirmEliminarEvento('${r.evento.id}')">🗑️ Eliminar</button>`:''}
         </div>
       </td>
     </tr>`;
@@ -2578,25 +2637,67 @@ async function guardarEvento(){
   await cargarEventos();
 }
 
-async function eliminarEvento(){
+function eliminarEvento(){
   if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;}
-  const eventoId=eventoActualId;
+  if(!eventoActualId) return;
+  abrirConfirmEliminarEvento(eventoActualId);
+}
+
+// ── Eliminar evento (con confirmación explícita, solo Octavio) ──
+// Borra en este orden para no dejar datos huérfanos:
+// asistencia_historial -> asistencia_eventos -> enlaces_temporales -> eventos
+let eventoAEliminarId=null;
+function abrirConfirmEliminarEvento(eventoId){
+  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;}
   const ev=eventosCache.find(e=>e.id===eventoId);
-  if(!ev||!confirm(`¿Eliminar el evento "${ev.nombre}"?`)) return;
-  await fetch(`${SB_URL}/rest/v1/asistencia_eventos?evento_id=eq.${eventoId}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
-  await fetch(`${SB_URL}/rest/v1/eventos?id=eq.${eventoId}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  if(!ev){showToast('⚠️ Evento no encontrado');return;}
+  eventoAEliminarId=eventoId;
+  document.getElementById('cee-nombre').textContent=ev.nombre||'(sin nombre)';
+  document.getElementById('cee-fecha').textContent=ev.fecha?`📅 ${ev.fecha}`:'';
+  const input=document.getElementById('cee-input');
+  input.value='';
+  document.getElementById('cee-btn-confirmar').disabled=true;
+  document.getElementById('modal-confirmar-eliminar-evento').style.display='flex';
+  input.focus();
+}
+function validarConfirmEliminarEvento(){
+  const ok=document.getElementById('cee-input').value.trim().toUpperCase()==='ELIMINAR';
+  document.getElementById('cee-btn-confirmar').disabled=!ok;
+}
+async function confirmarEliminarEvento(){
+  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;}
+  const eventoId=eventoAEliminarId;
+  if(!eventoId) return;
+  const btn=document.getElementById('cee-btn-confirmar');
+  btn.disabled=true;
+  btn.textContent='⏳ Eliminando...';
+  try{
+    await sbDelete('asistencia_historial',`?evento_id=eq.${eventoId}`);
+    await sbDelete('asistencia_eventos',`?evento_id=eq.${eventoId}`);
+    await sbDelete('enlaces_temporales',`?evento_id=eq.${eventoId}`);
+    await sbDelete('eventos',`?id=eq.${eventoId}`);
+  }catch(e){
+    console.error(e);
+    showToast('⚠️ Error al eliminar el evento');
+    btn.textContent='🗑️ Sí, eliminar';
+    btn.disabled=false;
+    return;
+  }
+  btn.textContent='🗑️ Sí, eliminar';
+  closeModal('modal-confirmar-eliminar-evento');
+  eventoAEliminarId=null;
   if(eventoActualId===eventoId){
     eventoActualId=null;
     document.getElementById('panel-asistencia').style.display='none';
   }
-  showToast('🗑 Evento eliminado');
+  showToast('🗑️ Evento eliminado');
   await cargarEventos();
 }
 
-async function exportarEventos(){
+async function exportarEventos(eventoId){
+  eventoId=eventoId||eventoActualId;
   showToast('⏳ Preparando Excel...');
-  if(!eventoActualId){showToast('⚠️ Selecciona un evento primero');return;}
-  const eventoId=eventoActualId;
+  if(!eventoId){showToast('⚠️ Selecciona un evento primero');return;}
   const ev=eventosCache.find(e=>e.id===eventoId);
   const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoId}`);
   const asisMap={};
