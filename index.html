@@ -30,6 +30,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .lav{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;color:#fff}
 .lav-o{background:#1a1a2e}.lav-f{background:#003399}.lav-m{background:#2d6a4f}.lav-r{background:#854f0b}
 .lav-k{background:#993556}.lav-l{background:#0f6e56}.lav-v{background:#534ab7}
+/* Avatares de usuarios de micrositios externos (otras dependencias, propia base de datos cada una) */
+.lav-diana{background:#0e7490}.lav-elsa{background:#a21caf}.lav-grisel{background:#b91c1c}.lav-karol{background:#c2410c}
 .lname{font-size:13px;font-weight:700;color:var(--text)}
 .lrole{font-size:11px;color:var(--muted)}
 .lpass-row{display:flex;gap:8px}
@@ -1330,6 +1332,39 @@ let selectedUser=null;
 let personalCache=[];
 let pendientesCache=[];
 let inePersona=null;
+
+// ── MICROSITIOS EXTERNOS ──
+// Otras dependencias/micrositios (cada uno con su propia base de datos
+// separada, mismo patrón que Alumbrado). Para agregar uno nuevo en el
+// futuro: un objeto más en este array, con su propia url y su propia
+// lista de usuarios — no hay que tocar el resto de este archivo.
+const MICROSITIOS_EXTERNOS=[
+  {
+    id:'alumbrado',
+    url:'alumbrado.html',
+    usuarios:[
+      {nombre:'Diana',  iniciales:'DP', avClass:'lav-diana'},
+      {nombre:'Elsa',   iniciales:'ES', avClass:'lav-elsa'},
+      {nombre:'Grisel', iniciales:'GQ', avClass:'lav-grisel'},
+      {nombre:'Karol',  iniciales:'KG', avClass:'lav-karol'},
+    ]
+  }
+];
+
+// Tarjetas idénticas en estructura/estilo a las de login local (.luser/.lav/.lname/.lrole),
+// pero en vez de selUser()+contraseña, llevan directo al micrositio correspondiente —
+// ese micrositio ya tiene su propio login (usuario/contraseña) contra su propia tabla.
+function renderMicrositiosExternos(){
+  const cont=document.getElementById('lusers');
+  if(!cont) return;
+  const html=MICROSITIOS_EXTERNOS.flatMap(m=>m.usuarios.map(u=>`
+    <div class="luser" onclick="location.href='${m.url}'">
+      <div class="lav ${u.avClass}">${u.iniciales}</div>
+      <div><div class="lname">${u.nombre}</div><div class="lrole">Administradora</div></div>
+    </div>`)).join('');
+  cont.insertAdjacentHTML('beforeend',html);
+}
+renderMicrositiosExternos();
 
 // ── LOGIN ──
 function selUser(name,code,avClass,rol){
