@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEMACUU · Alumbrado</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pan:#003399;--pan2:#1a4fc4;--pan3:#4a7fe0;--pan-light:#e6eeff;
+  --red:#cc0000;--red2:#e63333;
+  --bg:#f0f4ff;--white:#fff;
+  --text:#1a1a2e;--muted:#6b7280;
+  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --radius:14px;--radius-sm:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ── */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#001a66 0%,#003399 60%,#cc0000 100%)}
+.lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,51,.35)}
+.lhead{text-align:center;margin-bottom:1.75rem}
+.llogo{width:64px;height:64px;background:var(--pan);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
+.ltitle{font-size:22px;font-weight:800;color:var(--pan);letter-spacing:.04em}
+.lsub{font-size:12px;color:var(--muted);margin-top:3px}
+.lbtn{padding:11px 18px;background:var(--pan);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;width:100%}
+.lbtn:hover{background:var(--pan2)}
+.lbtn:disabled{opacity:.6;cursor:not-allowed}
+.lerr{font-size:12px;color:var(--red);margin-top:10px;min-height:16px;text-align:center}
+
+/* ── APP ── */
+#app{display:none}
+.topbar{background:var(--pan);color:#fff;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,102,.2)}
+.tl{display:flex;align-items:center;gap:12px}
+.tlogo{font-size:17px;font-weight:800;letter-spacing:.06em}
+.tbadge{font-size:11px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 10px;border-radius:20px}
+.tdot{width:6px;height:6px;background:var(--red);border-radius:50%}
+.tuser{font-size:12px;color:rgba(255,255,255,.7)}
+.tuser b{color:#fff}
+.tbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+.tbtn:hover{background:rgba(255,255,255,.25)}
+
+/* ── RESUMEN BAR ── */
+.rbar{background:#001a66;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
+.rblock{padding:6px 20px;border-right:1px solid rgba(255,255,255,.12);flex-shrink:0}
+.rblock:last-child{border-right:none}
+.rnum{font-size:18px;font-weight:800;color:#fff;line-height:1}
+.rlbl{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.rtag{font-size:11px;color:#7aabf7;font-weight:600}
+
+/* ── NAV TABS ── */
+.nav{background:#fff;border-bottom:2px solid var(--border);display:flex;flex-wrap:wrap;padding:6px 1rem;gap:2px}
+.ntab{
+  --c:var(--pan);--c-bg:var(--pan-light);
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 14px;color:var(--muted);font-size:13px;font-weight:700;
+  border:none;border-radius:9px;background:none;cursor:pointer;
+  transition:background .15s,color .15s;white-space:nowrap;font-family:inherit;
+}
+.ntab .ntab-ico{font-size:15px;filter:grayscale(45%) opacity(.75);transition:filter .15s}
+.ntab:hover{background:var(--bg)}
+.ntab.on{color:var(--c);background:var(--c-bg)}
+.ntab.on .ntab-ico{filter:none}
+
+/* ── PANELS ── */
+.panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
+.panel.on{display:block}
+
+/* ── CARDS ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow)}
+.card-title{font-size:14px;font-weight:700;margin-bottom:1rem;color:var(--pan);display:flex;align-items:center;gap:8px}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
+.stat{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat-n{font-size:26px;font-weight:800;line-height:1;color:var(--pan)}
+.stat-l{font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow:auto;border-radius:var(--radius);border:1px solid var(--border);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f0f4ff;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;white-space:nowrap}
+td{padding:10px 14px;border-top:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:#f8faff}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-pan{background:#e6eeff;color:#003399}
+.badge-red{background:#fce8e8;color:#cc0000}
+.badge-gray{background:#f0f0f0;color:#555}
+.badge-green{background:#eaf3de;color:#2d6a4f}
+.badge-amber{background:#fef3c7;color:#854f0b}
+
+/* ── FORM ── */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text);outline:none;background:#fff;transition:.15s}
+.fg input:focus,.fg select:focus{border-color:var(--pan)}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--pan);color:#fff}
+.btn-primary:hover{background:var(--pan2)}
+.btn-secondary{background:#f0f4ff;color:var(--pan);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--pan-light)}
+.btn-danger{background:#fce8e8;color:var(--red);border:1px solid #f5c2c2}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.w-full{width:100%}
+
+/* ── PERSONA CHIP ── */
+.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:#f0f4ff;color:var(--pan);border:1px solid var(--border);margin:2px}
+
+/* ── SECCION CARD ── */
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.sec-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow)}
+.sec-num{font-size:20px;font-weight:800;color:var(--pan)}
+.sec-enc{font-size:13px;font-weight:600;margin-top:2px;color:var(--text)}
+.sec-chips{margin-top:8px;display:flex;flex-wrap:wrap;gap:3px}
+
+/* ── ORG ── */
+.org-tree{display:flex;flex-direction:column;align-items:center;gap:0}
+.org-root{background:var(--pan);color:#fff;border-radius:12px;padding:14px 28px;text-align:center;font-weight:700;font-size:15px;box-shadow:var(--shadow)}
+.org-line{width:2px;height:28px;background:var(--pan3);margin:0 auto}
+.org-branches{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;width:100%}
+.org-branch{display:flex;flex-direction:column;align-items:center}
+.org-pad{border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;font-size:14px;box-shadow:var(--shadow);width:100%}
+.org-o60{background:#003399;color:#fff}
+.org-o30{background:#2d6a4f;color:#fff}
+.org-pad-sub{font-size:11px;opacity:.75;font-weight:400;margin-top:3px}
+
+/* ── MAPAS DE SECCIÓN ── */
+.mapas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.mapa-card{border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;background:#f8faff}
+.mapa-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:#fff;display:block;margin-bottom:6px;cursor:pointer}
+.mapa-pdf-icon{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:28px;background:#fff;border-radius:6px;margin-bottom:6px;border:1px solid var(--border);cursor:pointer;text-decoration:none}
+.mapa-pdf-thumb-wrap{position:relative;display:block;margin-bottom:6px}
+.mapa-pdf-thumb-wrap .mapa-thumb{margin-bottom:0}
+.mapa-pdf-thumb-wrap .mapa-pdf-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(0,51,153,.8);color:#fff;font-size:9px;text-align:center;padding:2px;border-radius:0 0 6px 6px;pointer-events:none}
+.mapa-fecha{font-size:9px;color:var(--muted);margin-bottom:4px}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+.modal-hdr h3{font-size:15px;font-weight:700;color:var(--pan)}
+.close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+.modal-persona-card{max-width:640px;max-height:calc(100vh - 2rem);overflow-y:auto}
+.persona-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
+.persona-form-grid .fg{min-width:0}
+.persona-lider{display:flex;align-items:center;gap:9px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#f8faff}
+.persona-lider input{width:17px;height:17px;accent-color:var(--pan)}
+.persona-lider span{font-size:13px;font-weight:700}
+.persona-actions{display:flex;gap:8px;margin-top:1rem}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,51,153,.3)}
+#toast.show{opacity:1}
+
+/* ── EVENTO CHIPS / FALTAS SUBTABS ── */
+.evento-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)}
+.evento-chip.sel{background:#e6f1fb;border-color:#185fa5;color:#0c447c;font-weight:700}
+.evento-chip.sel-faltas{background:#fce4ea;border-color:#e11d48;color:#e11d48;font-weight:700}
+
+/* ── CORREGIR ASISTENCIA ── */
+.corr-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
+.corr-row:last-child{border-bottom:none}
+.estado-select{width:132px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
+.estado-select:disabled{opacity:.5;cursor:not-allowed}
+.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
+.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
+.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
+.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .panel{padding:1rem}
+  .org-branches{grid-template-columns:1fr}
+  .rbar{gap:0}
+  .rblock{padding:6px 12px}
+  .persona-form-grid{grid-template-columns:1fr}
+  .nav{display:grid;grid-template-columns:repeat(2,1fr);padding:8px}
+  .ntab{padding:10px;font-size:12px;white-space:normal}
+}
+@media(min-width:421px) and (max-width:640px){
+  .nav{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lcard">
+    <div class="lhead">
+      <div class="llogo">G</div>
+      <div class="ltitle">GEMACUU</div>
+      <div class="lsub">💡 Alumbrado · Sistema Operativo 2026</div>
+    </div>
+    <div class="fg">
+      <label>Usuario</label>
+      <input type="text" id="lg-usuario" placeholder="ej. diana" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lg-pass').focus()">
+    </div>
+    <div class="fg">
+      <label>Contraseña</label>
+      <input type="password" id="lg-pass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="lbtn" id="lg-btn" onclick="doLogin()">Entrar →</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="tl">
+      <span class="tlogo">GEMACUU</span>
+      <span class="tbadge">💡 Alumbrado</span>
+      <div class="tdot"></div>
+      <span class="tuser">Sesión: <b id="tname">—</b></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="tbtn" id="btn-export" onclick="exportarExcel()" style="display:none">↓ Excel</button>
+      <button class="tbtn" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- RESUMEN BAR -->
+  <div class="rbar" id="rbar">
+    <div class="rblock"><div class="rnum" id="rb-total">cargando…</div><div class="rlbl">Total</div></div>
+    <div class="rblock">
+      <div class="rtag">Oficinas Centrales</div>
+      <div class="rlbl" id="rb-60">cargando…</div>
+    </div>
+    <div class="rblock">
+      <div class="rtag">Centro de Acopio</div>
+      <div class="rlbl" id="rb-30">cargando…</div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav" id="nav-bar">
+    <button class="ntab on" style="--c:#1d4ed8;--c-bg:#e2e8fa" onclick="goTab('operativa',this)"><span class="ntab-ico">👥</span>Base Operativa</button>
+    <button class="ntab" style="--c:#6d28d9;--c-bg:#ece3fa" onclick="goTab('organigrama',this)"><span class="ntab-ico">🏛</span>Organigrama</button>
+    <button class="ntab" style="--c:#0e7490;--c-bg:#e0edf1" onclick="goTab('secciones',this)"><span class="ntab-ico">🗳</span>Secciones</button>
+    <button class="ntab" style="--c:#15803d;--c-bg:#e1eee6" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
+    <button class="ntab" id="tab-mapas" style="--c:#003399;--c-bg:#dde6f6;display:none" onclick="goTab('mapas',this)"><span class="ntab-ico">📍</span>Mapas</button>
+    <button class="ntab" style="--c:#e11d48;--c-bg:#fce4ea" onclick="goTab('faltas',this)"><span class="ntab-ico">📊</span>Faltas</button>
+    <button class="ntab" id="tab-correccion" style="--c:#c2410c;--c-bg:#f7e6df;display:none" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
+    <button class="ntab" id="tab-historial" style="--c:#3730a3;--c-bg:#e5e4f3;display:none" onclick="goTab('historial',this)"><span class="ntab-ico">📜</span>Historial de cambios</button>
+  </div>
+
+  <!-- PANEL: BASE OPERATIVA -->
+  <div id="panel-operativa" class="panel on">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="fg" style="flex:1;min-width:180px;margin-bottom:0">
+          <label>Buscar</label>
+          <input type="text" id="p-buscar" placeholder="nombre o apellido..." oninput="filtrarPersonal()">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Oficina</label>
+          <select id="p-oficina" onchange="filtrarPersonal()">
+            <option value="">todas</option>
+            <option value="60">Oficinas Centrales</option>
+            <option value="30">Centro de Acopio</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Turno</label>
+          <select id="p-turno" onchange="filtrarPersonal()">
+            <option value="">todos</option>
+            <option value="M">Matutino</option>
+            <option value="V">Vespertino</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Sección</label>
+          <select id="p-sec" onchange="filtrarPersonal()">
+            <option value="">todas</option>
+            <option value="sin">sin sección</option>
+          </select>
+        </div>
+        <button id="btn-nueva-persona" class="btn btn-primary btn-sm" style="display:none" onclick="abrirNuevaPersona()">+ Nueva persona</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Nombre</th><th>Oficina</th><th>Turno</th><th>Sección</th><th>Usuario</th><th></th>
+        </tr></thead>
+        <tbody id="personal-tbody"></tbody>
+      </table>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px" id="p-count"></div>
+  </div>
+
+  <!-- PANEL: ORGANIGRAMA -->
+  <div id="panel-organigrama" class="panel">
+    <div class="card">
+      <div class="org-tree">
+        <div class="org-root">💡 GEMACUU · Alumbrado</div>
+        <div class="org-line"></div>
+        <div style="background:var(--pan-light);border:1px solid var(--border);border-radius:10px;padding:10px 20px;text-align:center;font-weight:700;font-size:14px;color:var(--pan)">👑 Administración: <span id="org-admins">cargando…</span></div>
+        <div class="org-line"></div>
+        <div class="org-branches">
+          <div class="org-branch">
+            <div class="org-pad org-o60">Oficinas Centrales (60)<div class="org-pad-sub" id="org-sub-60">cargando…</div></div>
+            <div class="org-line" style="background:#003399"></div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-60"></div>
+          </div>
+          <div class="org-branch">
+            <div class="org-pad org-o30">Centro de Acopio (30)<div class="org-pad-sub" id="org-sub-30">cargando…</div></div>
+            <div class="org-line" style="background:#2d6a4f"></div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-30"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: SECCIONES -->
+  <div id="panel-secciones" class="panel">
+    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="filtroSec('')" id="sf-todos">Todos</button>
+      <button class="btn btn-secondary btn-sm" onclick="filtroSec('60')" id="sf-60">Oficinas Centrales</button>
+      <button class="btn btn-secondary btn-sm" onclick="filtroSec('30')" id="sf-30">Centro de Acopio</button>
+    </div>
+    <div class="sec-grid" id="sec-grid"></div>
+  </div>
+
+  <!-- PANEL: EVENTOS -->
+  <div id="panel-eventos" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title">📅 Eventos</div>
+          <div style="font-size:12px;color:var(--muted)">Selecciona un evento para ver su asistencia.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="https://cartografia.ine.mx/sige8/productosCartograficos/planos-mapas" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🗺️ Descargar mapas del INE</a>
+          <button class="btn btn-secondary btn-sm" onclick="exportarEventos()">↓ Excel</button>
+          <button class="btn btn-primary btn-sm" id="btn-nuevo-evento" onclick="abrirFormEvento()" style="display:none">➕ Nuevo evento</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chips de eventos -->
+    <div class="card" style="margin-bottom:1rem">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Eventos registrados</div>
+      <div id="eventos-chips" style="display:flex;flex-wrap:wrap;gap:6px">
+        <div style="font-size:13px;color:var(--muted)">Sin eventos registrados aún.</div>
+      </div>
+    </div>
+
+    <!-- Resumen de asistencia total por evento -->
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📊 Resumen de asistencia por evento</div>
+        <button class="btn btn-secondary btn-sm" onclick="exportarResumenEventos()">↓ Excel resumen</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th><th>Totales de la app de encuestas</th><th>Evidencia</th></tr></thead>
+          <tbody id="resumen-eventos-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Panel asistencia del evento seleccionado -->
+    <div id="panel-asistencia" style="display:none">
+      <div class="card" style="margin-bottom:1rem">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          <div>
+            <div id="ev-nombre-display" style="font-size:15px;font-weight:800;color:var(--pan)"></div>
+            <div id="ev-meta-display" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button id="btn-editar-evento" class="btn btn-secondary btn-sm" onclick="editarEvento()" style="display:none">✏️</button>
+            <button id="btn-eliminar-evento" class="btn btn-danger btn-sm" onclick="eliminarEvento()" style="display:none">🗑</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px">
+          <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-total" style="font-size:22px;font-weight:800;color:var(--pan)">0</div>
+            <div style="font-size:10px;color:var(--muted)">Total</div>
+          </div>
+          <div style="background:#eaf3de;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-asistencia" style="font-size:22px;font-weight:800;color:#2d6a4f">0</div>
+            <div style="font-size:10px;color:#2d6a4f">Asistencia</div>
+          </div>
+          <div style="background:#fce8e8;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-falta" style="font-size:22px;font-weight:800;color:#cc0000">0</div>
+            <div style="font-size:10px;color:#cc0000">Falta</div>
+          </div>
+          <div style="background:#e6eeff;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-vacaciones" style="font-size:22px;font-weight:800;color:#003399">0</div>
+            <div style="font-size:10px;color:#003399">Vacaciones</div>
+          </div>
+          <div style="background:#fef3c7;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-incapacidad" style="font-size:22px;font-weight:800;color:#854f0b">0</div>
+            <div style="font-size:10px;color:#854f0b">Incapacidad</div>
+          </div>
+          <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-sin-capturar" style="font-size:22px;font-weight:800;color:var(--muted)">0</div>
+            <div style="font-size:10px;color:var(--muted)">Sin capturar</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen por oficina y sección -->
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title">🗂 Resumen por oficina y sección</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Oficina</th><th>Sección</th><th>Líder</th><th>Participaron</th><th>Encuestas</th><th>Fotos</th></tr></thead>
+            <tbody id="resumen-oficina-seccion-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENLACES TEMPORALES DE ASISTENCIA POR SECCIÓN (solo administradoras) -->
+    <div class="card" id="card-enlaces-temporales" style="display:none">
+      <div class="card-title">🔗 Enlaces temporales de asistencia por sección</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Genera un enlace para que un líder de sección capture asistencia desde su celular, sin iniciar sesión.
+        No caduca hasta que alguien lo abre por primera vez — a partir de ahí tiene la vigencia indicada abajo.
+      </div>
+      <div class="fg">
+        <label>Etiqueta (para identificarlo en la lista de abajo)</label>
+        <input type="text" id="enl-etiqueta" placeholder="ej. Enlace general julio">
+      </div>
+      <div class="fg">
+        <label>Actividad *</label>
+        <select id="enl-evento">
+          <option value="">— selecciona un evento —</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Horas de vigencia (a partir de la primera apertura)</label>
+        <input type="number" id="enl-horas" min="1" step="1" value="15" inputmode="numeric">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
+      <div id="enl-resultado" style="margin-top:10px"></div>
+
+      <div style="border-top:1px solid var(--border);margin:16px 0"></div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
+      <div id="enl-lista"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: MAPAS -->
+  <div id="panel-mapas" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">📍 Mapas por sección</div>
+      <div style="font-size:12px;color:var(--muted)">Sube, previsualiza y elimina el mapa (imagen o PDF) de cada sección.</div>
+    </div>
+    <div class="sec-grid" id="mapas-grid"></div>
+  </div>
+
+  <!-- PANEL: FALTAS -->
+  <div id="panel-faltas" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📉 Faltas</div>
+      <div id="faltas-subtabs" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+
+    <!-- Vista: Acumulado (todos los eventos) -->
+    <div id="faltas-vista-acumulado" class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📉 Faltas acumuladas por persona</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Suma de "Falta" en todos los eventos registrados. Solo se listan personas con al menos una falta.</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportarFaltasAcumuladas()">↓ Excel</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Oficina</th><th>Sección</th><th>Total de faltas</th><th>Detalle</th></tr></thead>
+          <tbody id="faltas-acumuladas-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Vista: faltas de un evento específico -->
+    <div id="faltas-vista-evento" class="card" style="margin-bottom:1rem;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <div>
+          <div id="faltas-evento-titulo" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📉 Faltas</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Personas con "Falta" marcada en este evento.</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportarFaltasEvento()">↓ Excel</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Oficina</th><th>Sección</th></tr></thead>
+          <tbody id="faltas-evento-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE DE FALTAS POR PERSONA -->
+  <div id="modal-detalle-faltas" class="modal-bg" style="display:none">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-hdr">
+        <h3>📉 Detalle de faltas</h3>
+        <button class="close-btn" onclick="closeModal('modal-detalle-faltas')">✕</button>
+      </div>
+      <div id="df-nombre" style="font-weight:800;color:var(--pan);font-size:15px"></div>
+      <div id="df-meta" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+      <div id="df-lista" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: CORRECCIÓN DE ASISTENCIA -->
+  <div id="panel-correccion" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">✏️ Corregir asistencia</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        Corrige el estado de cualquier persona, de cualquier sección, para un evento ya registrado.
+        Cada cambio queda guardado en el historial con quién lo hizo y qué valor tenía antes.
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Actividad</label>
+        <select id="corr-evento" onchange="seleccionarEventoCorreccion(this.value)">
+          <option value="">— selecciona un evento —</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="corr-contenido" style="display:none">
+      <div class="card" style="margin-bottom:1rem">
+        <input type="text" id="corr-buscar" placeholder="Buscar persona por nombre..." oninput="renderCorreccionLista()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none">
+      </div>
+      <div class="card">
+        <div id="corr-lista"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: HISTORIAL DE CAMBIOS -->
+  <div id="panel-historial" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">📜 Historial de cambios de asistencia</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Últimos 200 cambios hechos desde "Corregir asistencia", más reciente primero.</div>
+      <input type="text" id="hist-buscar" placeholder="Buscar por nombre de la persona o de quién hizo el cambio..." oninput="renderHistorial()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;margin-bottom:10px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="fg" style="flex:1;min-width:160px;margin-bottom:0">
+          <label>Sección</label>
+          <select id="hist-filtro-seccion" onchange="renderHistorial()">
+            <option value="">todas las secciones</option>
+          </select>
+        </div>
+        <div class="fg" style="flex:1;min-width:160px;margin-bottom:0">
+          <label>Líder</label>
+          <select id="hist-filtro-lider" onchange="renderHistorial()">
+            <option value="">todos los líderes</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Fecha/hora</th><th>Evento</th><th>Persona</th><th>Sección</th><th>Antes</th><th>Después</th><th>Modificado por</th></tr></thead>
+          <tbody id="hist-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR/NUEVA PERSONA -->
+<div id="modal-persona" class="modal-bg" style="display:none">
+  <div class="modal modal-persona-card">
+    <div class="modal-hdr">
+      <h3 id="modal-persona-titulo">✏️ Editar persona</h3>
+      <button class="close-btn" onclick="closeModal('modal-persona')">✕</button>
+    </div>
+    <input type="hidden" id="ep-id">
+    <div class="persona-form-grid">
+      <div class="fg"><label>Nombre</label><input id="ep-nombre"></div>
+      <div class="fg"><label>Apellido paterno</label><input id="ep-ap-paterno"></div>
+      <div class="fg"><label>Apellido materno</label><input id="ep-ap-materno"></div>
+      <div class="fg">
+        <label>Oficina</label>
+        <select id="ep-oficina">
+          <option value="60">Oficinas Centrales (60)</option>
+          <option value="30">Centro de Acopio (30)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Turno</label>
+        <select id="ep-turno">
+          <option value="M">Matutino</option>
+          <option value="V">Vespertino</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Sección</label>
+        <input id="ep-sec" type="text" placeholder="ej. 3240, ADMIN, COM">
+      </div>
+      <div class="fg"><label>Usuario</label><input id="ep-usuario" type="text" placeholder="ej: diana"></div>
+      <div class="fg"><label>Contraseña</label><input id="ep-pass" type="text" placeholder="dejar vacío si no tiene aún"></div>
+    </div>
+    <label class="persona-lider">
+      <input id="ep-lider-seccion" type="checkbox">
+      <span>Es líder de sección</span>
+    </label>
+    <div class="persona-actions">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-persona')">Cancelar</button>
+      <button class="btn btn-primary w-full" onclick="guardarPersona()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EVENTO -->
+<div id="modal-evento" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-hdr">
+      <h3 id="modal-ev-titulo">📅 Nuevo Evento</h3>
+      <button class="close-btn" onclick="closeModal('modal-evento')">✕</button>
+    </div>
+    <input type="hidden" id="ev-edit-id">
+    <div class="fg">
+      <label>Nombre del evento *</label>
+      <input type="text" id="ev-nombre" placeholder="Ej. Volanteo Sección 3240...">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div class="fg" style="margin-bottom:0">
+        <label>Fecha *</label>
+        <input type="date" id="ev-fecha">
+      </div>
+      <div class="fg" id="ev-dias-wrap" style="margin-bottom:0">
+        <label>¿Cuántos días?</label>
+        <input type="number" id="ev-dias" min="1" step="1" value="1">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-evento')">Cancelar</button>
+      <button class="btn btn-primary w-full" onclick="guardarEvento()">💾 Guardar evento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR ELIMINAR EVENTO -->
+<div id="modal-confirmar-eliminar-evento" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hdr">
+      <h3>⚠️ Eliminar evento</h3>
+      <button class="close-btn" onclick="closeModal('modal-confirmar-eliminar-evento')">✕</button>
+    </div>
+    <div style="font-size:13px;margin-bottom:10px">Vas a eliminar permanentemente el evento:</div>
+    <div style="background:#fce8e8;border:1px solid #f5c2c2;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+      <div id="cee-nombre" style="font-weight:800;color:#cc0000"></div>
+      <div id="cee-fecha" style="font-size:12px;color:var(--muted)"></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
+      Esto borra también toda su asistencia, historial de cambios y enlaces temporales asociados a este evento.
+      <b>No se puede deshacer y no hay respaldo.</b>
+    </div>
+    <div class="fg">
+      <label>Escribe <b>ELIMINAR</b> para confirmar</label>
+      <input type="text" id="cee-input" placeholder="ELIMINAR" autocomplete="off" oninput="validarConfirmEliminarEvento()">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-confirmar-eliminar-evento')">Cancelar</button>
+      <button class="btn btn-danger w-full" id="cee-btn-confirmar" onclick="confirmarEliminarEvento()" disabled>🗑️ Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MAPAS DE SECCIÓN -->
+<div id="modal-mapas" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-hdr">
+      <h3 id="mapas-modal-titulo">📍 Mapas</h3>
+      <button class="close-btn" onclick="closeModal('modal-mapas')">✕</button>
+    </div>
+    <div id="mapas-modal-lista" class="mapas-grid"></div>
+    <div class="fg" style="margin-top:12px">
+      <label>Subir mapa nuevo (imagen o PDF)</label>
+      <input type="file" id="mapas-input-archivo" accept="image/*,application/pdf" onchange="subirMapaSeccion(this)"
+        style="padding:8px;border:1.5px dashed var(--border);border-radius:8px;width:100%;font-size:13px;cursor:pointer">
+      <div id="mapas-upload-status" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-mapas')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// GEMACUU · ALUMBRADO — micrositio independiente, tablas propias
+// (prefijo alumbrado_ en todo). NO comparte datos con Áreas Verdes D17.
+// Ruta de prueba: todavía no está conectado al login principal de
+// gemacuu.org — se abre directo como alumbrado.html.
+// ══════════════════════════════════════════════════════════════
+
+const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+const CLOUD='da7m6y3kk';
+const PRESET='barrido_electoral';
+
+// Usuarios con control total (mismo nivel que "Octavio" en D17).
+const ALUM_ADMINS=['diana','elsa','grisel','karol'];
+const OFICINA_LABEL={'60':'Oficinas Centrales','30':'Centro de Acopio'};
+const TURNO_LABEL={'M':'Matutino','V':'Vespertino'};
+const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
+const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
+const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vacaciones',INCAPACIDAD:'e-incapacidad'};
+
+// ── SUPABASE ──
+async function sbGet(table,params=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  return r.json();
+}
+async function sbPatch(table,params,body){
+  return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+}
+async function sbPost(table,body){
+  return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
+}
+async function sbDelete(table,params){
+  return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>t.classList.remove('show'),2500);
+}
+function closeModal(id){document.getElementById(id).style.display='none';}
+function nombreCompleto(p){
+  return [p.nombre,p.apellido_paterno,p.apellido_materno].filter(Boolean).join(' ');
+}
+
+// ── LOGIN ──
+let currentPersona=null; // fila completa de alumbrado_personal de quien inició sesión
+let currentNombre='';
+let ALUM_isAdmin=false;
+let ALUM_isLider=false;
+
+async function doLogin(){
+  const usuario=document.getElementById('lg-usuario').value.trim();
+  const pwd=document.getElementById('lg-pass').value;
+  const errEl=document.getElementById('lerr');
+  errEl.textContent='';
+  if(!usuario||!pwd){errEl.textContent='Ingresa usuario y contraseña.';return;}
+  const btn=document.getElementById('lg-btn');
+  btn.disabled=true;btn.textContent='Verificando…';
+  let rows;
+  try{
+    rows=await sbGet('alumbrado_personal',`?usuario=eq.${encodeURIComponent(usuario)}&status=eq.activo&limit=1`);
+  }catch(e){rows=null;}
+  btn.disabled=false;btn.textContent='Entrar →';
+  const persona=Array.isArray(rows)?rows[0]:null;
+  if(!persona||persona.password==null||String(persona.password)!==pwd){
+    errEl.textContent='Usuario o contraseña incorrectos.';
+    return;
+  }
+  currentPersona=persona;
+  currentNombre=nombreCompleto(persona)||persona.usuario;
+  ALUM_isAdmin=ALUM_ADMINS.includes((persona.usuario||'').toLowerCase());
+  ALUM_isLider=persona.es_lider_seccion===true;
+
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('tname').textContent=currentNombre;
+  document.getElementById('btn-export').style.display=ALUM_isAdmin?'inline-flex':'none';
+  document.getElementById('btn-nueva-persona').style.display=ALUM_isAdmin?'inline-flex':'none';
+  document.getElementById('tab-mapas').style.display=ALUM_isAdmin?'block':'none';
+  document.getElementById('tab-correccion').style.display=(ALUM_isAdmin||ALUM_isLider)?'block':'none';
+  document.getElementById('tab-historial').style.display=(ALUM_isAdmin||ALUM_isLider)?'block':'none';
+
+  await cargarPersonal();
+  renderStats();
+  renderPersonal();
+  renderSecciones();
+}
+function doLogout(){
+  currentPersona=null;currentNombre='';ALUM_isAdmin=false;ALUM_isLider=false;
+  document.getElementById('lg-usuario').value='';
+  document.getElementById('lg-pass').value='';
+  document.getElementById('lerr').textContent='';
+  document.getElementById('login').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+// ── CARGAR PERSONAL ──
+let personalCache=[];
+async function cargarPersonal(){
+  try{
+    const data=await sbGet('alumbrado_personal','?status=eq.activo&order=nombre.asc&limit=200');
+    personalCache=Array.isArray(data)?data.filter(p=>p.status==='activo'):[];
+    const secs=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))].sort();
+    const sel=document.getElementById('p-sec');
+    sel.innerHTML='<option value="">todas</option><option value="sin">sin sección</option>'+secs.map(s=>`<option value="${s}">Sec. ${s}</option>`).join('');
+    construirLiderPorSeccion();
+  }catch(e){personalCache=[];console.error(e);}
+}
+
+// ── LÍDER DE SECCIÓN (en vivo) ──
+let liderPorSeccionMap={};
+function construirLiderPorSeccion(){
+  liderPorSeccionMap={};
+  personalCache
+    .filter(p=>p.es_lider_seccion===true && p.seccion)
+    .forEach(p=>{ if(!liderPorSeccionMap[p.seccion]) liderPorSeccionMap[p.seccion]=nombreCompleto(p); });
+}
+function liderDe(seccionNum){
+  return liderPorSeccionMap[seccionNum]||'— sin líder activo —';
+}
+function seccionesUnicas(filtroOficina){
+  let base=personalCache.filter(p=>p.seccion);
+  if(filtroOficina) base=base.filter(p=>String(p.oficina)===String(filtroOficina));
+  return [...new Set(base.map(p=>p.seccion))].sort();
+}
+
+// ── STATS ──
+function conteoOficina(cod){
+  const personas=personalCache.filter(p=>String(p.oficina)===String(cod));
+  const secciones=new Set(personas.filter(p=>p.seccion).map(p=>p.seccion));
+  return {personas:personas.length, secciones:secciones.size};
+}
+function renderStats(){
+  const c60=conteoOficina('60');
+  const c30=conteoOficina('30');
+  const total=personalCache.length;
+  const lideres=personalCache.filter(p=>p.es_lider_seccion===true).length;
+  document.getElementById('rb-total').textContent=total;
+  document.getElementById('rb-60').textContent=`${c60.personas} personas · ${c60.secciones} secciones`;
+  document.getElementById('rb-30').textContent=`${c30.personas} personas · ${c30.secciones} secciones`;
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Total activos</div></div>
+    <div class="stat"><div class="stat-n" style="color:#003399">${c60.personas}</div><div class="stat-l">Oficinas Centrales</div></div>
+    <div class="stat"><div class="stat-n" style="color:#2d6a4f">${c30.personas}</div><div class="stat-l">Centro de Acopio</div></div>
+    <div class="stat"><div class="stat-n" style="color:#854f0b">${lideres}</div><div class="stat-l">Líderes de sección</div></div>
+  `;
+  renderOrganigrama();
+}
+
+function renderOrganigrama(){
+  const admins=personalCache.filter(p=>ALUM_ADMINS.includes((p.usuario||'').toLowerCase()));
+  document.getElementById('org-admins').textContent=admins.length?admins.map(nombreCompleto).join(' · '):'—';
+  [{cod:'60',subId:'org-sub-60',secsId:'org-secs-60'},{cod:'30',subId:'org-sub-30',secsId:'org-secs-30'}].forEach(o=>{
+    const c=conteoOficina(o.cod);
+    document.getElementById(o.subId).textContent=`${c.personas} personas · ${c.secciones} secciones`;
+    const secciones=seccionesUnicas(o.cod);
+    document.getElementById(o.secsId).innerHTML=secciones.length?secciones.map(s=>`${s} · ${liderDe(s)}`).join('<br>'):'<span style="opacity:.6">sin secciones</span>';
+  });
+}
+
+// ── PERSONAL (Base Operativa) ──
+function filtrarPersonal(){
+  const q=(document.getElementById('p-buscar').value||'').toLowerCase();
+  const oficina=document.getElementById('p-oficina').value;
+  const turno=document.getElementById('p-turno').value;
+  const sec=document.getElementById('p-sec').value;
+  let lista=personalCache;
+  if(q) lista=lista.filter(p=>nombreCompleto(p).toLowerCase().includes(q));
+  if(oficina) lista=lista.filter(p=>String(p.oficina)===oficina);
+  if(turno) lista=lista.filter(p=>p.turno===turno);
+  if(sec==='sin') lista=lista.filter(p=>!p.seccion);
+  else if(sec) lista=lista.filter(p=>p.seccion===sec);
+  document.getElementById('p-count').textContent=`${lista.length} personas`;
+  document.getElementById('personal-tbody').innerHTML=lista.map(p=>`<tr>
+    <td style="font-weight:600">${nombreCompleto(p)||'—'}${p.es_lider_seccion?' <span class="badge badge-pan" style="margin-left:4px">🔑 Líder</span>':''}</td>
+    <td>${OFICINA_LABEL[String(p.oficina)]||p.oficina||'—'}</td>
+    <td>${TURNO_LABEL[p.turno]||p.turno||'—'}</td>
+    <td>${p.seccion?`<span class="badge badge-pan">Sec. ${p.seccion}</span>`:'<span style="color:var(--muted);font-size:12px">sin sección</span>'}</td>
+    <td style="font-size:12px;font-family:monospace;color:var(--pan)">${p.usuario||'<span style="color:var(--muted)">sin usuario</span>'}</td>
+    <td>${ALUM_isAdmin?`<button class="btn btn-secondary btn-xs" onclick="editarPersona('${p.id}')">✏️</button>`:''}</td>
+  </tr>`).join('');
+}
+function renderPersonal(){filtrarPersonal();}
+
+function editarPersona(id){
+  if(!ALUM_isAdmin){showToast('⚠️ Sin permiso');return;}
+  const p=personalCache.find(x=>x.id===id);if(!p)return;
+  document.getElementById('modal-persona-titulo').textContent='✏️ Editar persona';
+  document.getElementById('ep-id').value=p.id;
+  document.getElementById('ep-nombre').value=p.nombre||'';
+  document.getElementById('ep-ap-paterno').value=p.apellido_paterno||'';
+  document.getElementById('ep-ap-materno').value=p.apellido_materno||'';
+  document.getElementById('ep-oficina').value=String(p.oficina||'60');
+  document.getElementById('ep-turno').value=p.turno||'M';
+  document.getElementById('ep-sec').value=p.seccion||'';
+  document.getElementById('ep-lider-seccion').checked=Boolean(p.es_lider_seccion);
+  document.getElementById('ep-usuario').value=p.usuario||'';
+  document.getElementById('ep-pass').value=p.password||'';
+  document.getElementById('modal-persona').style.display='flex';
+}
+function abrirNuevaPersona(){
+  if(!ALUM_isAdmin){showToast('⚠️ Sin permiso');return;}
+  document.getElementById('modal-persona-titulo').textContent='+ Nueva persona';
+  document.getElementById('ep-id').value='';
+  document.getElementById('ep-nombre').value='';
+  document.getElementById('ep-ap-paterno').value='';
+  document.getElementById('ep-ap-materno').value='';
+  document.getElementById('ep-oficina').value='60';
+  document.getElementById('ep-turno').value='M';
+  document.getElementById('ep-sec').value='';
+  document.getElementById('ep-lider-seccion').checked=false;
+  document.getElementById('ep-usuario').value='';
+  document.getElementById('ep-pass').value='';
+  document.getElementById('modal-persona').style.display='flex';
+  document.getElementById('ep-nombre').focus();
+}
+async function guardarPersona(){
+  const id=document.getElementById('ep-id').value;
+  const nombre=document.getElementById('ep-nombre').value.trim();
+  if(!nombre){showToast('Escribe el nombre de la persona');return;}
+  const apellido_paterno=document.getElementById('ep-ap-paterno').value.trim()||null;
+  const apellido_materno=document.getElementById('ep-ap-materno').value.trim()||null;
+  const oficina=parseInt(document.getElementById('ep-oficina').value,10);
+  const turno=document.getElementById('ep-turno').value;
+  const seccion=document.getElementById('ep-sec').value.trim()||null;
+  const es_lider_seccion=document.getElementById('ep-lider-seccion').checked;
+  const usuario=document.getElementById('ep-usuario').value.trim()||null;
+  const password=document.getElementById('ep-pass').value.trim()||null;
+  const payload={nombre:nombre.toUpperCase(),apellido_paterno,apellido_materno,oficina,turno,seccion,es_lider_seccion,usuario,password};
+  const response=id
+    ?await sbPatch('alumbrado_personal',`?id=eq.${id}`,payload)
+    :await sbPost('alumbrado_personal',{...payload,status:'activo'});
+  if(!response.ok){showToast('No se pudo guardar la persona');return;}
+  closeModal('modal-persona');
+  showToast(id?'✓ Persona actualizada':'✓ Persona agregada');
+  await cargarPersonal();
+  renderPersonal();
+  renderStats();
+}
+
+function exportarExcel(){
+  if(!personalCache.length){showToast('⚠️ No hay personal para exportar');return;}
+  let csv='﻿'+'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,OFICINA,TURNO,SECCIÓN,USUARIO\n';
+  personalCache.forEach(p=>{
+    csv+=`"${p.nombre||''}","${p.apellido_paterno||''}","${p.apellido_materno||''}","${OFICINA_LABEL[String(p.oficina)]||p.oficina||''}","${TURNO_LABEL[p.turno]||p.turno||''}","${p.seccion||''}","${p.usuario||''}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`ALUMBRADO_personal_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Excel descargado');
+}
+
+// ── SECCIONES ──
+let secFiltro=''; // '' | '60' | '30'
+function filtroSec(oficina){
+  secFiltro=oficina;
+  document.querySelectorAll('[id^="sf-"]').forEach(b=>{b.className='btn btn-secondary btn-sm';});
+  const key=oficina?'sf-'+oficina:'sf-todos';
+  document.getElementById(key).className='btn btn-primary btn-sm';
+  renderSecciones();
+}
+function renderSecciones(){
+  const lista=seccionesUnicas(secFiltro);
+  document.getElementById('sec-grid').innerHTML=lista.length?lista.map(num=>{
+    const personas=personalCache.filter(p=>p.seccion===num);
+    const oficinaPredom=personas[0]?String(personas[0].oficina):'';
+    const color=oficinaPredom==='60'?'#003399':'#2d6a4f';
+    const label=OFICINA_LABEL[oficinaPredom]||'';
+    return `<div class="sec-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="sec-num">Sec. ${num}</div>
+        ${label?`<span class="badge" style="background:${color}20;color:${color};font-size:10px">${label}</span>`:''}
+      </div>
+      <div class="sec-enc">🗝 ${liderDe(num)}</div>
+      <div class="sec-chips">${personas.map(p=>`<span class="chip">${nombreCompleto(p).split(' ').slice(0,2).join(' ')}</span>`).join('')||'<span style="font-size:11px;color:var(--muted)">sin asignados</span>'}</div>
+    </div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:13px">Sin secciones registradas todavía.</div>';
+}
+
+// ── MAPAS (galería por sección, solo administradoras) ──
+let mapasPorSeccion={};
+let mapasModalSeccion=null;
+
+async function cargarMapasSeccion(){
+  if(!ALUM_isAdmin) return;
+  try{
+    const data=await sbGet('alumbrado_mapas_seccion','?order=subido_en.desc');
+    mapasPorSeccion={};
+    (Array.isArray(data)?data:[]).forEach(m=>{
+      if(!mapasPorSeccion[m.seccion]) mapasPorSeccion[m.seccion]=[];
+      mapasPorSeccion[m.seccion].push(m);
+    });
+  }catch(e){console.error('Error cargando alumbrado_mapas_seccion',e);}
+}
+function renderMapasTab(){
+  const lista=seccionesUnicas('');
+  document.getElementById('mapas-grid').innerHTML=lista.length?lista.map(num=>{
+    const numMapas=(mapasPorSeccion[num]||[]).length;
+    return `<div class="sec-card">
+      <div class="sec-num">Sec. ${num}</div>
+      <div class="sec-enc">🗝 ${liderDe(num)}</div>
+      <button type="button" class="btn btn-secondary btn-xs" style="width:100%;margin-top:8px" onclick="abrirMapasSeccion('${num}')">📍 ${numMapas?'Mapas ('+numMapas+')':'Subir mapa'}</button>
+    </div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:13px">Sin secciones registradas todavía.</div>';
+}
+
+function abrirMapasSeccion(num){
+  if(!ALUM_isAdmin){showToast('⚠️ Sin permiso');return;}
+  mapasModalSeccion=num;
+  document.getElementById('mapas-modal-titulo').textContent=`📍 Mapas — Sección ${num}`;
+  document.getElementById('mapas-input-archivo').value='';
+  document.getElementById('mapas-upload-status').textContent='';
+  renderMapasModalLista();
+  document.getElementById('modal-mapas').style.display='flex';
+}
+
+// Los PDF se suben con /auto/upload, así que Cloudinary los guarda como
+// resource_type "image" y puede rasterizar la página 1 como JPG sin volver
+// a subir el archivo: pg_1 = página 1, f_jpg = formato de salida.
+function urlPreviewPdf(cloudinaryUrl){
+  return cloudinaryUrl.replace('/upload/','/upload/f_jpg,pg_1/');
+}
+// Inserta fl_attachment justo después de /upload/ para que Cloudinary fuerce
+// la descarga real del archivo en vez de solo abrir la imagen/PDF en el navegador.
+function urlDescarga(cloudinaryUrl){
+  return cloudinaryUrl.replace('/upload/','/upload/fl_attachment/');
+}
+
+function renderMapasModalLista(){
+  const lista=mapasPorSeccion[mapasModalSeccion]||[];
+  document.getElementById('mapas-modal-lista').innerHTML=lista.length
+    ? lista.map(m=>{
+        const fecha=m.subido_en?new Date(m.subido_en).toLocaleDateString('es-MX',{day:'2-digit',month:'short'}):'';
+        const preview=m.tipo_archivo==='pdf'
+          ? `<div class="mapa-pdf-thumb-wrap">
+               <img class="mapa-thumb" src="${urlPreviewPdf(m.cloudinary_url)}" onclick="window.open('${m.cloudinary_url}','_blank')" title="Ver PDF" onerror="this.parentElement.outerHTML='&lt;a href=&quot;${m.cloudinary_url}&quot; target=&quot;_blank&quot; class=&quot;mapa-pdf-icon&quot; title=&quot;Ver PDF&quot;&gt;📄&lt;/a&gt;'">
+               <div class="mapa-pdf-badge">PDF</div>
+             </div>`
+          : `<img class="mapa-thumb" src="${m.cloudinary_url}" onclick="window.open('${m.cloudinary_url}','_blank')" title="Ver imagen">`;
+        return `<div class="mapa-card">
+          ${preview}
+          <div class="mapa-fecha">${fecha}</div>
+          <button type="button" class="btn btn-danger btn-xs" style="width:100%" onclick="eliminarMapaSeccion('${m.id}')">🗑️ Eliminar</button>
+        </div>`;
+      }).join('')
+    : '<div style="font-size:12px;color:var(--muted);padding:8px 0">Sin mapas subidos todavía.</div>';
+}
+
+async function subirMapaSeccion(input){
+  const file=input.files[0];
+  if(!file) return;
+  const status=document.getElementById('mapas-upload-status');
+  status.textContent='⏳ Subiendo...';
+  try{
+    const fd=new FormData();
+    fd.append('file',file);
+    fd.append('upload_preset',PRESET);
+    fd.append('folder',`alumbrado/mapas-seccion/${mapasModalSeccion}`);
+    const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/auto/upload`,{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.secure_url){ status.textContent='✗ Error al subir'; return; }
+    const tipo_archivo=file.type==='application/pdf'?'pdf':'imagen';
+    const resp=await sbPost('alumbrado_mapas_seccion',{
+      seccion:mapasModalSeccion,
+      cloudinary_url:d.secure_url,
+      cloudinary_public_id:d.public_id,
+      tipo_archivo,
+      subido_por:currentNombre,
+      subido_en:new Date().toISOString()
+    });
+    if(!resp.ok){ status.textContent='✗ Error al guardar el registro'; return; }
+    status.textContent='✓ Mapa subido';
+    input.value='';
+    await cargarMapasSeccion();
+    renderMapasModalLista();
+    renderMapasTab();
+  }catch(e){
+    console.error(e);
+    status.textContent='✗ Error de red';
+  }
+}
+
+async function eliminarMapaSeccion(id){
+  if(!confirm('¿Eliminar este mapa? Solo se borra el registro, no afecta el archivo en Cloudinary.')) return;
+  await sbDelete('alumbrado_mapas_seccion',`?id=eq.${id}`);
+  showToast('🗑️ Mapa eliminado');
+  await cargarMapasSeccion();
+  renderMapasModalLista();
+  renderMapasTab();
+}
+
+// ── EVENTOS ──
+let eventosCache=[];
+let eventoActualId=null;
+let eventoLoadToken=0;
+let asistenciaLocal={};
+let estadoPorSeccionLocal={};
+
+async function cargarEventos(){
+  const data=await sbGet('alumbrado_eventos','?order=fecha.desc');
+  eventosCache=Array.isArray(data)?data:[];
+  renderEventoChips();
+  document.getElementById('btn-nuevo-evento').style.display=ALUM_isAdmin?'inline-flex':'none';
+  const cardEnl=document.getElementById('card-enlaces-temporales');
+  cardEnl.style.display=ALUM_isAdmin?'':'none';
+  if(ALUM_isAdmin){
+    document.getElementById('enl-etiqueta').value='';
+    document.getElementById('enl-resultado').innerHTML='';
+    document.getElementById('enl-horas').value=15;
+    await cargarEventosParaEnlace();
+    await cargarEnlaces();
+  }
+  if(eventosCache.length>0&&!eventoActualId){
+    seleccionarEvento(eventosCache[0].id);
+  }
+  await cargarResumenEventos();
+}
+
+let resumenEventosCache=[];
+async function cargarResumenEventos(){
+  const tbody=document.getElementById('resumen-eventos-tbody');
+  if(!eventosCache.length){
+    resumenEventosCache=[];
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
+    return;
+  }
+  const [estData,encData]=await Promise.all([
+    sbGet('alumbrado_asistencia_eventos','?estado=not.is.null&select=evento_id,estado'),
+    sbGet('alumbrado_encuestas_seccion','?select=evento_id,total_encuestas')
+  ]);
+  const conteoPorEvento={};
+  (Array.isArray(estData)?estData:[]).forEach(a=>{
+    if(!conteoPorEvento[a.evento_id]) conteoPorEvento[a.evento_id]={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
+    if(conteoPorEvento[a.evento_id].hasOwnProperty(a.estado)) conteoPorEvento[a.evento_id][a.estado]++;
+  });
+  const encuestasPorEvento={};
+  (Array.isArray(encData)?encData:[]).forEach(e=>{
+    encuestasPorEvento[e.evento_id]=(encuestasPorEvento[e.evento_id]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
+  });
+  const total=personalCache.length;
+  resumenEventosCache=eventosCache.map(ev=>{
+    const c=conteoPorEvento[ev.id]||{ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
+    const capturados=c.ASISTENCIA+c.FALTA+c.VACACIONES+c.INCAPACIDAD;
+    return {evento:ev, asistencia:c.ASISTENCIA, falta:c.FALTA, vacaciones:c.VACACIONES, incapacidad:c.INCAPACIDAD, sinCapturar:total-capturados, total, encuestas:encuestasPorEvento[ev.id]||0};
+  });
+  renderResumenEventosTbody();
+}
+
+function renderResumenEventosTbody(){
+  const tbody=document.getElementById('resumen-eventos-tbody');
+  tbody.innerHTML=resumenEventosCache.map(r=>{
+    const activa=r.evento.evidencia_publica!==false;
+    return `<tr>
+      <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}</td>
+      <td style="color:#2d6a4f;font-weight:700">${r.asistencia}</td>
+      <td style="color:#cc0000;font-weight:700">${r.falta}</td>
+      <td style="color:#003399;font-weight:700">${r.vacaciones}</td>
+      <td style="color:#854f0b;font-weight:700">${r.incapacidad}</td>
+      <td style="color:var(--muted)">${r.sinCapturar}</td>
+      <td>${r.total}</td>
+      <td>${r.encuestas}</td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <a href="alumbrado-evidencia-evento.html?evento=${r.evento.id}" target="_blank" class="btn btn-secondary btn-xs">🔗 Ver</a>
+          <button class="btn btn-secondary btn-xs" onclick="exportarEventos('${r.evento.id}')">↓ Excel</button>
+          ${ALUM_isAdmin?`<button class="btn btn-xs ${activa?'btn-danger':'btn-secondary'}" onclick="toggleEvidenciaPublica('${r.evento.id}')">${activa?'🔒 Desactivar':'🔓 Activar'}</button>`:''}
+          ${ALUM_isAdmin?`<button class="btn btn-danger btn-xs" onclick="abrirConfirmEliminarEvento('${r.evento.id}')">🗑️ Eliminar</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function toggleEvidenciaPublica(eventoId){
+  if(!ALUM_isAdmin){ showToast('⚠️ Sin permiso'); return; }
+  const r=resumenEventosCache.find(x=>x.evento.id===eventoId);
+  if(!r) return;
+  const nuevo=r.evento.evidencia_publica===false;
+  const resp=await sbPatch('alumbrado_eventos',`?id=eq.${eventoId}`,{evidencia_publica:nuevo});
+  if(!resp.ok){ showToast('⚠️ No se pudo actualizar el estado del link'); return; }
+  r.evento.evidencia_publica=nuevo;
+  const ev=eventosCache.find(e=>e.id===eventoId);
+  if(ev) ev.evidencia_publica=nuevo;
+  renderResumenEventosTbody();
+  showToast(nuevo?'🔓 Link de evidencia activado':'🔒 Link de evidencia desactivado');
+}
+
+function renderEventoChips(){
+  const chips=document.getElementById('eventos-chips');
+  if(!eventosCache.length){
+    chips.innerHTML='<div style="font-size:13px;color:var(--muted)">Sin eventos registrados aún.</div>';
+    return;
+  }
+  chips.innerHTML=eventosCache.map(ev=>`
+    <button class="evento-chip ${ev.id===eventoActualId?'sel':''}" onclick="seleccionarEvento('${ev.id}')">
+      📅 ${ev.nombre} ${ev.fecha?'· '+ev.fecha:''}
+    </button>`).join('');
+}
+
+async function seleccionarEvento(id){
+  eventoActualId=id;
+  const miToken=++eventoLoadToken;
+  asistenciaLocal={};
+  estadoPorSeccionLocal={};
+  renderEventoChips();
+  const ev=eventosCache.find(e=>e.id===id);
+  if(!ev) return;
+
+  document.getElementById('ev-nombre-display').textContent=ev.nombre||'';
+  document.getElementById('ev-meta-display').textContent=`📅 ${ev.fecha||'—'}`;
+
+  document.getElementById('btn-editar-evento').style.display=ALUM_isAdmin?'inline-flex':'none';
+  document.getElementById('btn-eliminar-evento').style.display=ALUM_isAdmin?'inline-flex':'none';
+
+  document.getElementById('panel-asistencia').style.display='block';
+  const asisData=await sbGet('alumbrado_asistencia_eventos',`?evento_id=eq.${id}`);
+  if(miToken!==eventoLoadToken) return;
+  const asisRegistrada=Array.isArray(asisData)?asisData:[];
+  asisRegistrada.forEach(a=>{
+    asistenciaLocal[a.personal_id]=a.estado||null;
+    const persona=personalCache.find(p=>p.id===a.personal_id);
+    const seccionEfectiva=a.capturado_en_seccion||(persona&&persona.seccion);
+    if(!seccionEfectiva) return;
+    if(!estadoPorSeccionLocal[seccionEfectiva]) estadoPorSeccionLocal[seccionEfectiva]={};
+    estadoPorSeccionLocal[seccionEfectiva][a.personal_id]=a.estado||null;
+  });
+
+  actualizarConteosEvento();
+  renderResumenOficinaSeccion(id,miToken);
+}
+
+function contarEstados(){
+  const conteo={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
+  personalCache.forEach(p=>{
+    const v=asistenciaLocal[p.id];
+    if(v&&conteo.hasOwnProperty(v)) conteo[v]++;
+  });
+  const sinCapturar=personalCache.length-ESTADOS.reduce((s,e)=>s+conteo[e],0);
+  return {...conteo, SIN_CAPTURAR:sinCapturar};
+}
+function actualizarConteosEvento(){
+  const c=contarEstados();
+  document.getElementById('ev-total').textContent=personalCache.length;
+  document.getElementById('ev-asistencia').textContent=c.ASISTENCIA;
+  document.getElementById('ev-falta').textContent=c.FALTA;
+  document.getElementById('ev-vacaciones').textContent=c.VACACIONES;
+  document.getElementById('ev-incapacidad').textContent=c.INCAPACIDAD;
+  document.getElementById('ev-sin-capturar').textContent=c.SIN_CAPTURAR;
+}
+
+async function renderResumenOficinaSeccion(eventoId,miToken){
+  const tbody=document.getElementById('resumen-oficina-seccion-tbody');
+  if(!tbody) return;
+  const [fotosData,encData]=await Promise.all([
+    sbGet('alumbrado_fotos_actividad_seccion',`?evento_id=eq.${eventoId}&select=seccion`),
+    sbGet('alumbrado_encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion,total_encuestas`)
+  ]);
+  if(miToken!==eventoLoadToken) return;
+
+  const fotosPorSeccion={};
+  (Array.isArray(fotosData)?fotosData:[]).forEach(f=>{
+    fotosPorSeccion[f.seccion]=(fotosPorSeccion[f.seccion]||0)+1;
+  });
+  const encuestasPorSeccion={};
+  (Array.isArray(encData)?encData:[]).forEach(e=>{
+    encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
+  });
+  const secciones=seccionesUnicas('');
+  const participaronPorSeccion={};
+  secciones.forEach(num=>{
+    const mapa=estadoPorSeccionLocal[num]||{};
+    participaronPorSeccion[num]=Object.values(mapa).filter(e=>e==='ASISTENCIA').length;
+  });
+
+  tbody.innerHTML=secciones.length?secciones.map(num=>{
+    const personas=personalCache.filter(p=>p.seccion===num);
+    const oficina=OFICINA_LABEL[String(personas[0]?.oficina)]||'—';
+    return `<tr>
+      <td>${oficina}</td>
+      <td><b>${num}</b></td>
+      <td>${liderDe(num)}</td>
+      <td>${participaronPorSeccion[num]||0}</td>
+      <td>${encuestasPorSeccion[num]||0}</td>
+      <td>${fotosPorSeccion[num]||0}</td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin secciones registradas todavía.</td></tr>';
+}
+
+function abrirFormEvento(){
+  document.getElementById('ev-edit-id').value='';
+  document.getElementById('ev-nombre').value='';
+  document.getElementById('ev-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ev-dias').value='1';
+  document.getElementById('ev-dias-wrap').style.display='';
+  document.getElementById('modal-ev-titulo').textContent='📅 Nuevo Evento';
+  document.getElementById('modal-evento').style.display='flex';
+}
+function editarEvento(){
+  const ev=eventosCache.find(e=>e.id===eventoActualId);
+  if(!ev) return;
+  document.getElementById('ev-edit-id').value=ev.id;
+  document.getElementById('ev-nombre').value=ev.nombre||'';
+  document.getElementById('ev-fecha').value=ev.fecha||'';
+  document.getElementById('ev-dias').value='1';
+  document.getElementById('ev-dias-wrap').style.display='none';
+  document.getElementById('modal-ev-titulo').textContent='✏️ Editar Evento';
+  document.getElementById('modal-evento').style.display='flex';
+}
+function sumarDiasFecha(fechaStr,dias){
+  const [y,m,d]=fechaStr.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d));
+  dt.setUTCDate(dt.getUTCDate()+dias);
+  return dt.toISOString().split('T')[0];
+}
+async function guardarEvento(){
+  const nombre=document.getElementById('ev-nombre').value.trim();
+  const fecha=document.getElementById('ev-fecha').value;
+  if(!nombre||!fecha){showToast('⚠️ Nombre y fecha son obligatorios');return;}
+  const editId=document.getElementById('ev-edit-id').value;
+
+  if(editId){
+    await sbPatch('alumbrado_eventos',`?id=eq.${editId}`,{nombre,fecha});
+    showToast('✓ Evento actualizado');
+    closeModal('modal-evento');
+    await cargarEventos();
+    return;
+  }
+
+  const diasRaw=parseInt(document.getElementById('ev-dias').value,10);
+  const dias=Number.isFinite(diasRaw)&&diasRaw>1?diasRaw:1;
+
+  if(dias===1){
+    await sbPost('alumbrado_eventos',{nombre,fecha});
+    showToast('✓ Evento creado');
+  } else {
+    const fechaFinal=sumarDiasFecha(fecha,dias-1);
+    if(!confirm(`¿Crear ${dias} eventos, uno por día del ${fecha} al ${fechaFinal}?`)) return;
+    const payloads=Array.from({length:dias},(_,i)=>({
+      nombre:`${nombre} Día ${i+1}`,
+      fecha:sumarDiasFecha(fecha,i)
+    }));
+    await sbPost('alumbrado_eventos',payloads);
+    showToast(`✓ ${dias} eventos creados`);
+  }
+  closeModal('modal-evento');
+  await cargarEventos();
+}
+
+function eliminarEvento(){
+  if(!ALUM_isAdmin){showToast('⚠️ Sin permiso');return;}
+  if(!eventoActualId) return;
+  abrirConfirmEliminarEvento(eventoActualId);
+}
+
+// Borra en este orden para no dejar datos huérfanos:
+// alumbrado_asistencia_historial -> alumbrado_asistencia_eventos -> alumbrado_enlaces_temporales -> alumbrado_eventos
+let eventoAEliminarId=null;
+function abrirConfirmEliminarEvento(eventoId){
+  if(!ALUM_isAdmin){showToast('⚠️ Sin permiso');return;}
+  const ev=eventosCache.find(e=>e.id===eventoId);
+  if(!ev){showToast('⚠️ Evento no encontrado');return;}
+  eventoAEliminarId=eventoId;
+  document.getElementById('cee-nombre').textContent=ev.nombre||'(sin nombre)';
+  document.getElementById('cee-fecha').textContent=ev.fecha?`📅 ${ev.fecha}`:'';
+  const input=document.getElementById('cee-input');
+  input.value='';
+  document.getElementById('cee-btn-confirmar').disabled=true;
+  document.getElementById('modal-confirmar-eliminar-evento').style.display='flex';
+  input.focus();
+}
+function validarConfirmEliminarEvento(){
+  const ok=document.getElementById('cee-input').value.trim().toUpperCase()==='ELIMINAR';
+  document.getElementById('cee-btn-confirmar').disabled=!ok;
+}
+async function confirmarEliminarEvento(){
+  if(!ALUM_isAdmin){showToast('⚠️ Sin permiso');return;}
+  const eventoId=eventoAEliminarId;
+  if(!eventoId) return;
+  const btn=document.getElementById('cee-btn-confirmar');
+  btn.disabled=true;
+  btn.textContent='⏳ Eliminando...';
+  try{
+    await sbDelete('alumbrado_asistencia_historial',`?evento_id=eq.${eventoId}`);
+    await sbDelete('alumbrado_asistencia_eventos',`?evento_id=eq.${eventoId}`);
+    await sbDelete('alumbrado_enlaces_temporales',`?evento_id=eq.${eventoId}`);
+    await sbDelete('alumbrado_eventos',`?id=eq.${eventoId}`);
+  }catch(e){
+    console.error(e);
+    showToast('⚠️ Error al eliminar el evento');
+    btn.textContent='🗑️ Sí, eliminar';
+    btn.disabled=false;
+    return;
+  }
+  btn.textContent='🗑️ Sí, eliminar';
+  closeModal('modal-confirmar-eliminar-evento');
+  eventoAEliminarId=null;
+  if(eventoActualId===eventoId){
+    eventoActualId=null;
+    document.getElementById('panel-asistencia').style.display='none';
+  }
+  showToast('🗑️ Evento eliminado');
+  await cargarEventos();
+}
+
+async function exportarEventos(eventoId){
+  eventoId=eventoId||eventoActualId;
+  showToast('⏳ Preparando Excel...');
+  if(!eventoId){showToast('⚠️ Selecciona un evento primero');return;}
+  const ev=eventosCache.find(e=>e.id===eventoId);
+  const asisData=await sbGet('alumbrado_asistencia_eventos',`?evento_id=eq.${eventoId}`);
+  const asisMap={};
+  (Array.isArray(asisData)?asisData:[]).forEach(a=>{asisMap[a.personal_id]=a.estado;});
+
+  let csv='﻿'+'EVENTO,FECHA,NOMBRE,OFICINA,TURNO,SECCIÓN,USUARIO,ESTADO\n';
+  personalCache.forEach(p=>{
+    const estado=asisMap[p.id]?ESTADO_LABEL[asisMap[p.id]].toUpperCase():'SIN CAPTURAR';
+    csv+=`"${ev?.nombre||''}","${ev?.fecha||''}","${nombreCompleto(p)}","${OFICINA_LABEL[String(p.oficina)]||p.oficina||''}","${TURNO_LABEL[p.turno]||p.turno||''}","${p.seccion||''}","${p.usuario||''}","${estado}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`ALUMBRADO_asistencia_${(ev?.nombre||'evento').replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Excel de asistencia descargado');
+}
+
+function exportarResumenEventos(){
+  if(!resumenEventosCache.length){ showToast('⚠️ No hay eventos registrados'); return; }
+  let csv='﻿'+'EVENTO,FECHA,ASISTENCIA,FALTA,VACACIONES,INCAPACIDAD,SIN CAPTURAR,TOTAL,TOTALES DE LA APP DE ENCUESTAS\n';
+  resumenEventosCache.forEach(r=>{
+    csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.asistencia}","${r.falta}","${r.vacaciones}","${r.incapacidad}","${r.sinCapturar}","${r.total}","${r.encuestas}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`ALUMBRADO_resumen_eventos_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Resumen descargado');
+}
+
+// ── ENLACES TEMPORALES (asistencia por sección sin login) ──
+let enlacesCache=[];
+let eventosParaEnlaceCache=[];
+
+async function cargarEventosParaEnlace(){
+  const data=await sbGet('alumbrado_eventos','?order=fecha.desc');
+  eventosParaEnlaceCache=Array.isArray(data)?data:[];
+  const sel=document.getElementById('enl-evento');
+  const actual=sel.value;
+  sel.innerHTML='<option value="">— selecciona un evento —</option>'+
+    eventosParaEnlaceCache.map(ev=>`<option value="${ev.id}">${ev.nombre}${ev.fecha?' · '+ev.fecha:''}</option>`).join('');
+  if(actual) sel.value=actual;
+}
+function urlEnlaceSeccion(token){
+  return `${location.origin}${location.pathname.replace(/alumbrado\.html$/,'')}alumbrado-asistencia-seccion.html?token=${token}`;
+}
+function copiarEnlaceGenerado(url){
+  navigator.clipboard.writeText(url).then(()=>showToast('📋 enlace copiado')).catch(()=>showToast('⚠️ no se pudo copiar'));
+}
+async function generarEnlace(){
+  const eventoId=document.getElementById('enl-evento').value;
+  if(!eventoId){ showToast('⚠️ Selecciona una actividad'); return; }
+  const etiqueta=document.getElementById('enl-etiqueta').value.trim();
+  const horas=parseInt(document.getElementById('enl-horas').value,10);
+  if(!horas||horas<1){ showToast('⚠️ Horas de vigencia inválidas'); return; }
+  const secciones=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))];
+  if(!secciones.length){ showToast('⚠️ No hay secciones activas en personal'); return; }
+  const token=(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2)));
+  const r=await sbPost('alumbrado_enlaces_temporales',{
+    token,
+    secciones,
+    evento_id:eventoId,
+    etiqueta:etiqueta||null,
+    vigencia_horas:horas,
+    creado_por:currentNombre
+  });
+  if(!r.ok){ showToast('⚠️ Error al generar el enlace'); return; }
+  const url=urlEnlaceSeccion(token);
+  document.getElementById('enl-resultado').innerHTML=`
+    <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
+      ✅ Enlace generado (${secciones.length} secciones):<br><b>${url}</b>
+      <div style="margin-top:6px"><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋 copiar enlace</button></div>
+    </div>`;
+  document.getElementById('enl-etiqueta').value='';
+  document.getElementById('enl-evento').value='';
+  showToast('✓ Enlace generado');
+  await cargarEnlaces();
+}
+async function cargarEnlaces(){
+  const data=await sbGet('alumbrado_enlaces_temporales','?order=creado_en.desc&limit=30');
+  enlacesCache=Array.isArray(data)?data:[];
+  renderListaEnlaces();
+}
+function renderListaEnlaces(){
+  const el=document.getElementById('enl-lista');
+  if(!el) return;
+  if(!enlacesCache.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted)">Aún no se han generado enlaces.</div>'; return; }
+  el.innerHTML=enlacesCache.map(en=>{
+    let estadoHtml;
+    if(en.revocado){
+      estadoHtml=`<span class="badge badge-red">🚫 revocado</span>`;
+    } else if(!en.primera_apertura){
+      estadoHtml=`<span class="badge badge-gray">⏳ sin abrir — disponible</span>`;
+    } else {
+      const expira=new Date(new Date(en.primera_apertura).getTime()+(en.vigencia_horas||15)*60*60*1000);
+      estadoHtml = new Date()>expira
+        ? `<span class="badge badge-red">⏱ caducado</span>`
+        : `<span class="badge badge-green">🟢 activo — caduca ${expira.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>`;
+    }
+    const url=urlEnlaceSeccion(en.token);
+    const evento=eventosParaEnlaceCache.find(ev=>ev.id===en.evento_id);
+    const eventoLabel=evento?`${evento.nombre}${evento.fecha?' · '+evento.fecha:''}`:'(evento no encontrado)';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:13px;font-weight:700">${en.etiqueta||'(sin etiqueta)'}</div>
+        <div style="font-size:11px;color:var(--muted)">📅 ${eventoLabel} · ${(en.secciones||[]).length} sección(es) · ⏱ ${en.vigencia_horas||15}h · por ${en.creado_por} · ${new Date(en.creado_en).toLocaleDateString('es-MX')}</div>
+      </div>
+      ${estadoHtml}
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋</button>
+        ${!en.revocado?`<button class="btn btn-danger btn-xs" onclick="revocarEnlace('${en.id}')">🚫 revocar</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+async function revocarEnlace(id){
+  if(!confirm('¿Revocar este enlace? Dejará de funcionar de inmediato.')) return;
+  await sbPatch('alumbrado_enlaces_temporales',`?id=eq.${id}`,{revocado:true});
+  showToast('🚫 enlace revocado');
+  await cargarEnlaces();
+}
+
+// ── FALTAS ──
+let faltasAcumuladasCache=[]; // [{persona, total, eventos:[{id,nombre,fecha}]}]
+let faltasEventosCache=[];
+let faltasPorEventoCache={};
+let faltasVista='acumulado'; // 'acumulado' o el id de un evento — se conserva entre visitas a la pestaña
+let faltasEventoActualCache=[];
+
+async function cargarFaltasAcumuladas(){
+  const [faltasData,evData]=await Promise.all([
+    sbGet('alumbrado_asistencia_eventos','?estado=eq.FALTA&select=personal_id,evento_id'),
+    sbGet('alumbrado_eventos','?order=fecha.desc')
+  ]);
+  faltasEventosCache=Array.isArray(evData)?evData:[];
+  const eventosPorId={};
+  faltasEventosCache.forEach(ev=>{ eventosPorId[ev.id]=ev; });
+  const faltasDetalle=Array.isArray(faltasData)?faltasData:[];
+
+  const porPersona={};
+  faltasPorEventoCache={};
+  faltasDetalle.forEach(a=>{
+    if(!porPersona[a.personal_id]) porPersona[a.personal_id]={total:0,eventos:[]};
+    porPersona[a.personal_id].total++;
+    const ev=eventosPorId[a.evento_id];
+    porPersona[a.personal_id].eventos.push({id:a.evento_id, nombre:ev?.nombre||'(evento eliminado)', fecha:ev?.fecha||''});
+    if(!faltasPorEventoCache[a.evento_id]) faltasPorEventoCache[a.evento_id]=[];
+    faltasPorEventoCache[a.evento_id].push(a.personal_id);
+  });
+  faltasAcumuladasCache=personalCache
+    .filter(p=>porPersona[p.id]?.total>0)
+    .map(p=>({persona:p, total:porPersona[p.id].total, eventos:porPersona[p.id].eventos.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''))}))
+    .sort((a,b)=>b.total-a.total);
+
+  renderFaltasSubtabs();
+  renderFaltasVista();
+}
+function renderFaltasSubtabs(){
+  const chips=[`<div class="evento-chip ${faltasVista==='acumulado'?'sel-faltas':''}" onclick="seleccionarVistaFaltas('acumulado')">📊 Acumulado</div>`]
+    .concat(faltasEventosCache.map(ev=>`<div class="evento-chip ${faltasVista===ev.id?'sel-faltas':''}" onclick="seleccionarVistaFaltas('${ev.id}')">${ev.nombre||''}${ev.fecha?' · '+ev.fecha:''}</div>`));
+  document.getElementById('faltas-subtabs').innerHTML=chips.join('');
+}
+function seleccionarVistaFaltas(v){
+  faltasVista=v;
+  renderFaltasSubtabs();
+  renderFaltasVista();
+}
+function renderFaltasVista(){
+  if(faltasVista!=='acumulado'&&!faltasEventosCache.some(ev=>ev.id===faltasVista)){
+    faltasVista='acumulado';
+    renderFaltasSubtabs();
+  }
+  const esAcumulado=faltasVista==='acumulado';
+  document.getElementById('faltas-vista-acumulado').style.display=esAcumulado?'':'none';
+  document.getElementById('faltas-vista-evento').style.display=esAcumulado?'none':'';
+  if(esAcumulado){ renderFaltasAcumuladasTabla(); }
+  else{ renderFaltasEventoTabla(faltasVista); }
+}
+function renderFaltasAcumuladasTabla(){
+  const tbody=document.getElementById('faltas-acumuladas-tbody');
+  if(!faltasAcumuladasCache.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nadie tiene faltas registradas todavía.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=faltasAcumuladasCache.map((r,i)=>`<tr>
+      <td><b>${nombreCompleto(r.persona)||''}</b></td>
+      <td>${OFICINA_LABEL[String(r.persona.oficina)]||r.persona.oficina||'—'}</td>
+      <td>${r.persona.seccion?'Sec. '+r.persona.seccion:'—'}</td>
+      <td style="color:#cc0000;font-weight:700">${r.total}</td>
+      <td><button class="btn btn-secondary btn-xs" onclick="verDetalleFaltas(${i})">🔍 Ver detalle</button></td>
+    </tr>`).join('');
+}
+function renderFaltasEventoTabla(eventoId){
+  const ev=faltasEventosCache.find(e=>e.id===eventoId);
+  document.getElementById('faltas-evento-titulo').textContent=`📉 Faltas — ${ev?.nombre||''}${ev?.fecha?' · '+ev.fecha:''}`;
+  const idsConFalta=new Set(faltasPorEventoCache[eventoId]||[]);
+  faltasEventoActualCache=personalCache.filter(p=>idsConFalta.has(p.id));
+  const tbody=document.getElementById('faltas-evento-tbody');
+  if(!faltasEventoActualCache.length){
+    tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--muted)">Nadie tiene falta marcada en este evento.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=faltasEventoActualCache.map(p=>`<tr>
+      <td><b>${nombreCompleto(p)||''}</b></td>
+      <td>${OFICINA_LABEL[String(p.oficina)]||p.oficina||'—'}</td>
+      <td>${p.seccion?'Sec. '+p.seccion:'—'}</td>
+    </tr>`).join('');
+}
+function exportarFaltasEvento(){
+  if(!faltasEventoActualCache.length){ showToast('⚠️ No hay faltas registradas en este evento'); return; }
+  const ev=faltasEventosCache.find(e=>e.id===faltasVista);
+  let csv='﻿'+'NOMBRE,OFICINA,SECCIÓN\n';
+  faltasEventoActualCache.forEach(p=>{
+    csv+=`"${nombreCompleto(p)}","${OFICINA_LABEL[String(p.oficina)]||p.oficina||''}","${p.seccion||''}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`ALUMBRADO_faltas_${(ev?.nombre||'evento').replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Faltas del evento descargadas');
+}
+function exportarFaltasAcumuladas(){
+  if(!faltasAcumuladasCache.length){ showToast('⚠️ No hay faltas registradas'); return; }
+  let csv='﻿'+'NOMBRE,OFICINA,SECCIÓN,TOTAL DE FALTAS\n';
+  faltasAcumuladasCache.forEach(r=>{
+    csv+=`"${nombreCompleto(r.persona)}","${OFICINA_LABEL[String(r.persona.oficina)]||r.persona.oficina||''}","${r.persona.seccion||''}","${r.total}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`ALUMBRADO_faltas_acumuladas_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✓ Faltas acumuladas descargadas');
+}
+function verDetalleFaltas(i){
+  const r=faltasAcumuladasCache[i];
+  if(!r) return;
+  document.getElementById('df-nombre').textContent=nombreCompleto(r.persona)||'';
+  document.getElementById('df-meta').textContent=`${OFICINA_LABEL[String(r.persona.oficina)]||''} ${r.persona.seccion?'· Sec. '+r.persona.seccion:''}`;
+  document.getElementById('df-lista').innerHTML=r.eventos.map(e=>`
+    <div style="display:flex;justify-content:space-between;gap:10px;padding:8px 10px;background:var(--bg);border-radius:8px;font-size:13px">
+      <span>${e.nombre}</span>
+      <span style="color:var(--muted);white-space:nowrap">${e.fecha||'—'}</span>
+    </div>`).join('');
+  document.getElementById('modal-detalle-faltas').style.display='flex';
+}
+
+// ── CORRECCIÓN DE ASISTENCIA (con historial) ──
+let corrEventoId=null;
+let corrAsistenciaLocal={};
+let corrPendientes=new Map();
+
+async function cargarCorreccion(){
+  const data=await sbGet('alumbrado_eventos','?order=fecha.desc');
+  eventosCache=Array.isArray(data)?data:[];
+  const sel=document.getElementById('corr-evento');
+  const actual=sel.value;
+  sel.innerHTML='<option value="">— selecciona un evento —</option>'+
+    eventosCache.map(ev=>`<option value="${ev.id}">${ev.nombre}${ev.fecha?' · '+ev.fecha:''}</option>`).join('');
+  if(actual&&eventosCache.some(ev=>ev.id===actual)){
+    sel.value=actual;
+    await seleccionarEventoCorreccion(actual);
+  } else {
+    corrEventoId=null;
+    document.getElementById('corr-contenido').style.display='none';
+  }
+}
+async function seleccionarEventoCorreccion(eventoId){
+  corrEventoId=eventoId||null;
+  corrAsistenciaLocal={};
+  if(!corrEventoId){
+    document.getElementById('corr-contenido').style.display='none';
+    return;
+  }
+  document.getElementById('corr-contenido').style.display='block';
+  document.getElementById('corr-buscar').value='';
+  document.getElementById('corr-lista').innerHTML='<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Cargando…</div>';
+
+  const asisData=await sbGet('alumbrado_asistencia_eventos',`?evento_id=eq.${corrEventoId}`);
+  if(corrEventoId!==eventoId) return;
+  (Array.isArray(asisData)?asisData:[]).forEach(a=>{ corrAsistenciaLocal[a.personal_id]=a.estado||null; });
+  renderCorreccionLista();
+}
+function renderCorreccionLista(){
+  const q=(document.getElementById('corr-buscar').value||'').toLowerCase();
+  let lista=personalCache;
+  if(q) lista=lista.filter(p=>nombreCompleto(p).toLowerCase().includes(q));
+
+  document.getElementById('corr-lista').innerHTML=lista.length?lista.map(p=>{
+    const marcado=corrAsistenciaLocal[p.id]||'';
+    return `<div class="corr-row" id="corr-row-${p.id}">
+      <div style="flex:1;min-width:140px">
+        <div style="font-weight:700">${nombreCompleto(p)||'—'}</div>
+        <div style="font-size:11px;color:var(--muted)">${OFICINA_LABEL[String(p.oficina)]||''} ${p.seccion?'· Sec. '+p.seccion:''}</div>
+      </div>
+      <span id="corr-status-${p.id}" style="font-size:13px;width:16px;text-align:center;flex-shrink:0" onclick="reintentarCorreccion('${p.id}')"></span>
+      <select class="estado-select ${marcado?ESTADO_CLASS[marcado]:''}" onchange="cambiarEstadoCorreccion('${p.id}',this.value,this)">
+        <option value="" ${marcado?'disabled':''}>— sin capturar —</option>
+        ${ESTADOS.map(e=>`<option value="${e}" ${e===marcado?'selected':''}>${ESTADO_LABEL[e]}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join(''):`<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Sin resultados.</div>`;
+}
+let corrUltimoCtx={};
+function cambiarEstadoCorreccion(personalId,nuevoEstado,sel){
+  const estadoAnterior=corrAsistenciaLocal[personalId]||null;
+  corrAsistenciaLocal[personalId]=nuevoEstado;
+  sel.className=`estado-select ${ESTADO_CLASS[nuevoEstado]||''}`;
+  sel.querySelector('option[value=""]').disabled=true;
+  const ctx={evento_id:corrEventoId, personal_id:personalId, estado_anterior:estadoAnterior, estado_nuevo:nuevoEstado};
+  corrUltimoCtx[personalId]=ctx;
+  guardarCorreccion(ctx);
+}
+function reintentarCorreccion(personalId){
+  if(corrPendientes.has(personalId)) return;
+  const ctx=corrUltimoCtx[personalId];
+  if(!ctx) return;
+  guardarCorreccion(ctx);
+}
+function marcarEstadoCorreccion(personalId,estado){
+  const el=document.getElementById(`corr-status-${personalId}`);
+  if(!el) return;
+  if(estado==='guardando'){ el.textContent='⏳'; el.style.cursor='default'; el.title='Guardando…'; }
+  else if(estado==='ok'){
+    el.textContent='✓'; el.style.cursor='default'; el.title='Guardado';
+    setTimeout(()=>{ if(el.textContent==='✓') el.textContent=''; },1200);
+  } else if(estado==='error'){
+    el.textContent='⚠️'; el.style.cursor='pointer'; el.title='Error al guardar — clic para reintentar';
+  } else { el.textContent=''; el.style.cursor='default'; el.title=''; }
+}
+async function guardarCorreccion(ctx,intentos=0){
+  marcarEstadoCorreccion(ctx.personal_id,'guardando');
+  const promesa=(async()=>{
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/alumbrado_asistencia_eventos?on_conflict=evento_id,personal_id`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify([{evento_id:ctx.evento_id, personal_id:ctx.personal_id, estado:ctx.estado_nuevo, registrado_por:currentNombre}])
+      });
+      if(!r.ok) throw new Error(await r.text());
+      const rHist=await fetch(`${SB_URL}/rest/v1/alumbrado_asistencia_historial`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify([{evento_id:ctx.evento_id, personal_id:ctx.personal_id, estado_anterior:ctx.estado_anterior, estado_nuevo:ctx.estado_nuevo, modificado_por:currentNombre}])
+      });
+      if(!rHist.ok) throw new Error(await rHist.text());
+      marcarEstadoCorreccion(ctx.personal_id,'ok');
+    }catch(e){
+      if(intentos<2){
+        await new Promise(res=>setTimeout(res,800*(intentos+1)));
+        corrPendientes.delete(ctx.personal_id);
+        return guardarCorreccion(ctx,intentos+1);
+      }
+      console.error('Error guardando corrección',ctx,e);
+      marcarEstadoCorreccion(ctx.personal_id,'error');
+    }finally{
+      corrPendientes.delete(ctx.personal_id);
+    }
+  })();
+  corrPendientes.set(ctx.personal_id,promesa);
+  return promesa;
+}
+
+// ── HISTORIAL DE CAMBIOS ──
+let historialCache=[];
+async function cargarHistorial(){
+  const tbody=document.getElementById('hist-tbody');
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Cargando…</td></tr>';
+  document.getElementById('hist-buscar').value='';
+  const selSeccion=document.getElementById('hist-filtro-seccion');
+  const selLider=document.getElementById('hist-filtro-lider');
+  const secciones=seccionesUnicas('');
+  selSeccion.innerHTML='<option value="">todas las secciones</option>'+
+    secciones.map(num=>`<option value="${num}">Sec. ${num} — ${liderDe(num)}</option>`).join('');
+  const lideresActivos=[...new Set(Object.values(liderPorSeccionMap))].sort((a,b)=>a.localeCompare(b,'es'));
+  selLider.innerHTML='<option value="">todos los líderes</option>'+
+    lideresActivos.map(nombre=>`<option value="${nombre}">${nombre}</option>`).join('');
+  selSeccion.value='';
+  selLider.value='';
+  const data=await sbGet('alumbrado_asistencia_historial','?order=modificado_en.desc&limit=200');
+  historialCache=Array.isArray(data)?data:[];
+  renderHistorial();
+}
+function renderHistorial(){
+  const q=(document.getElementById('hist-buscar').value||'').toLowerCase();
+  const seccionFiltro=document.getElementById('hist-filtro-seccion').value;
+  const liderFiltro=document.getElementById('hist-filtro-lider').value;
+  const tbody=document.getElementById('hist-tbody');
+  if(!historialCache.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin cambios registrados todavía.</td></tr>';
+    return;
+  }
+  let filas=historialCache.map(h=>{
+    const persona=personalCache.find(p=>p.id===h.personal_id);
+    const evento=eventosCache.find(e=>e.id===h.evento_id);
+    return {...h,
+      nombrePersona:persona?nombreCompleto(persona):'(persona no encontrada)',
+      nombreEvento:evento?evento.nombre+(evento.fecha?' · '+evento.fecha:''):'(evento no encontrado)',
+      seccionPersona:persona?.seccion||'',
+      liderPersona:persona?.seccion?liderDe(persona.seccion):''
+    };
+  });
+  if(q) filas=filas.filter(f=>f.nombrePersona.toLowerCase().includes(q)||(f.modificado_por||'').toLowerCase().includes(q));
+  if(seccionFiltro) filas=filas.filter(f=>f.seccionPersona===seccionFiltro);
+  if(liderFiltro) filas=filas.filter(f=>f.liderPersona===liderFiltro);
+  if(!filas.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin resultados.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=filas.map(f=>`<tr>
+      <td>${new Date(f.modificado_en).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${f.nombreEvento}</td>
+      <td>${f.nombrePersona}</td>
+      <td>${f.seccionPersona?`${f.seccionPersona}${f.liderPersona?' · '+f.liderPersona:''}`:'—'}</td>
+      <td>${f.estado_anterior?ESTADO_LABEL[f.estado_anterior]:'sin capturar'}</td>
+      <td><b>${ESTADO_LABEL[f.estado_nuevo]||f.estado_nuevo}</b></td>
+      <td>${f.modificado_por||''}</td>
+    </tr>`).join('');
+}
+
+// ── NAV ──
+function goTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('panel-'+name).classList.add('on');
+  btn.classList.add('on');
+  if(name==='eventos'){cargarEventos();}
+  if(name==='faltas'){cargarFaltasAcumuladas();}
+  if(name==='correccion'){cargarCorreccion();}
+  if(name==='historial'){cargarHistorial();}
+  if(name==='secciones'){renderSecciones();}
+  if(name==='mapas'){ cargarMapasSeccion().then(renderMapasTab); }
+}
+</script>
+</body>
+</html>

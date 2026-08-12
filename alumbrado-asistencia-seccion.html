@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GEMACUU · Alumbrado — Asistencia de sección</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pan:#003399;--pan2:#1a4fc4;--red:#cc0000;
+  --bg:#f0f4ff;--white:#fff;--text:#1a1a2e;--muted:#6b7280;
+  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --radius:14px;--radius-sm:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+.hidden{display:none!important}
+.topbar{background:var(--pan);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,102,.2)}
+.topbar-logo{font-size:17px;font-weight:800;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.topbar-badge{font-size:10px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 8px;border-radius:20px}
+.exp-badges{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.exp-badge{display:block;width:100%;box-sizing:border-box;text-align:center;font-size:26px;font-weight:700;line-height:1.25;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:14px;padding:10px 12px}
+.exp-countdown{font-size:32px;font-weight:800}
+.exp-countdown.exp-warn{background:#fce8e8;border-color:#f5c2c2;color:var(--red)}
+@media(max-width:380px){
+  .exp-badge{font-size:20px}
+  .exp-countdown{font-size:24px}
+}
+.wrap{max-width:640px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;box-shadow:var(--shadow);margin-bottom:1rem}
+.center-msg{text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px}
+.center-msg .ico{font-size:40px;margin-bottom:10px}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);outline:none;background:#fff}
+.fg input:focus,.fg select:focus{border-color:var(--pan)}
+.btn{padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:var(--pan);color:#fff}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:#f0f4ff;color:var(--pan);border:1px solid var(--border)}
+.btn-link{background:none;border:none;color:var(--pan);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;margin-bottom:8px}
+.w-full{width:100%}
+.error-msg{color:var(--red);font-size:12px;font-weight:700;margin-bottom:10px}
+.seccion-hdr{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.seccion-num{font-size:16px;font-weight:800;color:var(--pan)}
+.seccion-lider{font-size:12px;color:var(--muted);margin-top:2px}
+.seccion-evento{font-size:12px;color:var(--muted);margin-top:2px}
+.persona-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.persona-row:last-child{border-bottom:none}
+.persona-nombre{flex:1;font-size:13px;font-weight:600;min-width:110px}
+.persona-actividad{max-width:150px;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px}
+.persona-status{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.persona-origen{font-size:10px;color:var(--pan);background:#e6eeff;border-radius:20px;padding:1px 7px;font-weight:700;flex-shrink:0}
+.estado-select{width:132px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
+.estado-select:disabled{opacity:.5;cursor:not-allowed}
+.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
+.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
+.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
+.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
+.vacio{font-size:12px;color:var(--muted);padding:8px 0}
+.mapa-preview{display:flex;align-items:center;gap:10px;padding:8px;background:#f8faff;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;cursor:pointer}
+.mapa-preview-thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0}
+.mapa-preview-pdf{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff;border:1px solid var(--border);border-radius:6px;flex-shrink:0}
+.mapa-preview .btn{flex:1}
+.visor-mapas{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;overflow-y:auto;padding:16px}
+.visor-mapas-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;position:sticky;top:0}
+.visor-mapas-hdr h3{color:#fff;font-size:15px}
+.visor-mapas-hdr .close-btn{color:#fff;font-size:26px;background:none;border:none;cursor:pointer;line-height:1}
+.visor-mapa-item{background:#fff;border-radius:10px;padding:12px;margin-bottom:14px}
+.visor-mapa-item img{width:100%;border-radius:8px;display:block;margin-bottom:10px}
+.visor-mapa-pdf{display:block;text-align:center;padding:40px 12px;background:var(--bg);border-radius:8px;margin-bottom:10px;font-size:40px}
+.visor-mapa-pdf-link{display:block;text-align:center;margin-bottom:10px;text-decoration:none}
+.visor-mapa-pdf-link img{width:100%;border-radius:8px;display:block;margin-bottom:6px;background:var(--bg)}
+.visor-mapa-pdf-link span{font-size:13px}
+.buscar-otra{position:relative;margin:10px 0}
+.buscar-otra input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none}
+.buscar-otra-resultados{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);margin-top:4px;max-height:220px;overflow-y:auto;z-index:20}
+.buscar-otra-item{padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border)}
+.buscar-otra-item:last-child{border-bottom:none}
+.buscar-otra-item:hover{background:#f0f4ff}
+.buscar-otra-item .bo-sec{font-size:11px;color:var(--muted)}
+.buscar-otra-vacio{padding:9px 12px;font-size:12px;color:var(--muted)}
+.apoyo-form{display:flex;gap:8px;flex-wrap:wrap;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
+.apoyo-form input{flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
+.apoyo-form select{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
+.apoyo-form-btns{display:flex;gap:8px;width:100%;justify-content:flex-end}
+.apoyos-lista{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.apoyo-chip{font-size:12px;background:#fef3c7;border:1px solid #fac775;border-radius:7px;padding:6px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.apoyo-tag{font-size:10px;font-weight:700;color:#854f0b;background:#fff;border:1px solid #fac775;border-radius:20px;padding:1px 7px}
+.foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-bottom:10px}
+.foto-thumb{aspect-ratio:1;background:#f0f4ff;border:1px solid var(--border);border-radius:8px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px}
+.foto-thumb img{width:100%;height:100%;object-fit:cover}
+.foto-thumb.uploading{color:var(--muted)}
+.foto-thumb.error{color:var(--red);background:#fce8e8}
+.foto-check{position:absolute;bottom:2px;right:2px;background:#2d6a4f;color:#fff;font-size:11px;font-weight:800;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+.foto-btns{display:flex;gap:8px}
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:12px 16px;box-shadow:0 -2px 12px rgba(0,0,0,.08);z-index:50}
+.save-bar-inner{max-width:640px;margin:0 auto}
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,51,153,.3);max-width:calc(100vw - 32px);width:max-content;text-align:center}
+#toast.show{opacity:1}
+@media(max-width:420px){
+  .persona-actividad{max-width:110px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">💡 GEMACUU <span class="topbar-badge">Alumbrado</span></div>
+  <div class="exp-badges">
+    <div class="exp-badge" id="exp-badge">⏳ Enlace temporal</div>
+    <div class="exp-badge exp-countdown hidden" id="exp-countdown"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div id="loading" class="center-msg">
+    <div class="ico">⏳</div>
+    Cargando enlace…
+  </div>
+
+  <div id="error-box" class="card hidden">
+    <div class="center-msg">
+      <div class="ico">⚠️</div>
+      <div id="error-msg" style="font-weight:700;color:var(--red)"></div>
+    </div>
+  </div>
+
+  <div id="acceso-gate" class="card hidden">
+    <div class="fg">
+      <label>Contraseña (tu número de sección)</label>
+      <input type="text" inputmode="numeric" id="inp-seccion-gate" placeholder="ej. 3244">
+    </div>
+    <div class="fg" id="fg-nombre-gate">
+      <label>Tu nombre</label>
+      <input type="text" id="inp-nombre-gate" placeholder="Ej. Diana" oninput="mayusculizarInput(this)">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Escribe tu primer nombre en mayúscula</div>
+    </div>
+    <div id="acceso-error" class="error-msg hidden"></div>
+    <button class="btn btn-primary w-full" id="btn-entrar-gate" onclick="confirmarAcceso()">Entrar →</button>
+  </div>
+
+  <div id="app" class="hidden">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="registrado-como"></div>
+    <div id="seccion-cont"></div>
+  </div>
+
+</div>
+
+<div id="save-bar" class="save-bar hidden">
+  <div class="save-bar-inner">
+    <button class="btn btn-primary w-full" id="btn-guardar-todo" onclick="guardarTodo()">💾 Guardar asistencia</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="visor-mapas" class="visor-mapas hidden">
+  <div class="visor-mapas-hdr">
+    <h3 id="visor-mapas-titulo">📍 Mapas</h3>
+    <button type="button" class="close-btn" onclick="cerrarVisorMapas()">✕</button>
+  </div>
+  <div id="visor-mapas-lista"></div>
+</div>
+
+<script>
+// GEMACUU · Alumbrado — captura de asistencia por sección vía enlace temporal
+// (sin login). Espejo de asistencia-seccion.html, tablas alumbrado_* propias.
+const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+const CLOUD='da7m6y3kk';
+const PRESET='barrido_electoral';
+const ACTIVIDADES=['Volanteo','Apoyo general'];
+const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
+const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
+const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vacaciones',INCAPACIDAD:'e-incapacidad'};
+
+async function sbGet(table,params=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  return r.json();
+}
+async function sbPost(table,body){
+  return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+let token=null;
+let enlace=null;
+let expiraEn=null;
+let eventoId=null;
+let eventoInfo=null;
+let seccionesValidas=[];
+let seccionActual=null;    // {num,encargado}
+let registradoPor='';
+const hoy=new Date().toISOString().split('T')[0];
+
+let personalSeccion=[];
+let personalExterno=[];
+let asistenciaPersonas={};  // { personal_id: {estado, actividad} } — viene de alumbrado_asistencia_eventos
+let apoyosSeccion=[];
+let totalEncuestas=null;
+let fotosSeccion=[];
+let mapasSeccion=[];
+let buscarOtraResultados=[];
+let buscarOtraTimer=null;
+const pendientesAutosave=new Map();
+
+function urlDescarga(cloudinaryUrl){
+  return cloudinaryUrl.replace('/upload/','/upload/fl_attachment/');
+}
+function urlPreviewPdf(cloudinaryUrl){
+  return cloudinaryUrl.replace('/upload/','/upload/f_jpg,pg_1/');
+}
+function mayusculizarInput(input){
+  const pos=input.selectionStart;
+  input.value=input.value.toUpperCase();
+  input.setSelectionRange(pos,pos);
+}
+function mostrarError(msg){
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('error-msg').textContent=msg;
+  document.getElementById('error-box').classList.remove('hidden');
+}
+function actualizarCuentaRegresiva(){
+  if(!expiraEn) return;
+  const el=document.getElementById('exp-countdown');
+  const msRestantes=expiraEn.getTime()-Date.now();
+  const totalMin=Math.max(0,Math.floor(msRestantes/60000));
+  const horas=Math.floor(totalMin/60);
+  const minutos=totalMin%60;
+  el.textContent=`⏱ ${String(horas).padStart(2,'0')}h ${String(minutos).padStart(2,'0')}m restantes`;
+  el.classList.toggle('exp-warn',totalMin<60);
+  el.classList.remove('hidden');
+}
+
+async function init(){
+  const params=new URLSearchParams(location.search);
+  token=params.get('token');
+  if(!token){ mostrarError('Este enlace no incluye un token válido.'); return; }
+
+  let rows=await sbGet('alumbrado_enlaces_temporales',`?token=eq.${encodeURIComponent(token)}`);
+  enlace=Array.isArray(rows)?rows[0]:null;
+  if(!enlace || enlace.revocado){ mostrarError('Este enlace no es válido o fue revocado.'); return; }
+
+  if(!enlace.primera_apertura){
+    await fetch(`${SB_URL}/rest/v1/alumbrado_enlaces_temporales?token=eq.${encodeURIComponent(token)}&primera_apertura=is.null`,{
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({primera_apertura:new Date().toISOString()})
+    });
+    rows=await sbGet('alumbrado_enlaces_temporales',`?token=eq.${encodeURIComponent(token)}`);
+    enlace=Array.isArray(rows)?rows[0]:null;
+    if(!enlace){ mostrarError('Este enlace no es válido.'); return; }
+  }
+
+  expiraEn=new Date(new Date(enlace.primera_apertura).getTime()+(enlace.vigencia_horas||15)*60*60*1000);
+  if(new Date()>expiraEn){
+    mostrarError(`Este enlace caducó el ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}.`);
+    return;
+  }
+
+  eventoId=enlace.evento_id;
+  seccionesValidas=enlace.secciones||[];
+  if(!eventoId||!seccionesValidas.length){ mostrarError('Este enlace no tiene una actividad o secciones configuradas.'); return; }
+
+  const eventoRows=await sbGet('alumbrado_eventos',`?id=eq.${eventoId}`);
+  eventoInfo=(Array.isArray(eventoRows)&&eventoRows[0])?eventoRows[0]:null;
+
+  document.getElementById('exp-badge').textContent=`⏳ Enlace temporal — caduca ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+  actualizarCuentaRegresiva();
+  setInterval(actualizarCuentaRegresiva,60000);
+  document.getElementById('loading').classList.add('hidden');
+
+  registradoPor=(localStorage.getItem('alumbrado_asis_nombre')||'').toUpperCase();
+  document.getElementById('fg-nombre-gate').classList.toggle('hidden',!!registradoPor);
+  document.getElementById('acceso-gate').classList.remove('hidden');
+  document.getElementById('inp-seccion-gate').focus();
+}
+
+async function confirmarAcceso(){
+  const numSeccion=document.getElementById('inp-seccion-gate').value.trim();
+  const nombreInput=document.getElementById('inp-nombre-gate').value.trim().toUpperCase();
+  const errEl=document.getElementById('acceso-error');
+  errEl.classList.add('hidden');
+
+  if(!registradoPor && !nombreInput){
+    errEl.textContent='Escribe tu nombre.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if(!numSeccion){
+    errEl.textContent='Escribe tu número de sección.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const btn=document.getElementById('btn-entrar-gate');
+  btn.disabled=true;
+  btn.textContent='Verificando…';
+  let personas,liderRows;
+  try{
+    [personas,liderRows]=await Promise.all([
+      sbGet('alumbrado_personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&status=eq.activo&select=id&limit=1`),
+      sbGet('alumbrado_personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&es_lider_seccion=eq.true&status=eq.activo&select=nombre,apellido_paterno&order=nombre.asc&limit=1`)
+    ]);
+  }catch(e){
+    personas=null;liderRows=null;
+  }
+  btn.disabled=false;
+  btn.textContent='Entrar →';
+
+  if(!Array.isArray(personas)||!personas.length){
+    errEl.textContent='Número de sección no válido.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  if(!registradoPor){
+    registradoPor=nombreInput;
+    localStorage.setItem('alumbrado_asis_nombre',registradoPor);
+  }
+
+  const lider=(Array.isArray(liderRows)&&liderRows[0])?liderRows[0]:null;
+  const liderNombre=lider?[lider.nombre,lider.apellido_paterno].filter(Boolean).join(' '):'— sin líder activo —';
+  seccionActual={num:numSeccion,encargado:liderNombre};
+  document.getElementById('acceso-gate').classList.add('hidden');
+  cargarYRenderizar();
+}
+
+async function cargarYRenderizar(){
+  document.getElementById('registrado-como').textContent=`Registrando como: ${registradoPor}`;
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('save-bar').classList.remove('hidden');
+
+  const num=seccionActual.num;
+
+  const personal=await sbGet('alumbrado_personal',`?status=eq.activo&seccion=eq.${encodeURIComponent(num)}&order=nombre.asc`);
+  personalSeccion=Array.isArray(personal)?personal:[];
+  const idsPropios=new Set(personalSeccion.map(p=>p.id));
+
+  if(personalSeccion.length){
+    const ids=personalSeccion.map(p=>p.id).join(',');
+    const asis=await sbGet('alumbrado_asistencia_eventos',`?evento_id=eq.${eventoId}&personal_id=in.(${ids})`);
+    (Array.isArray(asis)?asis:[]).forEach(a=>{
+      asistenciaPersonas[a.personal_id]={estado:a.estado||null,actividad:a.actividad||null};
+    });
+  }
+
+  const asisExterna=await sbGet('alumbrado_asistencia_eventos',`?evento_id=eq.${eventoId}&capturado_en_seccion=eq.${encodeURIComponent(num)}&select=personal_id,estado,actividad`);
+  const idsExternos=(Array.isArray(asisExterna)?asisExterna:[])
+    .map(a=>a.personal_id)
+    .filter(id=>!idsPropios.has(id));
+  if(idsExternos.length){
+    const personalExternoRows=await sbGet('alumbrado_personal',`?id=in.(${idsExternos.join(',')})&order=nombre.asc`);
+    personalExterno=Array.isArray(personalExternoRows)?personalExternoRows:[];
+    asisExterna.forEach(a=>{
+      if(idsPropios.has(a.personal_id)) return;
+      asistenciaPersonas[a.personal_id]={estado:a.estado||null,actividad:a.actividad||null};
+    });
+  } else {
+    personalExterno=[];
+  }
+
+  const apoyos=await sbGet('alumbrado_apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
+  apoyosSeccion=Array.isArray(apoyos)?apoyos:[];
+
+  const encuestas=await sbGet('alumbrado_encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}`);
+  totalEncuestas=(Array.isArray(encuestas)&&encuestas[0])?encuestas[0].total_encuestas:null;
+
+  const fotos=await sbGet('alumbrado_fotos_actividad_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
+  fotosSeccion=Array.isArray(fotos)?fotos:[];
+
+  const mapas=await sbGet('alumbrado_mapas_seccion',`?seccion=eq.${encodeURIComponent(num)}&order=subido_en.asc`);
+  mapasSeccion=Array.isArray(mapas)?mapas:[];
+
+  renderSeccion();
+}
+
+function renderSeccion(){
+  const s=seccionActual;
+  document.getElementById('seccion-cont').innerHTML=`<div class="card">
+    <div class="seccion-hdr">
+      <div class="seccion-num">Sección ${s.num}</div>
+      ${s.encargado?`<div class="seccion-lider">Líder: ${s.encargado}</div>`:''}
+      <div class="seccion-evento">📅 ${eventosNombreActual()}</div>
+    </div>
+
+    ${mapasSeccion.length?`
+    <div class="mapa-preview" onclick="abrirVisorMapas()">
+      ${mapasSeccion[0].tipo_archivo==='pdf'
+        ?`<img class="mapa-preview-thumb" src="${urlPreviewPdf(mapasSeccion[0].cloudinary_url)}" onerror="this.outerHTML='<div class=&quot;mapa-preview-pdf&quot;>📄</div>'">`
+        :`<img class="mapa-preview-thumb" src="${mapasSeccion[0].cloudinary_url}">`}
+      <button type="button" class="btn btn-secondary btn-sm">🔍 Ver mapas (${mapasSeccion.length})</button>
+    </div>`:''}
+
+    <div class="personas-lista">
+      ${personalSeccion.length?personalSeccion.map(p=>renderPersonaRow(p,false)).join(''):'<div class="vacio">Sin personal activo registrado en esta sección.</div>'}
+    </div>
+
+    ${personalExterno.length?`
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 4px">De otras secciones</div>
+    <div class="personas-lista">
+      ${personalExterno.map(p=>renderPersonaRow(p,true)).join('')}
+    </div>`:''}
+
+    <div class="buscar-otra">
+      <input type="text" id="inp-buscar-otra" placeholder="🔎 Buscar otra persona por nombre (cualquier sección)…" oninput="buscarOtraPersona(this.value)" autocomplete="off">
+      <div id="buscar-otra-resultados" class="buscar-otra-resultados hidden"></div>
+    </div>
+
+    <button type="button" class="btn-link" onclick="mostrarFormApoyo()">+ Agregar apoyo</button>
+    <div id="apoyo-form" class="apoyo-form hidden">
+      <input type="text" id="apoyo-nombre" placeholder="Nombre de quien apoyó">
+      <select id="apoyo-actividad">
+        ${ACTIVIDADES.map(a=>`<option value="${a}">${a}</option>`).join('')}
+      </select>
+      <div class="apoyo-form-btns">
+        <button type="button" class="btn btn-secondary" onclick="ocultarFormApoyo()">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarApoyo()">Guardar apoyo</button>
+      </div>
+    </div>
+    <div id="apoyos-lista" class="apoyos-lista">${apoyosSeccion.map(renderApoyoChip).join('')}</div>
+
+    <div class="fg">
+      <label>Total de encuestas de la app (grupo de encuestadores, hoy)</label>
+      <input type="number" min="0" step="1" inputmode="numeric" id="input-encuestas" value="${totalEncuestas??''}" placeholder="0">
+    </div>
+
+    <div class="fg" style="margin-bottom:0">
+      <label>Fotos de la actividad</label>
+      <div class="foto-grid" id="fotos-grid">${fotosSeccion.map(f=>`<div class="foto-thumb"><img src="${f.cloudinary_url}"></div>`).join('')}</div>
+      <div class="foto-btns">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('cam-inp').click()">📷 Cámara</button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('gal-inp').click()">🖼️ Galería</button>
+      </div>
+      <input type="file" id="cam-inp" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFotos(this)">
+      <input type="file" id="gal-inp" accept="image/*" multiple class="hidden" onchange="handleFotos(this)">
+    </div>
+  </div>`;
+}
+
+function abrirVisorMapas(){
+  document.getElementById('visor-mapas-titulo').textContent=`📍 Mapas — Sección ${seccionActual.num}`;
+  renderVisorMapas();
+  document.getElementById('visor-mapas').classList.remove('hidden');
+}
+function cerrarVisorMapas(){
+  document.getElementById('visor-mapas').classList.add('hidden');
+}
+function renderVisorMapas(){
+  document.getElementById('visor-mapas-lista').innerHTML=mapasSeccion.map((m,i)=>{
+    const preview=m.tipo_archivo==='pdf'
+      ? `<a href="${m.cloudinary_url}" target="_blank" class="visor-mapa-pdf-link">
+           <img src="${urlPreviewPdf(m.cloudinary_url)}" alt="Mapa ${i+1} (PDF, página 1)" onerror="this.parentElement.outerHTML='&lt;a href=&quot;${m.cloudinary_url}&quot; target=&quot;_blank&quot; class=&quot;visor-mapa-pdf&quot;&gt;📄&lt;br&gt;&lt;span style=&quot;font-size:13px&quot;&gt;Ver PDF ${i+1} (nueva pestaña)&lt;/span&gt;&lt;/a&gt;'">
+           <span>Ver PDF ${i+1} (nueva pestaña)</span>
+         </a>`
+      : `<img src="${m.cloudinary_url}" alt="Mapa ${i+1}">`;
+    return `<div class="visor-mapa-item">
+      ${preview}
+      <a class="btn btn-primary w-full" href="${urlDescarga(m.cloudinary_url)}" download>⬇️ Descargar</a>
+    </div>`;
+  }).join('');
+}
+
+function eventosNombreActual(){
+  if(!eventoInfo) return 'Actividad seleccionada';
+  return `${eventoInfo.nombre||''}${eventoInfo.fecha?' · '+eventoInfo.fecha:''}`;
+}
+
+function nombreCompleto(p){
+  return [p.nombre,p.apellido_paterno,p.apellido_materno].filter(Boolean).join(' ');
+}
+
+function renderPersonaRow(p,esExterna){
+  const estado=asistenciaPersonas[p.id]||{estado:null,actividad:null};
+  const marcado=estado.estado||'';
+  const esAsistencia=marcado==='ASISTENCIA';
+  const actividad=estado.actividad||ACTIVIDADES[0];
+  return `<div class="persona-row">
+    <div class="persona-nombre">${nombreCompleto(p)}${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}</div>
+    <select class="persona-actividad ${esAsistencia?'':'hidden'}" onchange="cambiarActividad('${p.id}',this.value)">
+      ${ACTIVIDADES.map(a=>`<option value="${a}" ${a===actividad?'selected':''}>${a}</option>`).join('')}
+    </select>
+    <span class="persona-status" id="status-${p.id}" onclick="reintentarPersona('${p.id}')"></span>
+    <select class="estado-select ${marcado?ESTADO_CLASS[marcado]:''}" onchange="cambiarEstado('${p.id}',this.value,this)">
+      <option value="" ${marcado?'disabled':''}>— sin capturar —</option>
+      ${ESTADOS.map(e=>`<option value="${e}" ${e===marcado?'selected':''}>${ESTADO_LABEL[e]}</option>`).join('')}
+    </select>
+  </div>`;
+}
+
+function marcarEstadoFila(personalId,estado){
+  const el=document.getElementById(`status-${personalId}`);
+  if(!el) return;
+  if(estado==='guardando'){ el.textContent='⏳'; el.style.cursor='default'; el.title='Guardando…'; }
+  else if(estado==='ok'){
+    el.textContent='✓'; el.style.cursor='default'; el.title='Guardado';
+    setTimeout(()=>{ if(el.textContent==='✓') el.textContent=''; },1200);
+  } else if(estado==='error'){
+    el.textContent='⚠️'; el.style.cursor='pointer'; el.title='Error al guardar — clic para reintentar';
+  } else { el.textContent=''; el.style.cursor='default'; el.title=''; }
+}
+
+function cambiarEstado(personalId,valor,sel){
+  const actual=asistenciaPersonas[personalId]||{estado:null,actividad:null};
+  const esAsistencia=valor==='ASISTENCIA';
+  const nuevaActividad=esAsistencia?(actual.actividad||ACTIVIDADES[0]):null;
+  asistenciaPersonas[personalId]={estado:valor,actividad:nuevaActividad};
+
+  sel.className=`estado-select ${ESTADO_CLASS[valor]||''}`;
+  sel.querySelector('option[value=""]').disabled=true;
+  const actividadSel=sel.parentElement.querySelector('.persona-actividad');
+  actividadSel.classList.toggle('hidden',!esAsistencia);
+  if(esAsistencia) actividadSel.value=nuevaActividad;
+
+  autoguardarPersona(personalId,{estado:valor,actividad:nuevaActividad});
+}
+
+function reintentarPersona(personalId){
+  if(pendientesAutosave.has(personalId)) return;
+  const estado=asistenciaPersonas[personalId];
+  if(!estado||!estado.estado) return;
+  autoguardarPersona(personalId,estado);
+}
+
+function cambiarActividad(personalId,valor){
+  const actual=asistenciaPersonas[personalId]||{estado:'ASISTENCIA',actividad:null};
+  actual.actividad=valor;
+  asistenciaPersonas[personalId]=actual;
+  autoguardarPersona(personalId,{estado:actual.estado,actividad:valor});
+}
+
+async function autoguardarPersona(personalId,estado,intentos=0){
+  marcarEstadoFila(personalId,'guardando');
+  const eventoIdCtx=eventoId;
+  const seccionCtx=seccionActual.num;
+  const usuarioCtx=registradoPor;
+  const promesa=(async()=>{
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/alumbrado_asistencia_eventos?on_conflict=evento_id,personal_id`,{
+        method:'POST',
+        headers:{
+          'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,
+          'Content-Type':'application/json',
+          'Prefer':'resolution=merge-duplicates,return=minimal'
+        },
+        body:JSON.stringify([{
+          evento_id:eventoIdCtx,
+          personal_id:personalId,
+          estado:estado.estado,
+          actividad:estado.actividad,
+          capturado_en_seccion:seccionCtx,
+          registrado_por:usuarioCtx
+        }])
+      });
+      if(!r.ok) throw new Error(await r.text());
+      marcarEstadoFila(personalId,'ok');
+    }catch(e){
+      if(intentos<2){
+        await new Promise(res=>setTimeout(res,800*(intentos+1)));
+        pendientesAutosave.delete(personalId);
+        return autoguardarPersona(personalId,estado,intentos+1);
+      }
+      console.error('Error autoguardando asistencia',personalId,e);
+      marcarEstadoFila(personalId,'error');
+    }finally{
+      pendientesAutosave.delete(personalId);
+    }
+  })();
+  pendientesAutosave.set(personalId,promesa);
+  return promesa;
+}
+
+function buscarOtraPersona(q){
+  clearTimeout(buscarOtraTimer);
+  const resEl=document.getElementById('buscar-otra-resultados');
+  q=q.trim();
+  if(q.length<2){ resEl.classList.add('hidden'); resEl.innerHTML=''; return; }
+  buscarOtraTimer=setTimeout(async()=>{
+    const rows=await sbGet('alumbrado_personal',`?status=eq.activo&nombre=ilike.*${encodeURIComponent(q)}*&order=nombre.asc&limit=50`);
+    const yaListados=new Set([...personalSeccion,...personalExterno].map(p=>p.id));
+    const qUpper=q.toUpperCase();
+    buscarOtraResultados=(Array.isArray(rows)?rows:[])
+      .filter(p=>!yaListados.has(p.id))
+      .sort((a,b)=>{
+        const aEmpieza=nombreCompleto(a).toUpperCase().startsWith(qUpper);
+        const bEmpieza=nombreCompleto(b).toUpperCase().startsWith(qUpper);
+        if(aEmpieza!==bEmpieza) return aEmpieza?-1:1;
+        return nombreCompleto(a).localeCompare(nombreCompleto(b),'es');
+      })
+      .slice(0,15);
+    if(!buscarOtraResultados.length){
+      resEl.innerHTML='<div class="buscar-otra-vacio">Sin resultados (o ya está en la lista).</div>';
+    } else {
+      resEl.innerHTML=buscarOtraResultados.map(p=>`
+        <div class="buscar-otra-item" onclick="agregarPersonaExterna('${p.id}')">
+          ${nombreCompleto(p)}<div class="bo-sec">${p.seccion?'Sec. '+p.seccion:'sin sección'}</div>
+        </div>`).join('');
+    }
+    resEl.classList.remove('hidden');
+  },300);
+}
+
+function agregarPersonaExterna(personalId){
+  const p=buscarOtraResultados.find(x=>x.id===personalId);
+  if(!p) return;
+  personalExterno.push(p);
+  asistenciaPersonas[p.id]=asistenciaPersonas[p.id]||{estado:null,actividad:null};
+  document.getElementById('inp-buscar-otra').value='';
+  document.getElementById('buscar-otra-resultados').classList.add('hidden');
+  renderSeccion();
+  showToast(`✓ ${nombreCompleto(p)} agregada — captura su estado abajo`);
+}
+
+function mostrarFormApoyo(){ document.getElementById('apoyo-form').classList.remove('hidden'); }
+function ocultarFormApoyo(){
+  document.getElementById('apoyo-form').classList.add('hidden');
+  document.getElementById('apoyo-nombre').value='';
+}
+
+async function guardarApoyo(){
+  const nombre=document.getElementById('apoyo-nombre').value.trim();
+  const actividad=document.getElementById('apoyo-actividad').value;
+  if(!nombre){ showToast('Escribe el nombre de quien apoyó'); return; }
+  const payload={seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,nombre,actividad,es_no_registrado:true,enlace_token:token,registrado_por:registradoPor};
+  const r=await sbPost('alumbrado_apoyos_no_registrados',payload);
+  if(!r.ok){ showToast('⚠️ No se pudo guardar el apoyo — intenta de nuevo'); return; }
+  apoyosSeccion.push(payload);
+  document.getElementById('apoyos-lista').innerHTML=apoyosSeccion.map(renderApoyoChip).join('');
+  ocultarFormApoyo();
+  showToast(`✓ ${nombre} agregado como apoyo`);
+}
+
+function renderApoyoChip(a){
+  return `<div class="apoyo-chip">🏷️ ${a.nombre} · ${a.actividad} <span class="apoyo-tag">apoyo no registrado</span></div>`;
+}
+
+async function handleFotos(input){
+  const files=Array.from(input.files||[]);
+  if(!files.length) return;
+  const grid=document.getElementById('fotos-grid');
+  for(const file of files){
+    const thumb=document.createElement('div');
+    thumb.className='foto-thumb uploading';
+    thumb.textContent='⏳';
+    grid.appendChild(thumb);
+    try{
+      const fd=new FormData();
+      fd.append('file',file);
+      fd.append('upload_preset',PRESET);
+      fd.append('folder',`alumbrado/asistencia-seccion/${seccionActual.num}/${hoy}`);
+      const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+      const d=await r.json();
+      if(d.secure_url){
+        const rInsert=await sbPost('alumbrado_fotos_actividad_seccion',{seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,cloudinary_url:d.secure_url,cloudinary_public_id:d.public_id,enlace_token:token,registrado_por:registradoPor});
+        thumb.className='foto-thumb';
+        thumb.textContent='';
+        const img=document.createElement('img');
+        img.src=d.secure_url;
+        thumb.appendChild(img);
+        if(rInsert.ok){
+          const check=document.createElement('span');
+          check.className='foto-check';
+          check.textContent='✓';
+          thumb.appendChild(check);
+          setTimeout(()=>{ if(thumb.contains(check)) check.remove(); },1500);
+        }
+      } else {
+        thumb.className='foto-thumb error';
+        thumb.textContent='⚠️';
+      }
+    }catch(e){
+      thumb.className='foto-thumb error';
+      thumb.textContent='⚠️';
+      console.error(e);
+    }
+  }
+  input.value='';
+}
+
+async function postConReintentos(url,body,intentos=0){
+  try{
+    const r=await fetch(url,{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify(body)
+    });
+    if(!r.ok){ console.error('Error guardando',url,await r.text()); return {ok:false}; }
+    return {ok:true};
+  }catch(e){
+    if(intentos<2){
+      await new Promise(res=>setTimeout(res,800*(intentos+1)));
+      return postConReintentos(url,body,intentos+1);
+    }
+    console.error('Error de red guardando',url,e);
+    return {ok:false};
+  }
+}
+
+async function guardarTodo(){
+  const btn=document.getElementById('btn-guardar-todo');
+  const textoOriginal=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='Guardando...';
+
+  const raw=document.getElementById('input-encuestas').value.trim();
+  let encuestasPayload=null;
+  if(raw!==''){
+    const n=Number(raw);
+    if(!Number.isFinite(n)||!Number.isInteger(n)||n<0){
+      showToast('⚠️ "Total de encuestas" debe ser un número entero válido');
+      btn.disabled=false;btn.textContent=textoOriginal;
+      return;
+    }
+    encuestasPayload={seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,total_encuestas:n,enlace_token:token,registrado_por:registradoPor,updated_at:new Date().toISOString()};
+  }
+
+  await Promise.allSettled(Array.from(pendientesAutosave.values()));
+
+  const snapshotEventoId=eventoId;
+  const snapshotSeccion=seccionActual.num;
+  // Respaldo: solo gente con un estado realmente capturado — nunca se inventa "Falta" para quien no se ha revisado.
+  const registros=[...personalSeccion,...personalExterno]
+    .filter(p=>asistenciaPersonas[p.id]?.estado)
+    .map(p=>{
+      const estado=asistenciaPersonas[p.id];
+      return {
+        evento_id:snapshotEventoId,
+        personal_id:p.id,
+        estado:estado.estado,
+        actividad:estado.estado==='ASISTENCIA'?(estado.actividad||ACTIVIDADES[0]):null,
+        capturado_en_seccion:snapshotSeccion,
+        registrado_por:registradoPor
+      };
+    });
+
+  let personasConError=0;
+  for(let i=0;i<registros.length;i+=50){
+    const lote=registros.slice(i,i+50);
+    const {ok}=await postConReintentos(`${SB_URL}/rest/v1/alumbrado_asistencia_eventos?on_conflict=evento_id,personal_id`,lote);
+    if(!ok) personasConError+=lote.length;
+  }
+
+  let encuestasConError=false;
+  if(encuestasPayload){
+    const {ok}=await postConReintentos(`${SB_URL}/rest/v1/alumbrado_encuestas_seccion?on_conflict=seccion,evento_id`,[encuestasPayload]);
+    if(!ok) encuestasConError=true;
+  }
+
+  btn.disabled=false;btn.textContent=textoOriginal;
+  if(personasConError>0&&encuestasConError){
+    showToast(`⚠️ No se guardó la asistencia de ${personasConError} persona(s) ni el total de encuestas — vuelve a intentar`);
+  } else if(personasConError>0){
+    showToast(`⚠️ No se pudo guardar la asistencia de ${personasConError} persona(s) — vuelve a intentar`);
+  } else if(encuestasConError){
+    showToast('⚠️ No se pudo guardar el total de encuestas — vuelve a intentar');
+  } else {
+    showToast('✅ Asistencia guardada correctamente');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
