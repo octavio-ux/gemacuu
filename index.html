@@ -113,6 +113,22 @@ tr:hover td{background:#f8faff}
 .fg-seccion select:focus{border-color:var(--pan);box-shadow:0 0 0 3px rgba(0,51,153,.15)}
 .fg-seccion-hint{font-size:11px;color:var(--pan);font-weight:600;margin-top:4px}
 
+/* ── SECCIONES ACTIVAS / META EE (modal de evento) ── */
+.ev-secciones-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px}
+@media(max-width:900px){.ev-secciones-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.ev-secciones-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:380px){.ev-secciones-grid{grid-template-columns:1fr}}
+.ev-sec-row{display:flex;flex-direction:column;gap:5px;padding:6px 7px;border:1px solid var(--border);border-radius:7px;background:#f8faff;min-width:0}
+.ev-sec-row-top{display:flex;align-items:center;gap:5px;min-width:0}
+.ev-sec-row-top input[type=checkbox]{width:15px;height:15px;flex-shrink:0;accent-color:var(--pan);cursor:pointer}
+.ev-sec-label{font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ev-sec-meta{width:100%;padding:5px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:11.5px}
+
+/* ── BLOQUEAR TOTAL DE ENCUESTAS (destacado, no debe pasar desapercibido) ── */
+.fg-bloqueo-encuestas{display:flex;align-items:center;gap:10px;background:#fff8e1;border:2px solid #f5a623;border-radius:10px;padding:12px 14px;box-shadow:0 2px 8px rgba(245,166,35,.2)}
+.fg-bloqueo-encuestas input[type=checkbox]{width:22px;height:22px;flex-shrink:0;accent-color:#b45309;cursor:pointer}
+.fg-bloqueo-encuestas label{margin:0;text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.3px;color:#854f0b;cursor:pointer}
+
 /* ── BUTTONS ── */
 .btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
 .btn-primary{background:var(--pan);color:#fff}
@@ -1047,7 +1063,7 @@ tr:hover td{background:#f8faff}
 
 <!-- MODAL EVENTO -->
 <div id="modal-evento" class="modal-bg" style="display:none">
-  <div class="modal" style="max-width:500px">
+  <div class="modal" style="max-width:860px">
     <div class="modal-hdr">
       <h3 id="modal-ev-titulo">📅 Nuevo Evento</h3>
       <button class="close-btn" onclick="closeModal('modal-evento')">✕</button>
@@ -1087,11 +1103,11 @@ tr:hover td{background:#f8faff}
         <label style="margin:0">Secciones activas este evento · Meta EE (opcional)</label>
         <button type="button" class="btn btn-secondary btn-xs" onclick="deseleccionarTodasSecciones()">Deseleccionar todas</button>
       </div>
-      <div id="ev-secciones-ee" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:6px 8px"></div>
+      <div id="ev-secciones-ee" class="ev-secciones-grid"></div>
     </div>
-    <div class="fg" style="display:flex;align-items:center;gap:8px">
-      <input type="checkbox" id="ev-bloquear-encuestas" style="width:auto">
-      <label style="margin:0;text-transform:none;font-weight:600;font-size:13px" for="ev-bloquear-encuestas">Bloquear total de encuestas este evento</label>
+    <div class="fg fg-bloqueo-encuestas">
+      <input type="checkbox" id="ev-bloquear-encuestas">
+      <label for="ev-bloquear-encuestas">🔒 Bloquear total de encuestas este evento</label>
     </div>
 
     <div style="display:flex;gap:8px;margin-top:1rem">
@@ -2814,10 +2830,13 @@ function renderSeccionesEEForm(activas,metaMap,bloqueado){
   document.getElementById('ev-secciones-ee').innerHTML=SECCIONES.map(s=>{
     const activa=activas.has(s.num);
     const meta=metaMap[s.num];
-    return `<div class="ev-sec-row" style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)">
-      <input type="checkbox" class="ev-sec-activa" data-sec="${s.num}" ${activa?'checked':''} onchange="onCambioSeccionActivaEvento()" style="width:auto">
-      <span style="flex:1;font-size:13px">${s.num} — ${s.encargado||''}</span>
-      <input type="number" min="0" step="1" inputmode="numeric" class="ev-sec-meta" data-sec="${s.num}" placeholder="Meta EE" value="${meta===null||meta===undefined?'':meta}" style="width:90px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px" ${activa?'':'disabled'}>
+    const etiqueta=`${s.num} — ${s.encargado||''}`;
+    return `<div class="ev-sec-row">
+      <div class="ev-sec-row-top">
+        <input type="checkbox" class="ev-sec-activa" data-sec="${s.num}" ${activa?'checked':''} onchange="onCambioSeccionActivaEvento()">
+        <span class="ev-sec-label" title="${etiqueta}">${etiqueta}</span>
+      </div>
+      <input type="number" min="0" step="1" inputmode="numeric" class="ev-sec-meta" data-sec="${s.num}" placeholder="Meta EE" value="${meta===null||meta===undefined?'':meta}" ${activa?'':'disabled'}>
     </div>`;
   }).join('');
 }
