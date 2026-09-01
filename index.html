@@ -1090,10 +1090,6 @@ tr:hover td{background:#f8faff}
       <input type="checkbox" id="ev-bloquear-encuestas" style="width:auto">
       <label style="margin:0;text-transform:none;font-weight:600;font-size:13px" for="ev-bloquear-encuestas">Bloquear total de encuestas este evento</label>
     </div>
-    <div class="fg">
-      <label>Asignar apoyos — secciones no activas este evento</label>
-      <div id="ev-apoyos" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:6px 8px"></div>
-    </div>
 
     <div style="display:flex;gap:8px;margin-top:1rem">
       <button class="btn btn-secondary w-full" onclick="closeModal('modal-evento')">Cancelar</button>
@@ -2763,8 +2759,7 @@ function abrirFormEvento(){
   document.getElementById('ev-padrino').value='';
   document.getElementById('ev-lugar').value='';
   document.getElementById('modal-ev-titulo').textContent='📅 Nuevo Evento';
-  // Evento nuevo: todas las secciones del catálogo activas por defecto, sin apoyos asignados.
-  evApoyosSeleccion={};
+  // Evento nuevo: todas las secciones del catálogo activas por defecto.
   evActivasOriginales=new Set();
   evTotalEncuestasOriginal={};
   renderSeccionesEEForm(new Set(SECCIONES.map(s=>s.num)),{},false);
@@ -2786,10 +2781,10 @@ async function editarEvento(){
   await cargarConfigEEEvento(ev.id);
 }
 
-// ── SECCIONES ACTIVAS / META EE / APOYOS (modal de evento) ──
-// evApoyosSeleccion: { seccion_origen: seccion_destino } de las secciones NO activas
-// mientras el modal está abierto — se persiste al guardar el evento.
-let evApoyosSeleccion={};
+// ── SECCIONES ACTIVAS / META EE (modal de evento) ──
+// La asignación de qué sección apoya a cuál YA NO se decide aquí: se elige en
+// campo el mismo día, desde el login del líder (asistencia-seccion.html), que
+// guarda directamente en apoyos_seccion_evento.
 // Snapshot de qué secciones ya estaban activas (y su total_encuestas) al abrir el modal de
 // edición, para poder "desactivar" con seguridad una sección que el admin desmarca: solo se
 // borra su fila de encuestas_seccion si nadie había capturado total_encuestas todavía.
@@ -2807,7 +2802,6 @@ function renderSeccionesEEForm(activas,metaMap,bloqueado){
       <input type="number" min="0" step="1" inputmode="numeric" class="ev-sec-meta" data-sec="${s.num}" placeholder="Meta EE" value="${meta===null||meta===undefined?'':meta}" style="width:90px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px" ${activa?'':'disabled'}>
     </div>`;
   }).join('');
-  renderApoyosForm();
 }
 
 function seccionesActivasSeleccionadas(){
@@ -2821,28 +2815,6 @@ function onCambioSeccionActivaEvento(){
     metaInp.disabled=!chk.checked;
     if(!chk.checked) metaInp.value='';
   });
-  renderApoyosForm();
-}
-
-function renderApoyosForm(){
-  const activas=new Set(seccionesActivasSeleccionadas());
-  const noActivas=SECCIONES.filter(s=>!activas.has(s.num));
-  const cont=document.getElementById('ev-apoyos');
-  if(!noActivas.length){
-    cont.innerHTML='<div style="font-size:12px;color:var(--muted)">Todas las secciones están activas este evento.</div>';
-    return;
-  }
-  cont.innerHTML=noActivas.map(s=>{
-    if(evApoyosSeleccion[s.num]&&!activas.has(evApoyosSeleccion[s.num])) delete evApoyosSeleccion[s.num];
-    const destinoActual=evApoyosSeleccion[s.num]||'';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
-      <span style="flex:1;min-width:150px;font-size:13px">${s.num} — ${s.encargado||''} va de apoyo a</span>
-      <select data-sec="${s.num}" onchange="evApoyosSeleccion['${s.num}']=this.value" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px">
-        <option value="">— elegir sección activa —</option>
-        ${SECCIONES.filter(a=>activas.has(a.num)).map(a=>`<option value="${a.num}" ${destinoActual===a.num?'selected':''}>${a.num} — ${a.encargado||''}</option>`).join('')}
-      </select>
-    </div>`;
-  }).join('');
 }
 
 // Carga config existente de un evento (al editar): secciones activas = las que
@@ -2850,10 +2822,7 @@ function renderApoyosForm(){
 // tiene ninguna fila configurada, se parte de todas activas (mismo default que
 // un evento nuevo) para no obligar a Octavio a marcarlas una por una.
 async function cargarConfigEEEvento(eventoId){
-  const [encRows,apoyoRows]=await Promise.all([
-    sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion,meta_ee,bloquear_total_encuestas,total_encuestas`),
-    sbGet('apoyos_seccion_evento',`?evento_id=eq.${eventoId}&select=seccion_origen,seccion_destino`)
-  ]);
+  const encRows=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion,meta_ee,bloquear_total_encuestas,total_encuestas`);
   const filas=Array.isArray(encRows)?encRows:[];
   const metaMap={};
   let bloqueado=false;
@@ -2866,14 +2835,11 @@ async function cargarConfigEEEvento(eventoId){
     activas=new Set(SECCIONES.map(s=>s.num));
   }
   evActivasOriginales=new Set(activas);
-  evApoyosSeleccion={};
-  (Array.isArray(apoyoRows)?apoyoRows:[]).forEach(r=>{ evApoyosSeleccion[r.seccion_origen]=r.seccion_destino; });
   renderSeccionesEEForm(activas,metaMap,bloqueado);
 }
 
-// Guarda Meta EE / bloqueo de encuestas (encuestas_seccion) y las asignaciones
-// de apoyo (apoyos_seccion_evento) para un evento ya creado/editado. Para
-// secciones que ya tenían fila en encuestas_seccion (p.ej. porque el líder ya
+// Guarda Meta EE / bloqueo de encuestas (encuestas_seccion) para un evento ya
+// creado/editado. Para secciones que ya tenían fila (p.ej. porque el líder ya
 // capturó su total de encuestas) solo se actualizan meta_ee/bloquear_total_encuestas
 // vía PATCH, sin tocar total_encuestas ni otros campos ya guardados.
 async function guardarConfigEEEvento(eventoId,fechaEvento){
@@ -2905,12 +2871,6 @@ async function guardarConfigEEEvento(eventoId,fechaEvento){
       await sbDelete('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(sec)}`);
     }
   }
-  // Apoyos: se reemplaza el conjunto completo para este evento con la selección actual del modal.
-  await sbDelete('apoyos_seccion_evento',`?evento_id=eq.${eventoId}`);
-  const apoyosFilas=Object.entries(evApoyosSeleccion)
-    .filter(([origen,destino])=>destino&&activasSet.has(destino))
-    .map(([origen,destino])=>({evento_id:eventoId,seccion_origen:origen,seccion_destino:destino}));
-  if(apoyosFilas.length) await sbPost('apoyos_seccion_evento',apoyosFilas);
 }
 
 // Suma días en UTC sobre los componentes Y-M-D del input date, para no

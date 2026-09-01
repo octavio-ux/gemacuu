@@ -143,6 +143,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <button class="btn btn-primary w-full" id="btn-entrar-gate" onclick="confirmarAcceso()">Entrar →</button>
   </div>
 
+  <div id="apoyo-selector" class="card hidden">
+    <div class="aviso-apoyo" style="margin-bottom:14px">⚠️ Tu sección hoy va de apoyo — Selecciona a qué sección vas a apoyar</div>
+    <div class="fg">
+      <label>¿A qué sección vas a apoyar?</label>
+      <select id="sel-apoyo-destino"></select>
+    </div>
+    <div id="apoyo-selector-error" class="error-msg hidden"></div>
+    <button class="btn btn-primary w-full" id="btn-confirmar-apoyo" onclick="confirmarApoyoDestino()">Confirmar y continuar →</button>
+  </div>
+
   <div id="sin-actividad" class="card hidden">
     <div class="center-msg">
       <div class="ico">🚫</div>
@@ -215,6 +225,9 @@ async function sbGet(table,params=''){
 }
 async function sbPost(table,body){
   return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+}
+async function sbPatch(table,params,body){
+  return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
 }
 
 function showToast(msg){
@@ -378,27 +391,19 @@ async function confirmarAcceso(){
   }
 
   // ¿La sección ingresada está activa este evento? (tiene fila en encuestas_seccion para este evento_id)
+  // Nunca se recuerda una asignación de apoyo de una sesión anterior: si la sección no está
+  // activa, siempre se le pregunta de nuevo a qué sección va a apoyar hoy (ver mostrarSelectorApoyo).
   seccionOrigenNum=numSeccion;
   seccionEsApoyo=false;
   seccionDestinoApoyo=null;
-  let numSeccionCard=numSeccion;
+  let esActiva=false;
+  let seccionesActivasEvento=[];
   try{
     const activaRows=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(numSeccion)}&select=seccion&limit=1`);
-    const esActiva=Array.isArray(activaRows)&&activaRows.length>0;
+    esActiva=Array.isArray(activaRows)&&activaRows.length>0;
     if(!esActiva){
-      const apoyoRows=await sbGet('apoyos_seccion_evento',`?evento_id=eq.${eventoId}&seccion_origen=eq.${encodeURIComponent(numSeccion)}&select=seccion_destino&limit=1`);
-      const destino=(Array.isArray(apoyoRows)&&apoyoRows[0])?apoyoRows[0].seccion_destino:null;
-      if(destino){
-        seccionEsApoyo=true;
-        seccionDestinoApoyo=destino;
-        numSeccionCard=destino;
-      } else {
-        btn.disabled=false;
-        btn.textContent='Entrar →';
-        document.getElementById('acceso-gate').classList.add('hidden');
-        document.getElementById('sin-actividad').classList.remove('hidden');
-        return;
-      }
+      const todasActivas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion`);
+      seccionesActivasEvento=[...new Set((Array.isArray(todasActivas)?todasActivas:[]).map(r=>r.seccion))];
     }
   }catch(e){
     btn.disabled=false;
@@ -407,17 +412,85 @@ async function confirmarAcceso(){
     errEl.classList.remove('hidden');
     return;
   }
-
-  // Líder en vivo (es_lider_seccion=true, activo) de la sección que se va a mostrar — no del catálogo fijo.
-  const liderRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccionCard)}&es_lider_seccion=eq.true&status=eq.activo&select=nombre&order=nombre.asc&limit=1`);
   btn.disabled=false;
   btn.textContent='Entrar →';
 
+  if(esActiva){
+    document.getElementById('acceso-gate').classList.add('hidden');
+    await entrarASeccion(numSeccion);
+    return;
+  }
+
+  if(!seccionesActivasEvento.length){
+    document.getElementById('acceso-gate').classList.add('hidden');
+    document.getElementById('sin-actividad').classList.remove('hidden');
+    return;
+  }
+
+  document.getElementById('acceso-gate').classList.add('hidden');
+  mostrarSelectorApoyo(seccionesActivasEvento);
+}
+
+// Llena el <select> con las secciones activas de este evento y muestra la pantalla de
+// selección — siempre desde cero, nunca precargada con una elección de una sesión anterior.
+function mostrarSelectorApoyo(seccionesActivasEvento){
+  const sel=document.getElementById('sel-apoyo-destino');
+  const ordenadas=[...seccionesActivasEvento].sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+  sel.innerHTML='<option value="">— selecciona una sección —</option>'+
+    ordenadas.map(num=>{
+      const cat=SECCIONES.find(s=>s.num===num);
+      return `<option value="${num}">${num}${cat?' — '+cat.encargado:''}</option>`;
+    }).join('');
+  document.getElementById('apoyo-selector-error').classList.add('hidden');
+  document.getElementById('apoyo-selector').classList.remove('hidden');
+}
+
+// Guarda (upsert) la elección del líder en apoyos_seccion_evento y carga la tarjeta destino.
+async function confirmarApoyoDestino(){
+  const destino=document.getElementById('sel-apoyo-destino').value;
+  const errEl=document.getElementById('apoyo-selector-error');
+  errEl.classList.add('hidden');
+  if(!destino){
+    errEl.textContent='Selecciona a qué sección vas a apoyar.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  const btn=document.getElementById('btn-confirmar-apoyo');
+  const textoOriginal=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='Guardando…';
+  try{
+    const existentes=await sbGet('apoyos_seccion_evento',`?evento_id=eq.${eventoId}&seccion_origen=eq.${encodeURIComponent(seccionOrigenNum)}&select=id&limit=1`);
+    let r;
+    if(Array.isArray(existentes)&&existentes.length){
+      r=await sbPatch('apoyos_seccion_evento',`?evento_id=eq.${eventoId}&seccion_origen=eq.${encodeURIComponent(seccionOrigenNum)}`,{seccion_destino:destino});
+    } else {
+      r=await sbPost('apoyos_seccion_evento',{evento_id:eventoId,seccion_origen:seccionOrigenNum,seccion_destino:destino});
+    }
+    if(!r.ok) throw new Error(await r.text());
+  }catch(e){
+    console.error('Error guardando apoyo',e);
+    btn.disabled=false;
+    btn.textContent=textoOriginal;
+    errEl.textContent='No se pudo guardar tu selección — intenta de nuevo.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  seccionEsApoyo=true;
+  seccionDestinoApoyo=destino;
+  btn.disabled=false;
+  btn.textContent=textoOriginal;
+  document.getElementById('apoyo-selector').classList.add('hidden');
+  await entrarASeccion(destino);
+}
+
+// Carga al líder en vivo de la sección a mostrar (propia o destino de apoyo) y renderiza su tarjeta.
+async function entrarASeccion(numSeccionCard){
+  const liderRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccionCard)}&es_lider_seccion=eq.true&status=eq.activo&select=nombre&order=nombre.asc&limit=1`);
   const catalogo=SECCIONES.find(s=>s.num===numSeccionCard)||{num:numSeccionCard,padrino:''};
   const liderNombre=(Array.isArray(liderRows)&&liderRows[0]?.nombre)||'— sin líder activo —';
   seccionActual={...catalogo,num:numSeccionCard,encargado:liderNombre};
-  document.getElementById('acceso-gate').classList.add('hidden');
-  cargarYRenderizar();
+  await cargarYRenderizar();
 }
 
 async function cargarYRenderizar(){
