@@ -125,6 +125,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
   <div class="wrap">
 
+    <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📋 Resumen de hoy</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" id="rh-participaron" style="color:var(--green)">0</div><div class="stat-label">Participaron hoy</div></div>
+      <div class="stat-card"><div class="stat-num" id="rh-secciones-activas" style="color:var(--pan)">0</div><div class="stat-label">Secciones activas</div></div>
+      <div class="stat-card"><div class="stat-num" id="rh-ee-total" style="color:var(--amber)">0 / 0</div><div class="stat-label">EE total / meta total</div></div>
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-num" id="st-asistencia" style="color:var(--green)">0</div><div class="stat-label">Asistencia</div></div>
       <div class="stat-card"><div class="stat-num" id="st-falta" style="color:var(--red)">0</div><div class="stat-label">Falta</div></div>
@@ -144,7 +151,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div id="ee-cont"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-faltaron">
       <div class="card-title">❌ Faltaron (<span id="faltaron-count">0</span>)</div>
       <div id="faltaron-cont"></div>
     </div>
@@ -204,6 +211,7 @@ let encuestasPorSeccion={};
 let liderPorSeccion={};     // seccion -> nombre de quien tiene es_lider_seccion=true (activo)
 let metaEEPorSeccion={};    // seccion -> meta_ee (solo secciones con meta_ee capturada este evento)
 let eeCapturadoPorSeccion={}; // seccion -> SUM(cantidad_ee) de ee_capturas_seccion este evento
+let seccionesActivasEvento=new Set(); // secciones con fila en encuestas_seccion para este evento (activas, con o sin meta_ee)
 const seccionesExpandidas=new Set();
 
 function liderDe(seccionNum){
@@ -273,6 +281,7 @@ async function init(){
     (Array.isArray(encuestas)?encuestas:[]).forEach(e=>{
       encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
       if(typeof e.meta_ee==='number') metaEEPorSeccion[e.seccion]=e.meta_ee;
+      seccionesActivasEvento.add(e.seccion); // toda fila en encuestas_seccion = sección activa este evento
     });
     (Array.isArray(eeCapturas)?eeCapturas:[]).forEach(c=>{
       eeCapturadoPorSeccion[c.seccion_destino]=(eeCapturadoPorSeccion[c.seccion_destino]||0)+(typeof c.cantidad_ee==='number'?c.cantidad_ee:0);
@@ -288,11 +297,29 @@ async function init(){
   document.getElementById('d-evento').textContent=evento.nombre||'—';
   document.getElementById('d-fecha').textContent=evento.fecha||'—';
 
+  renderResumenHoy();
   renderStats();
   renderTop3();
   renderEE();
   renderFaltaron();
   renderSecciones();
+}
+
+// Participaron hoy = suma de ASISTENCIA en TODAS las secciones activas del evento (dueños +
+// líderes de apoyo, vía capturado_en_seccion), sin importar el tamaño del equipo asignado.
+// Secciones activas / EE total-meta total reflejan lo mismo que ya se usa en el bloque de EE.
+function renderResumenHoy(){
+  let participaron=0;
+  seccionesActivasEvento.forEach(sec=>{
+    const mapa=estadoPorSeccion[sec]||{};
+    participaron+=Object.values(mapa).filter(e=>e==='ASISTENCIA').length;
+  });
+  const metaKeys=Object.keys(metaEEPorSeccion);
+  const eeTotal=Object.values(eeCapturadoPorSeccion).reduce((s,n)=>s+n,0);
+  const metaTotal=metaKeys.reduce((s,k)=>s+(metaEEPorSeccion[k]||0),0);
+  document.getElementById('rh-participaron').textContent=participaron;
+  document.getElementById('rh-secciones-activas').textContent=metaKeys.length;
+  document.getElementById('rh-ee-total').textContent=`${eeTotal} / ${metaTotal}`;
 }
 
 function renderStats(){
@@ -355,7 +382,13 @@ function renderEE(){
   }).join('')}</div>`;
 }
 
+// La tarjeta "Faltaron" se oculta por completo en eventos que ya tienen meta_ee capturada
+// en al menos una sección (se reemplaza por el resumen de arriba y el bloque de EE). Los
+// reportes de eventos viejos, sin ese dato, la siguen mostrando como siempre.
 function renderFaltaron(){
+  const card=document.getElementById('card-faltaron');
+  if(Object.keys(metaEEPorSeccion).length>0){ card.hidden=true; return; }
+  card.hidden=false;
   const faltaron=personalCache.filter(p=>asisMap[p.id]==='FALTA');
   document.getElementById('faltaron-count').textContent=faltaron.length;
   const cont=document.getElementById('faltaron-cont');
