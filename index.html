@@ -1187,7 +1187,7 @@ tr:hover td{background:#f8faff}
       <button class="close-btn" onclick="closeModal('modal-mapas')">✕</button>
     </div>
     <div id="mapas-modal-lista" class="mapas-grid"></div>
-    <div class="fg" style="margin-top:12px">
+    <div class="fg" id="mapas-upload-fg" style="margin-top:12px">
       <label>Subir mapa nuevo (imagen o PDF)</label>
       <input type="file" id="mapas-input-archivo" accept="image/*,application/pdf" onchange="subirMapaSeccion(this)"
         style="padding:8px;border:1.5px dashed var(--border);border-radius:8px;width:100%;font-size:13px;cursor:pointer">
@@ -1638,7 +1638,8 @@ let mapasPorSeccion={}; // seccion -> [{id,seccion,cloudinary_url,cloudinary_pub
 let mapasModalSeccion=null;
 
 async function cargarMapasSeccion(){
-  if(currentUser!=='Octavio') return; // solo Octavio ve/usa mapas, no gastamos la consulta en los demás
+  // Octavio (admin) y las Editoras pueden ver/descargar mapas; nadie más, para no gastar la consulta.
+  if(currentUser!=='Octavio' && !EDITORAS.includes(currentUser)) return;
   try{
     const data=await sbGet('mapas_seccion','?order=subido_en.desc');
     mapasPorSeccion={};
@@ -1659,9 +1660,16 @@ function renderSecciones(){
   const lista=secFiltro?SECCIONES.filter(s=>s.padrino===secFiltro):SECCIONES;
   const PAD_COLOR={'Fernando Amezcua':'#003399','Martin Yáñez':'#2d6a4f','Rene Espinoza':'#854f0b'};
   const isAdmin=currentUser==='Octavio';
+  // Las Editoras ven y descargan mapas en todas las secciones, igual que el admin — pero
+  // sin subir ni eliminar (eso sigue restringido a Octavio, ver abrirMapasSeccion).
+  const isEditor=EDITORAS.includes(currentUser);
+  const canViewMapas=isAdmin||isEditor;
   document.getElementById('sec-grid').innerHTML=lista.map(s=>{
     const personas=personalCache.filter(p=>p.seccion===s.num);
     const numMapas=(mapasPorSeccion[s.num]||[]).length;
+    // Admin siempre ve el botón (para poder subir el primer mapa); una Editora solo lo ve
+    // cuando ya hay mapas subidos, porque no puede subir.
+    const mostrarBtnMapas=isAdmin||(isEditor&&numMapas>0);
     return `<div class="sec-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="sec-num">Sec. ${s.num}</div>
@@ -1669,22 +1677,26 @@ function renderSecciones(){
       </div>
       <div class="sec-enc">🗝 ${liderDe(s.num)}</div>
       <div class="sec-chips">${personas.map(p=>`<span class="chip">${(p.nombre||'').split(' ').slice(0,2).join(' ')}</span>`).join('')||'<span style="font-size:11px;color:var(--muted)">sin asignados</span>'}</div>
-      ${isAdmin?`<button type="button" class="btn btn-secondary btn-xs" style="width:100%;margin-top:8px" onclick="abrirMapasSeccion('${s.num}')">📍 ${numMapas?'Mapas ('+numMapas+')':'Subir mapa'}</button>`:''}
+      ${canViewMapas&&mostrarBtnMapas?`<button type="button" class="btn btn-secondary btn-xs" style="width:100%;margin-top:8px" onclick="abrirMapasSeccion('${s.num}')">📍 ${numMapas?'Mapas ('+numMapas+')':'Subir mapa'}</button>`:''}
     </div>`;
   }).join('');
 }
 
 function abrirMapasSeccion(num){
-  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;}
+  const isAdmin=currentUser==='Octavio';
+  if(!isAdmin&&!EDITORAS.includes(currentUser)){showToast('⚠️ Sin permiso');return;}
   mapasModalSeccion=num;
   document.getElementById('mapas-modal-titulo').textContent=`📍 Mapas — Sección ${num}`;
   document.getElementById('mapas-input-archivo').value='';
   document.getElementById('mapas-upload-status').textContent='';
+  // Subir mapas sigue siendo solo de Octavio; las Editoras solo ven/descargan.
+  document.getElementById('mapas-upload-fg').style.display=isAdmin?'':'none';
   renderMapasModalLista();
   document.getElementById('modal-mapas').style.display='flex';
 }
 
 function renderMapasModalLista(){
+  const isAdmin=currentUser==='Octavio';
   const lista=mapasPorSeccion[mapasModalSeccion]||[];
   document.getElementById('mapas-modal-lista').innerHTML=lista.length
     ? lista.map(m=>{
@@ -1695,16 +1707,18 @@ function renderMapasModalLista(){
                <div class="mapa-pdf-badge">PDF</div>
              </div>`
           : `<img class="mapa-thumb" src="${m.cloudinary_url}" onclick="window.open('${m.cloudinary_url}','_blank')" title="Ver imagen">`;
+        // Eliminar sigue siendo solo de Octavio; las Editoras solo ven/descargan.
         return `<div class="mapa-card">
           ${preview}
           <div class="mapa-fecha">${fecha}</div>
-          <button type="button" class="btn btn-danger btn-xs" style="width:100%" onclick="eliminarMapaSeccion('${m.id}')">🗑️ Eliminar</button>
+          ${isAdmin?`<button type="button" class="btn btn-danger btn-xs" style="width:100%" onclick="eliminarMapaSeccion('${m.id}')">🗑️ Eliminar</button>`:''}
         </div>`;
       }).join('')
     : '<div style="font-size:12px;color:var(--muted);padding:8px 0">Sin mapas subidos todavía.</div>';
 }
 
 async function subirMapaSeccion(input){
+  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;} // subir sigue siendo solo de Octavio
   const file=input.files[0];
   if(!file) return;
   const status=document.getElementById('mapas-upload-status');
@@ -1741,6 +1755,7 @@ async function subirMapaSeccion(input){
 }
 
 async function eliminarMapaSeccion(id){
+  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;} // eliminar sigue siendo solo de Octavio
   if(!confirm('¿Eliminar este mapa? Solo se borra el registro, no afecta el archivo en Cloudinary.')) return;
   await fetch(`${SB_URL}/rest/v1/mapas_seccion?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
   showToast('🗑️ Mapa eliminado');
@@ -3674,7 +3689,7 @@ function goTab(name,btn){
   if(name==='incidencias'){cargarIncidencias();}
   if(name==='nuevos'){cargarNuevos();}
   if(name==='red'){filtrarRed();}
-  if(name==='secciones'){ if(currentUser==='Octavio'){ cargarMapasSeccion().then(renderSecciones); } else { renderSecciones(); } }
+  if(name==='secciones'){ if(currentUser==='Octavio'||EDITORAS.includes(currentUser)){ cargarMapasSeccion().then(renderSecciones); } else { renderSecciones(); } }
   if(name==='bajas')filtrarBajas();
   if(name==='ines')renderInes();
   if(name==='control')renderControl();
