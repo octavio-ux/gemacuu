@@ -141,7 +141,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div class="stat-card"><div class="stat-num" id="st-encuestas" style="color:var(--pan2)">0</div><div class="stat-label">Encuestas totales</div></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-top3">
       <div class="card-title">🏆 Top 3 secciones — Encuestas/puertas</div>
       <div id="top3-cont"></div>
     </div>
@@ -337,7 +337,13 @@ function renderStats(){
   document.getElementById('st-encuestas').textContent=encuestasTotales;
 }
 
+// El Top 3 se basa en total_encuestas, que para eventos con el sistema de EE está bloqueado
+// y siempre en 0 — así que la tarjeta se oculta por completo, igual que "Faltaron". Los
+// reportes de eventos viejos sin meta_ee la siguen mostrando como siempre.
 function renderTop3(){
+  const card=document.getElementById('card-top3');
+  if(Object.keys(metaEEPorSeccion).length>0){ card.hidden=true; return; }
+  card.hidden=false;
   const cont=document.getElementById('top3-cont');
   const medallas=['🥇','🥈','🥉'];
   const ranking=SECCIONES
@@ -407,12 +413,27 @@ function renderFaltaron(){
 
 function renderSecciones(){
   const cont=document.getElementById('secciones-cont');
-  cont.innerHTML=SECCIONES.map(s=>{
+  const filas=SECCIONES.map(s=>{
     const nativos=personalCache.filter(p=>p.seccion===s.num);
     const mapaSeccion=estadoPorSeccion[s.num]||{};
     const participaron=Object.values(mapaSeccion).filter(e=>e==='ASISTENCIA').length;
     const encuestas=encuestasPorSeccion[s.num]||0;
     const fotos=fotosPorSeccion[s.num]||[];
+    return {s,nativos,mapaSeccion,participaron,encuestas,fotos};
+  });
+  // En eventos con el sistema de EE, solo se listan secciones con actividad real
+  // (participaron, encuestas o fotos > 0) — a las que no les tocaba ir a este evento no
+  // deben aparecer como si hubieran faltado. Los reportes de eventos viejos sin meta_ee
+  // siguen mostrando el catálogo completo, como siempre.
+  const hayMetaEE=Object.keys(metaEEPorSeccion).length>0;
+  const listaFiltrada=hayMetaEE
+    ? filas.filter(f=>f.participaron>0||f.encuestas>0||f.fotos.length>0)
+    : filas;
+  if(!listaFiltrada.length){
+    cont.innerHTML='<div class="vacio">Sin actividad registrada en ninguna sección para este evento.</div>';
+    return;
+  }
+  cont.innerHTML=listaFiltrada.map(({s,nativos,mapaSeccion,participaron,encuestas,fotos})=>{
     const abierta=seccionesExpandidas.has(s.num);
     return `<div class="seccion-item ${abierta?'open':''}" id="seccion-item-${s.num}">
       <div class="seccion-hdr" onclick="toggleSeccion('${s.num}')">
