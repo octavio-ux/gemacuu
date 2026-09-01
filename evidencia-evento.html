@@ -45,6 +45,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .top3-padrino{font-size:11px;color:var(--muted)}
 .top3-num{font-size:28px;font-weight:800;color:var(--amber);text-align:right;flex-shrink:0}
 
+/* ── EE POR SECCIÓN ── */
+.ee-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.ee-row{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#f8faff;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.ee-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.ee-seccion{font-size:15px;font-weight:800;color:var(--pan)}
+.ee-fraccion{font-size:13px;font-weight:700;color:var(--text)}
+.ee-badge{font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;align-self:flex-start}
+.ee-badge-faltan{background:#fce8e8;color:var(--red)}
+.ee-badge-cumplida{background:#eaf3de;color:var(--green)}
+
 /* ── FALTARON ── */
 .faltaron-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
 .faltaron-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#fce8e8;border:1px solid #f5c2c2;border-radius:var(--radius-sm)}
@@ -129,6 +139,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div id="top3-cont"></div>
     </div>
 
+    <div class="card" id="card-ee" hidden>
+      <div class="card-title">🎯 EE por sección — avance contra meta</div>
+      <div id="ee-cont"></div>
+    </div>
+
     <div class="card">
       <div class="card-title">❌ Faltaron (<span id="faltaron-count">0</span>)</div>
       <div id="faltaron-cont"></div>
@@ -187,6 +202,8 @@ let faltasAcumuladas={};    // personal_id -> total de FALTA en todos los evento
 let fotosPorSeccion={};
 let encuestasPorSeccion={};
 let liderPorSeccion={};     // seccion -> nombre de quien tiene es_lider_seccion=true (activo)
+let metaEEPorSeccion={};    // seccion -> meta_ee (solo secciones con meta_ee capturada este evento)
+let eeCapturadoPorSeccion={}; // seccion -> SUM(cantidad_ee) de ee_capturas_seccion este evento
 const seccionesExpandidas=new Set();
 
 function liderDe(seccionNum){
@@ -227,12 +244,13 @@ async function init(){
     if(!evento){ mostrarError('No se encontró el evento indicado en este enlace.'); return; }
     if(evento.evidencia_publica===false){ mostrarRevocado(); return; }
 
-    const [personal,asisEvento,faltasTodas,fotos,encuestas]=await Promise.all([
+    const [personal,asisEvento,faltasTodas,fotos,encuestas,eeCapturas]=await Promise.all([
       sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion&order=nombre.asc'),
       sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado,capturado_en_seccion`),
       sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id'),
       sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`),
-      sbGet('encuestas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion,total_encuestas`)
+      sbGet('encuestas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion,total_encuestas,meta_ee`),
+      sbGet('ee_capturas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion_destino,cantidad_ee`)
     ]);
 
     personalCache=Array.isArray(personal)?personal:[];
@@ -254,6 +272,10 @@ async function init(){
     });
     (Array.isArray(encuestas)?encuestas:[]).forEach(e=>{
       encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
+      if(typeof e.meta_ee==='number') metaEEPorSeccion[e.seccion]=e.meta_ee;
+    });
+    (Array.isArray(eeCapturas)?eeCapturas:[]).forEach(c=>{
+      eeCapturadoPorSeccion[c.seccion_destino]=(eeCapturadoPorSeccion[c.seccion_destino]||0)+(typeof c.cantidad_ee==='number'?c.cantidad_ee:0);
     });
   }catch(e){
     console.error(e);
@@ -268,6 +290,7 @@ async function init(){
 
   renderStats();
   renderTop3();
+  renderEE();
   renderFaltaron();
   renderSecciones();
 }
@@ -309,6 +332,27 @@ function renderTop3(){
       </div>
       <div class="top3-num">${s.total}</div>
     </div>`).join('')}</div>`;
+}
+
+// Solo secciones con meta_ee capturada en este evento (las demás no aparecen).
+function renderEE(){
+  const card=document.getElementById('card-ee');
+  const secciones=SECCIONES.filter(s=>typeof metaEEPorSeccion[s.num]==='number');
+  if(!secciones.length){ card.hidden=true; return; }
+  card.hidden=false;
+  const cont=document.getElementById('ee-cont');
+  cont.innerHTML=`<div class="ee-grid">${secciones.map(s=>{
+    const meta=metaEEPorSeccion[s.num];
+    const suma=eeCapturadoPorSeccion[s.num]||0;
+    const faltan=meta-suma;
+    const badge=faltan>0
+      ? `<span class="ee-badge ee-badge-faltan">Faltan ${faltan}</span>`
+      : `<span class="ee-badge ee-badge-cumplida">✅ META CUMPLIDA</span>`;
+    return `<div class="ee-row">
+      <div class="ee-row-top"><span class="ee-seccion">Sec. ${s.num}</span><span class="ee-fraccion">${suma} / ${meta}</span></div>
+      ${badge}
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function renderFaltaron(){
