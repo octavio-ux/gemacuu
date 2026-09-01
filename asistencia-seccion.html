@@ -249,16 +249,18 @@ const hoy=new Date().toISOString().split('T')[0];
 
 let seccionOrigenNum=null;      // número de sección que el líder escribió como contraseña
 let seccionEsApoyo=false;       // true si esa sección no está activa este evento y va de apoyo a otra
-let seccionDestinoApoyo=null;   // sección destino cuando seccionEsApoyo=true (misma que seccionActual.num)
+let seccionDestinoApoyo=null;   // sección destino elegida cuando seccionEsApoyo=true — la tarjeta mostrada
+                                 // (seccionActual) sigue siendo la propia; solo el EE capturado cuenta aquí.
+let seccionEEDestino=null;      // a qué sección cuenta el EE capturado: seccionDestinoApoyo si es apoyo, si no la propia
 
 let personalSeccion=[];         // gente cuya sección real es esta (siempre visible, aunque no tenga estado capturado)
 let personalExterno=[];         // gente de OTRAS secciones que este líder agregó por búsqueda (persiste vía capturado_en_seccion)
 let asistenciaPersonas={};      // { personal_id: {estado, actividad} } — viene de asistencia_eventos
 let apoyosSeccion=[];
 let totalEncuestas=null;
-let bloquearTotalEncuestas=false; // toggle por evento (encuestas_seccion.bloquear_total_encuestas)
-let metaEE=null;                  // encuestas_seccion.meta_ee para esta sección+evento
-let eeCapturasSuma=0;             // SUM(cantidad_ee) de ee_capturas_seccion para esta sección+evento
+let bloquearTotalEncuestas=false; // toggle por evento (encuestas_seccion.bloquear_total_encuestas) — sección propia mostrada
+let metaEE=null;                  // encuestas_seccion.meta_ee de seccionEEDestino
+let eeCapturasSuma=0;             // SUM(cantidad_ee) de ee_capturas_seccion para seccionEEDestino+evento
 let fotosSeccion=[];
 let mapasSeccion=[];            // mapas del lugar físico de la sección (no dependen del evento)
 let buscarOtraResultados=[];
@@ -481,7 +483,10 @@ async function confirmarApoyoDestino(){
   btn.disabled=false;
   btn.textContent=textoOriginal;
   document.getElementById('apoyo-selector').classList.add('hidden');
-  await entrarASeccion(destino);
+  // La tarjeta que se carga es SIEMPRE la de la propia sección del líder (su gente, su
+  // asistencia) — el aviso amarillo arriba le recuerda a qué sección va de apoyo. Lo único
+  // que cuenta hacia esa sección destino es el EE que capture (ver cargarYRenderizar).
+  await entrarASeccion(seccionOrigenNum);
 }
 
 // Carga al líder en vivo de la sección a mostrar (propia o destino de apoyo) y renderiza su tarjeta.
@@ -540,13 +545,24 @@ async function cargarYRenderizar(){
   const apoyos=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
   apoyosSeccion=Array.isArray(apoyos)?apoyos:[];
 
+  // "Total de encuestas de la app" y su bloqueo siguen atados a la sección que se muestra
+  // en la tarjeta (num = la propia del líder, sea o no de apoyo) — sin cambios en esta parte.
   const encuestas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}`);
   const encRow=(Array.isArray(encuestas)&&encuestas[0])?encuestas[0]:null;
   totalEncuestas=encRow?encRow.total_encuestas:null;
   bloquearTotalEncuestas=!!(encRow&&encRow.bloquear_total_encuestas);
-  metaEE=encRow?encRow.meta_ee:null;
 
-  const eeCapturas=await sbGet('ee_capturas_seccion',`?evento_id=eq.${eventoId}&seccion_destino=eq.${encodeURIComponent(num)}&select=cantidad_ee`);
+  // El EE capturado por este líder cuenta hacia la sección que eligió apoyar (si es de apoyo),
+  // no hacia su propia sección — así que su meta y su suma se leen de esa sección destino.
+  seccionEEDestino=seccionEsApoyo?seccionDestinoApoyo:num;
+  let metaRow=encRow;
+  if(seccionEEDestino!==num){
+    const metaRows=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(seccionEEDestino)}&select=meta_ee`);
+    metaRow=(Array.isArray(metaRows)&&metaRows[0])?metaRows[0]:null;
+  }
+  metaEE=metaRow?metaRow.meta_ee:null;
+
+  const eeCapturas=await sbGet('ee_capturas_seccion',`?evento_id=eq.${eventoId}&seccion_destino=eq.${encodeURIComponent(seccionEEDestino)}&select=cantidad_ee`);
   eeCapturasSuma=(Array.isArray(eeCapturas)?eeCapturas:[]).reduce((s,r)=>s+(typeof r.cantidad_ee==='number'?r.cantidad_ee:0),0);
 
   const fotos=await sbGet('fotos_actividad_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
@@ -683,7 +699,7 @@ async function guardarEEPropio(){
   const btn=document.getElementById('btn-guardar-ee');
   btn.disabled=true;
   btn.textContent='Guardando…';
-  const payload={evento_id:eventoId,seccion_destino:seccionActual.num,lider_nombre:registradoPor,cantidad_ee:n};
+  const payload={evento_id:eventoId,seccion_destino:seccionEEDestino,lider_nombre:registradoPor,cantidad_ee:n};
   const {ok}=await postConReintentos(`${SB_URL}/rest/v1/ee_capturas_seccion`,[payload]);
   btn.disabled=false;
   btn.textContent='Guardar';
