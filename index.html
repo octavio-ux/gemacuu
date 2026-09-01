@@ -1083,7 +1083,10 @@ tr:hover td{background:#f8faff}
     </div>
 
     <div class="fg">
-      <label>Secciones activas este evento · Meta EE (opcional)</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+        <label style="margin:0">Secciones activas este evento · Meta EE (opcional)</label>
+        <button type="button" class="btn btn-secondary btn-xs" onclick="deseleccionarTodasSecciones()">Deseleccionar todas</button>
+      </div>
       <div id="ev-secciones-ee" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:6px 8px"></div>
     </div>
     <div class="fg" style="display:flex;align-items:center;gap:8px">
@@ -2815,6 +2818,13 @@ function onCambioSeccionActivaEvento(){
     metaInp.disabled=!chk.checked;
     if(!chk.checked) metaInp.value='';
   });
+}
+
+// Desmarca de un jalón todas las secciones (sin reordenar la lista); Octavio marca
+// después a mano solo las que necesita para este evento.
+function deseleccionarTodasSecciones(){
+  document.querySelectorAll('#ev-secciones-ee .ev-sec-activa').forEach(chk=>{ chk.checked=false; });
+  onCambioSeccionActivaEvento();
 }
 
 // Carga config existente de un evento (al editar): secciones activas = las que
