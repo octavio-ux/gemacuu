@@ -45,6 +45,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .top3-padrino{font-size:11px;color:var(--muted)}
 .top3-num{font-size:28px;font-weight:800;color:var(--amber);text-align:right;flex-shrink:0}
 
+/* ── EE POR SECCIÓN ── */
+.ee-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.ee-row{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#f8faff;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.ee-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.ee-seccion{font-size:15px;font-weight:800;color:var(--pan)}
+.ee-fraccion{font-size:13px;font-weight:700;color:var(--text)}
+.ee-badge{font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;align-self:flex-start}
+.ee-badge-faltan{background:#fce8e8;color:var(--red)}
+.ee-badge-cumplida{background:#eaf3de;color:var(--green)}
+
 /* ── FALTARON ── */
 .faltaron-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
 .faltaron-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#fce8e8;border:1px solid #f5c2c2;border-radius:var(--radius-sm)}
@@ -115,6 +125,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
   <div class="wrap">
 
+    <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📋 Resumen de hoy</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" id="rh-participaron" style="color:var(--green)">0</div><div class="stat-label">Participaron hoy</div></div>
+      <div class="stat-card"><div class="stat-num" id="rh-secciones-activas" style="color:var(--pan)">0</div><div class="stat-label">Secciones activas</div></div>
+      <div class="stat-card"><div class="stat-num" id="rh-ee-total" style="color:var(--amber)">0 / 0</div><div class="stat-label">EE total / meta total</div></div>
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-num" id="st-asistencia" style="color:var(--green)">0</div><div class="stat-label">Asistencia</div></div>
       <div class="stat-card"><div class="stat-num" id="st-falta" style="color:var(--red)">0</div><div class="stat-label">Falta</div></div>
@@ -124,12 +141,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div class="stat-card"><div class="stat-num" id="st-encuestas" style="color:var(--pan2)">0</div><div class="stat-label">Encuestas totales</div></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-top3">
       <div class="card-title">🏆 Top 3 secciones — Encuestas/puertas</div>
       <div id="top3-cont"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-ee" hidden>
+      <div class="card-title">🎯 EE por sección — avance contra meta</div>
+      <div id="ee-cont"></div>
+    </div>
+
+    <div class="card" id="card-faltaron">
       <div class="card-title">❌ Faltaron (<span id="faltaron-count">0</span>)</div>
       <div id="faltaron-cont"></div>
     </div>
@@ -187,6 +209,9 @@ let faltasAcumuladas={};    // personal_id -> total de FALTA en todos los evento
 let fotosPorSeccion={};
 let encuestasPorSeccion={};
 let liderPorSeccion={};     // seccion -> nombre de quien tiene es_lider_seccion=true (activo)
+let metaEEPorSeccion={};    // seccion -> meta_ee (solo secciones con meta_ee capturada este evento)
+let eeCapturadoPorSeccion={}; // seccion -> SUM(cantidad_ee) de ee_capturas_seccion este evento
+let seccionesActivasEvento=new Set(); // secciones con fila en encuestas_seccion para este evento (activas, con o sin meta_ee)
 const seccionesExpandidas=new Set();
 
 function liderDe(seccionNum){
@@ -227,12 +252,13 @@ async function init(){
     if(!evento){ mostrarError('No se encontró el evento indicado en este enlace.'); return; }
     if(evento.evidencia_publica===false){ mostrarRevocado(); return; }
 
-    const [personal,asisEvento,faltasTodas,fotos,encuestas]=await Promise.all([
+    const [personal,asisEvento,faltasTodas,fotos,encuestas,eeCapturas]=await Promise.all([
       sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion&order=nombre.asc'),
       sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado,capturado_en_seccion`),
       sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id'),
       sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`),
-      sbGet('encuestas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion,total_encuestas`)
+      sbGet('encuestas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion,total_encuestas,meta_ee`),
+      sbGet('ee_capturas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion_destino,cantidad_ee`)
     ]);
 
     personalCache=Array.isArray(personal)?personal:[];
@@ -254,6 +280,11 @@ async function init(){
     });
     (Array.isArray(encuestas)?encuestas:[]).forEach(e=>{
       encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
+      if(typeof e.meta_ee==='number') metaEEPorSeccion[e.seccion]=e.meta_ee;
+      seccionesActivasEvento.add(e.seccion); // toda fila en encuestas_seccion = sección activa este evento
+    });
+    (Array.isArray(eeCapturas)?eeCapturas:[]).forEach(c=>{
+      eeCapturadoPorSeccion[c.seccion_destino]=(eeCapturadoPorSeccion[c.seccion_destino]||0)+(typeof c.cantidad_ee==='number'?c.cantidad_ee:0);
     });
   }catch(e){
     console.error(e);
@@ -266,10 +297,29 @@ async function init(){
   document.getElementById('d-evento').textContent=evento.nombre||'—';
   document.getElementById('d-fecha').textContent=evento.fecha||'—';
 
+  renderResumenHoy();
   renderStats();
   renderTop3();
+  renderEE();
   renderFaltaron();
   renderSecciones();
+}
+
+// Participaron hoy = suma de ASISTENCIA en TODAS las secciones activas del evento (dueños +
+// líderes de apoyo, vía capturado_en_seccion), sin importar el tamaño del equipo asignado.
+// Secciones activas / EE total-meta total reflejan lo mismo que ya se usa en el bloque de EE.
+function renderResumenHoy(){
+  let participaron=0;
+  seccionesActivasEvento.forEach(sec=>{
+    const mapa=estadoPorSeccion[sec]||{};
+    participaron+=Object.values(mapa).filter(e=>e==='ASISTENCIA').length;
+  });
+  const metaKeys=Object.keys(metaEEPorSeccion);
+  const eeTotal=Object.values(eeCapturadoPorSeccion).reduce((s,n)=>s+n,0);
+  const metaTotal=metaKeys.reduce((s,k)=>s+(metaEEPorSeccion[k]||0),0);
+  document.getElementById('rh-participaron').textContent=participaron;
+  document.getElementById('rh-secciones-activas').textContent=metaKeys.length;
+  document.getElementById('rh-ee-total').textContent=`${eeTotal} / ${metaTotal}`;
 }
 
 function renderStats(){
@@ -287,7 +337,13 @@ function renderStats(){
   document.getElementById('st-encuestas').textContent=encuestasTotales;
 }
 
+// El Top 3 se basa en total_encuestas, que para eventos con el sistema de EE está bloqueado
+// y siempre en 0 — así que la tarjeta se oculta por completo, igual que "Faltaron". Los
+// reportes de eventos viejos sin meta_ee la siguen mostrando como siempre.
 function renderTop3(){
+  const card=document.getElementById('card-top3');
+  if(Object.keys(metaEEPorSeccion).length>0){ card.hidden=true; return; }
+  card.hidden=false;
   const cont=document.getElementById('top3-cont');
   const medallas=['🥇','🥈','🥉'];
   const ranking=SECCIONES
@@ -311,7 +367,34 @@ function renderTop3(){
     </div>`).join('')}</div>`;
 }
 
+// Solo secciones con meta_ee capturada en este evento (las demás no aparecen).
+function renderEE(){
+  const card=document.getElementById('card-ee');
+  const secciones=SECCIONES.filter(s=>typeof metaEEPorSeccion[s.num]==='number');
+  if(!secciones.length){ card.hidden=true; return; }
+  card.hidden=false;
+  const cont=document.getElementById('ee-cont');
+  cont.innerHTML=`<div class="ee-grid">${secciones.map(s=>{
+    const meta=metaEEPorSeccion[s.num];
+    const suma=eeCapturadoPorSeccion[s.num]||0;
+    const faltan=meta-suma;
+    const badge=faltan>0
+      ? `<span class="ee-badge ee-badge-faltan">Faltan ${faltan}</span>`
+      : `<span class="ee-badge ee-badge-cumplida">✅ META CUMPLIDA</span>`;
+    return `<div class="ee-row">
+      <div class="ee-row-top"><span class="ee-seccion">Sec. ${s.num}</span><span class="ee-fraccion">${suma} / ${meta}</span></div>
+      ${badge}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// La tarjeta "Faltaron" se oculta por completo en eventos que ya tienen meta_ee capturada
+// en al menos una sección (se reemplaza por el resumen de arriba y el bloque de EE). Los
+// reportes de eventos viejos, sin ese dato, la siguen mostrando como siempre.
 function renderFaltaron(){
+  const card=document.getElementById('card-faltaron');
+  if(Object.keys(metaEEPorSeccion).length>0){ card.hidden=true; return; }
+  card.hidden=false;
   const faltaron=personalCache.filter(p=>asisMap[p.id]==='FALTA');
   document.getElementById('faltaron-count').textContent=faltaron.length;
   const cont=document.getElementById('faltaron-cont');
@@ -330,12 +413,27 @@ function renderFaltaron(){
 
 function renderSecciones(){
   const cont=document.getElementById('secciones-cont');
-  cont.innerHTML=SECCIONES.map(s=>{
+  const filas=SECCIONES.map(s=>{
     const nativos=personalCache.filter(p=>p.seccion===s.num);
     const mapaSeccion=estadoPorSeccion[s.num]||{};
     const participaron=Object.values(mapaSeccion).filter(e=>e==='ASISTENCIA').length;
     const encuestas=encuestasPorSeccion[s.num]||0;
     const fotos=fotosPorSeccion[s.num]||[];
+    return {s,nativos,mapaSeccion,participaron,encuestas,fotos};
+  });
+  // En eventos con el sistema de EE, solo se listan secciones con actividad real
+  // (participaron, encuestas o fotos > 0) — a las que no les tocaba ir a este evento no
+  // deben aparecer como si hubieran faltado. Los reportes de eventos viejos sin meta_ee
+  // siguen mostrando el catálogo completo, como siempre.
+  const hayMetaEE=Object.keys(metaEEPorSeccion).length>0;
+  const listaFiltrada=hayMetaEE
+    ? filas.filter(f=>f.participaron>0||f.encuestas>0||f.fotos.length>0)
+    : filas;
+  if(!listaFiltrada.length){
+    cont.innerHTML='<div class="vacio">Sin actividad registrada en ninguna sección para este evento.</div>';
+    return;
+  }
+  cont.innerHTML=listaFiltrada.map(({s,nativos,mapaSeccion,participaron,encuestas,fotos})=>{
     const abierta=seccionesExpandidas.has(s.num);
     return `<div class="seccion-item ${abierta?'open':''}" id="seccion-item-${s.num}">
       <div class="seccion-hdr" onclick="toggleSeccion('${s.num}')">

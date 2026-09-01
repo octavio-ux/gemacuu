@@ -78,6 +78,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .buscar-otra-item:hover{background:#f0f4ff}
 .buscar-otra-item .bo-sec{font-size:11px;color:var(--muted)}
 .buscar-otra-vacio{padding:9px 12px;font-size:12px;color:var(--muted)}
+.aviso-apoyo{background:#fef3c7;border:2px solid #f5a623;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:14px;font-weight:700;color:#854f0b;text-align:center;box-shadow:0 2px 8px rgba(245,166,35,.25)}
+.ee-meta-cumplida{color:#2d6a4f;font-weight:800}
+.ee-meta-faltan{color:#cc0000;font-weight:800}
+.ee-total-row{font-size:13px;font-weight:700;margin-top:6px}
 .apoyo-form{display:flex;gap:8px;flex-wrap:wrap;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
 .apoyo-form input{flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
 .apoyo-form select{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
@@ -139,8 +143,26 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <button class="btn btn-primary w-full" id="btn-entrar-gate" onclick="confirmarAcceso()">Entrar →</button>
   </div>
 
+  <div id="apoyo-selector" class="card hidden">
+    <div class="aviso-apoyo" style="margin-bottom:14px">⚠️ Tu sección hoy va de apoyo — Selecciona a qué sección vas a apoyar</div>
+    <div class="fg">
+      <label>¿A qué sección vas a apoyar?</label>
+      <select id="sel-apoyo-destino"></select>
+    </div>
+    <div id="apoyo-selector-error" class="error-msg hidden"></div>
+    <button class="btn btn-primary w-full" id="btn-confirmar-apoyo" onclick="confirmarApoyoDestino()">Confirmar y continuar →</button>
+  </div>
+
+  <div id="sin-actividad" class="card hidden">
+    <div class="center-msg">
+      <div class="ico">🚫</div>
+      Sin actividad asignada para este evento
+    </div>
+  </div>
+
   <div id="app" class="hidden">
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="registrado-como"></div>
+    <div id="aviso-apoyo" class="aviso-apoyo hidden"></div>
     <div id="seccion-cont"></div>
   </div>
 
@@ -175,7 +197,7 @@ const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
   {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
   {num:'908',encargado:'Ernesto Alonso Ruiz',padrino:'Fernando Amezcua'},
-  {num:'3227',encargado:'Rubí Jurado',padrino:'Fernando Amezcua'},
+  {num:'3227',encargado:'Ruben Perez',padrino:'Fernando Amezcua'},
   {num:'3231',encargado:'Mayela Chavira',padrino:'Fernando Amezcua'},
   {num:'3232',encargado:'Sofia Mejia',padrino:'Fernando Amezcua'},
   {num:'3233',encargado:'Luis Raúl Vargas Ortega',padrino:'Fernando Amezcua'},
@@ -192,7 +214,7 @@ const SECCIONES=[
   {num:'3246',encargado:'Sergio Carreón',padrino:'Martin Yáñez'},
   {num:'3255',encargado:'Félix Vázquez',padrino:'Martin Yáñez'},
   {num:'3256',encargado:'José Luis Sánchez',padrino:'Martin Yáñez'},
-  {num:'3259',encargado:'Jesús Borruel',padrino:'Martin Yáñez'},
+  {num:'3259',encargado:'Jesus Rogelio Borruel',padrino:'Martin Yáñez'},
   {num:'3261',encargado:'Yesenia Aróstegui',padrino:'Martin Yáñez'},
   {num:'3263',encargado:'Pedro Hernández',padrino:'Martin Yáñez'},
 ];
@@ -203,6 +225,9 @@ async function sbGet(table,params=''){
 }
 async function sbPost(table,body){
   return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+}
+async function sbPatch(table,params,body){
+  return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
 }
 
 function showToast(msg){
@@ -218,15 +243,24 @@ let expiraEn=null;
 let eventoId=null;
 let eventoInfo=null; // {nombre,fecha} de la tabla "eventos"
 let seccionesValidas=[];   // universo de números de sección que trae el enlace
-let seccionActual=null;    // {num,encargado,padrino} de la única sección desbloqueada
+let seccionActual=null;    // {num,encargado,padrino} de la sección que se muestra (la propia, o la destino si es apoyo)
 let registradoPor='';
 const hoy=new Date().toISOString().split('T')[0];
+
+let seccionOrigenNum=null;      // número de sección que el líder escribió como contraseña
+let seccionEsApoyo=false;       // true si esa sección no está activa este evento y va de apoyo a otra
+let seccionDestinoApoyo=null;   // sección destino elegida cuando seccionEsApoyo=true — la tarjeta mostrada
+                                 // (seccionActual) sigue siendo la propia; solo el EE capturado cuenta aquí.
+let seccionEEDestino=null;      // a qué sección cuenta el EE capturado: seccionDestinoApoyo si es apoyo, si no la propia
 
 let personalSeccion=[];         // gente cuya sección real es esta (siempre visible, aunque no tenga estado capturado)
 let personalExterno=[];         // gente de OTRAS secciones que este líder agregó por búsqueda (persiste vía capturado_en_seccion)
 let asistenciaPersonas={};      // { personal_id: {estado, actividad} } — viene de asistencia_eventos
 let apoyosSeccion=[];
 let totalEncuestas=null;
+let bloquearTotalEncuestas=false; // toggle por evento (encuestas_seccion.bloquear_total_encuestas) — sección propia mostrada
+let metaEE=null;                  // encuestas_seccion.meta_ee de seccionEEDestino
+let eeCapturasSuma=0;             // SUM(cantidad_ee) de ee_capturas_seccion para seccionEEDestino+evento
 let fotosSeccion=[];
 let mapasSeccion=[];            // mapas del lugar físico de la sección (no dependen del evento)
 let buscarOtraResultados=[];
@@ -334,22 +368,20 @@ async function confirmarAcceso(){
 
   // Validación en vivo contra "personal" (no la lista fija capturada al generar el enlace):
   // así una sección corregida después de generado el enlace se reconoce de inmediato.
+  // Esta validación (contraseña = número de sección) no cambia.
   const btn=document.getElementById('btn-entrar-gate');
   btn.disabled=true;
   btn.textContent='Verificando…';
-  let personas,liderRows;
+  let personas;
   try{
-    [personas,liderRows]=await Promise.all([
-      sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&status=eq.activo&select=id&limit=1`),
-      sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&es_lider_seccion=eq.true&status=eq.activo&select=nombre&order=nombre.asc&limit=1`)
-    ]);
+    personas=await sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&status=eq.activo&select=id&limit=1`);
   }catch(e){
-    personas=null;liderRows=null;
+    personas=null;
   }
-  btn.disabled=false;
-  btn.textContent='Entrar →';
 
   if(!Array.isArray(personas)||!personas.length){
+    btn.disabled=false;
+    btn.textContent='Entrar →';
     errEl.textContent='Número de sección no válido.';
     errEl.classList.remove('hidden');
     return;
@@ -360,18 +392,124 @@ async function confirmarAcceso(){
     localStorage.setItem('gemacuu_asis_nombre',registradoPor);
   }
 
-  // Líder en vivo (es_lider_seccion=true, activo) — no del catálogo fijo.
-  const catalogo=SECCIONES.find(s=>s.num===numSeccion)||{num:numSeccion,padrino:''};
-  const liderNombre=(Array.isArray(liderRows)&&liderRows[0]?.nombre)||'— sin líder activo —';
-  seccionActual={...catalogo,num:numSeccion,encargado:liderNombre};
+  // ¿La sección ingresada está activa este evento? (tiene fila en encuestas_seccion para este evento_id)
+  // Nunca se recuerda una asignación de apoyo de una sesión anterior: si la sección no está
+  // activa, siempre se le pregunta de nuevo a qué sección va a apoyar hoy (ver mostrarSelectorApoyo).
+  seccionOrigenNum=numSeccion;
+  seccionEsApoyo=false;
+  seccionDestinoApoyo=null;
+  let esActiva=false;
+  let seccionesActivasEvento=[];
+  try{
+    const activaRows=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(numSeccion)}&select=seccion&limit=1`);
+    esActiva=Array.isArray(activaRows)&&activaRows.length>0;
+    if(!esActiva){
+      const todasActivas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion`);
+      seccionesActivasEvento=[...new Set((Array.isArray(todasActivas)?todasActivas:[]).map(r=>r.seccion))];
+    }
+  }catch(e){
+    btn.disabled=false;
+    btn.textContent='Entrar →';
+    errEl.textContent='No se pudo verificar la actividad de esta sección — intenta de nuevo.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  btn.disabled=false;
+  btn.textContent='Entrar →';
+
+  if(esActiva){
+    document.getElementById('acceso-gate').classList.add('hidden');
+    await entrarASeccion(numSeccion);
+    return;
+  }
+
+  if(!seccionesActivasEvento.length){
+    document.getElementById('acceso-gate').classList.add('hidden');
+    document.getElementById('sin-actividad').classList.remove('hidden');
+    return;
+  }
+
   document.getElementById('acceso-gate').classList.add('hidden');
-  cargarYRenderizar();
+  mostrarSelectorApoyo(seccionesActivasEvento);
+}
+
+// Llena el <select> con las secciones activas de este evento y muestra la pantalla de
+// selección — siempre desde cero, nunca precargada con una elección de una sesión anterior.
+function mostrarSelectorApoyo(seccionesActivasEvento){
+  const sel=document.getElementById('sel-apoyo-destino');
+  const ordenadas=[...seccionesActivasEvento].sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+  sel.innerHTML='<option value="">— selecciona una sección —</option>'+
+    ordenadas.map(num=>{
+      const cat=SECCIONES.find(s=>s.num===num);
+      return `<option value="${num}">${num}${cat?' — '+cat.encargado:''}</option>`;
+    }).join('');
+  document.getElementById('apoyo-selector-error').classList.add('hidden');
+  document.getElementById('apoyo-selector').classList.remove('hidden');
+}
+
+// Guarda (upsert) la elección del líder en apoyos_seccion_evento y carga la tarjeta destino.
+async function confirmarApoyoDestino(){
+  const destino=document.getElementById('sel-apoyo-destino').value;
+  const errEl=document.getElementById('apoyo-selector-error');
+  errEl.classList.add('hidden');
+  if(!destino){
+    errEl.textContent='Selecciona a qué sección vas a apoyar.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  const btn=document.getElementById('btn-confirmar-apoyo');
+  const textoOriginal=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='Guardando…';
+  try{
+    const existentes=await sbGet('apoyos_seccion_evento',`?evento_id=eq.${eventoId}&seccion_origen=eq.${encodeURIComponent(seccionOrigenNum)}&select=id&limit=1`);
+    let r;
+    if(Array.isArray(existentes)&&existentes.length){
+      r=await sbPatch('apoyos_seccion_evento',`?evento_id=eq.${eventoId}&seccion_origen=eq.${encodeURIComponent(seccionOrigenNum)}`,{seccion_destino:destino});
+    } else {
+      r=await sbPost('apoyos_seccion_evento',{evento_id:eventoId,seccion_origen:seccionOrigenNum,seccion_destino:destino});
+    }
+    if(!r.ok) throw new Error(await r.text());
+  }catch(e){
+    console.error('Error guardando apoyo',e);
+    btn.disabled=false;
+    btn.textContent=textoOriginal;
+    errEl.textContent='No se pudo guardar tu selección — intenta de nuevo.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  seccionEsApoyo=true;
+  seccionDestinoApoyo=destino;
+  btn.disabled=false;
+  btn.textContent=textoOriginal;
+  document.getElementById('apoyo-selector').classList.add('hidden');
+  // La tarjeta que se carga es SIEMPRE la de la propia sección del líder (su gente, su
+  // asistencia) — el aviso amarillo arriba le recuerda a qué sección va de apoyo. Lo único
+  // que cuenta hacia esa sección destino es el EE que capture (ver cargarYRenderizar).
+  await entrarASeccion(seccionOrigenNum);
+}
+
+// Carga al líder en vivo de la sección a mostrar (propia o destino de apoyo) y renderiza su tarjeta.
+async function entrarASeccion(numSeccionCard){
+  const liderRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccionCard)}&es_lider_seccion=eq.true&status=eq.activo&select=nombre&order=nombre.asc&limit=1`);
+  const catalogo=SECCIONES.find(s=>s.num===numSeccionCard)||{num:numSeccionCard,padrino:''};
+  const liderNombre=(Array.isArray(liderRows)&&liderRows[0]?.nombre)||'— sin líder activo —';
+  seccionActual={...catalogo,num:numSeccionCard,encargado:liderNombre};
+  await cargarYRenderizar();
 }
 
 async function cargarYRenderizar(){
   document.getElementById('registrado-como').textContent=`Registrando como: ${registradoPor}`;
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('save-bar').classList.remove('hidden');
+
+  const avisoEl=document.getElementById('aviso-apoyo');
+  if(seccionEsApoyo){
+    avisoEl.textContent=`⚠️ Tu sección (${seccionOrigenNum}) va de apoyo a la sección ${seccionDestinoApoyo}`;
+    avisoEl.classList.remove('hidden');
+  } else {
+    avisoEl.classList.add('hidden');
+  }
 
   const num=seccionActual.num;
 
@@ -407,8 +545,31 @@ async function cargarYRenderizar(){
   const apoyos=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
   apoyosSeccion=Array.isArray(apoyos)?apoyos:[];
 
+  // "Total de encuestas de la app" y su bloqueo siguen atados a la sección que se muestra
+  // en la tarjeta (num = la propia del líder, sea o no de apoyo) — sin cambios en esta parte.
   const encuestas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}`);
-  totalEncuestas=(Array.isArray(encuestas)&&encuestas[0])?encuestas[0].total_encuestas:null;
+  if(!Array.isArray(encuestas)){
+    // sbGet no valida el status HTTP: si esta consulta falla (permisos, red), devuelve un
+    // objeto de error en vez de un arreglo y antes eso se interpretaba en silencio como
+    // "sin bloqueo" — se deja registrado para poder diagnosticarlo desde la consola.
+    console.error('No se pudo leer encuestas_seccion para bloquear_total_encuestas/meta_ee',num,encuestas);
+  }
+  const encRow=(Array.isArray(encuestas)&&encuestas[0])?encuestas[0]:null;
+  totalEncuestas=encRow?encRow.total_encuestas:null;
+  bloquearTotalEncuestas=!!(encRow&&encRow.bloquear_total_encuestas);
+
+  // El EE capturado por este líder cuenta hacia la sección que eligió apoyar (si es de apoyo),
+  // no hacia su propia sección — así que su meta y su suma se leen de esa sección destino.
+  seccionEEDestino=seccionEsApoyo?seccionDestinoApoyo:num;
+  let metaRow=encRow;
+  if(seccionEEDestino!==num){
+    const metaRows=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(seccionEEDestino)}&select=meta_ee`);
+    metaRow=(Array.isArray(metaRows)&&metaRows[0])?metaRows[0]:null;
+  }
+  metaEE=metaRow?metaRow.meta_ee:null;
+
+  const eeCapturas=await sbGet('ee_capturas_seccion',`?evento_id=eq.${eventoId}&seccion_destino=eq.${encodeURIComponent(seccionEEDestino)}&select=cantidad_ee`);
+  eeCapturasSuma=(Array.isArray(eeCapturas)?eeCapturas:[]).reduce((s,r)=>s+(typeof r.cantidad_ee==='number'?r.cantidad_ee:0),0);
 
   const fotos=await sbGet('fotos_actividad_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
   fotosSeccion=Array.isArray(fotos)?fotos:[];
@@ -467,7 +628,17 @@ function renderSeccion(){
 
     <div class="fg">
       <label>Total de encuestas de la app (grupo de encuestadores, hoy)</label>
-      <input type="number" min="0" step="1" inputmode="numeric" id="input-encuestas" value="${totalEncuestas??''}" placeholder="0">
+      <input type="number" min="0" step="1" inputmode="numeric" id="input-encuestas" value="${totalEncuestas??''}" placeholder="0" ${bloquearTotalEncuestas?'disabled style="opacity:.55;cursor:not-allowed"':''}>
+      ${bloquearTotalEncuestas?'<div style="font-size:11px;color:var(--muted);margin-top:4px">🔒 Bloqueado por el administrador para este evento</div>':''}
+    </div>
+
+    <div class="fg">
+      <label>EE — ¿cuántas hiciste tú?</label>
+      <div style="display:flex;gap:8px">
+        <input type="number" min="0" step="1" inputmode="numeric" id="input-ee-propio" placeholder="0" style="flex:1">
+        <button type="button" class="btn btn-primary" id="btn-guardar-ee" onclick="guardarEEPropio()">Guardar</button>
+      </div>
+      <div class="ee-total-row" id="ee-total-row">${renderEETotalHtml()}</div>
     </div>
 
     <div class="fg" style="margin-bottom:0">
@@ -509,6 +680,41 @@ function renderVisorMapas(){
 function eventosNombreActual(){
   if(!eventoInfo) return 'Actividad seleccionada';
   return `${eventoInfo.nombre||''}${eventoInfo.fecha?' · '+eventoInfo.fecha:''}`;
+}
+
+// Total de EE (SUM de todas las capturas de esta sección+evento) contra la meta_ee del evento.
+function renderEETotalHtml(){
+  if(metaEE===null||metaEE===undefined){
+    return `Total EE capturado: <b>${eeCapturasSuma}</b>`;
+  }
+  const faltan=metaEE-eeCapturasSuma;
+  if(faltan>0){
+    return `Total EE: <b>${eeCapturasSuma}</b> / Meta ${metaEE} — <span class="ee-meta-faltan">Faltan ${faltan}</span>`;
+  }
+  return `Total EE: <b>${eeCapturasSuma}</b> / Meta ${metaEE} — <span class="ee-meta-cumplida">✅ META CUMPLIDA</span>`;
+}
+
+// Cada líder (dueño o de apoyo) mete SU propio número y se guarda como una fila nueva
+// en ee_capturas_seccion — nunca se sobreescribe una captura anterior, ni la propia ni la de otro líder.
+async function guardarEEPropio(){
+  const inp=document.getElementById('input-ee-propio');
+  const raw=inp.value.trim();
+  if(raw===''){ showToast('⚠️ Escribe cuántas EE hiciste'); return; }
+  const n=Number(raw);
+  if(!Number.isFinite(n)||!Number.isInteger(n)||n<0){ showToast('⚠️ Debe ser un número entero válido'); return; }
+  const btn=document.getElementById('btn-guardar-ee');
+  btn.disabled=true;
+  btn.textContent='Guardando…';
+  const payload={evento_id:eventoId,seccion_destino:seccionEEDestino,lider_nombre:registradoPor,cantidad_ee:n};
+  const {ok}=await postConReintentos(`${SB_URL}/rest/v1/ee_capturas_seccion`,[payload]);
+  btn.disabled=false;
+  btn.textContent='Guardar';
+  if(!ok){ showToast('⚠️ No se pudo guardar tus EE — intenta de nuevo'); return; }
+  eeCapturasSuma+=n;
+  inp.value='';
+  const totalRow=document.getElementById('ee-total-row');
+  if(totalRow) totalRow.innerHTML=renderEETotalHtml();
+  showToast(`✓ ${n} EE guardadas`);
 }
 
 function renderPersonaRow(p,esExterna){
@@ -749,7 +955,9 @@ async function guardarTodo(){
   btn.disabled=true;
   btn.textContent='Guardando...';
 
-  const raw=document.getElementById('input-encuestas').value.trim();
+  // Si el admin bloqueó el total de encuestas para este evento, el campo está deshabilitado
+  // en la tarjeta y nunca se manda a guardar (para no arriesgar sobreescribir nada mientras está bloqueado).
+  const raw=bloquearTotalEncuestas?'':document.getElementById('input-encuestas').value.trim();
   let encuestasPayload=null;
   if(raw!==''){
     const n=Number(raw);

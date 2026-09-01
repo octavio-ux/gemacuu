@@ -113,6 +113,32 @@ tr:hover td{background:#f8faff}
 .fg-seccion select:focus{border-color:var(--pan);box-shadow:0 0 0 3px rgba(0,51,153,.15)}
 .fg-seccion-hint{font-size:11px;color:var(--pan);font-weight:600;margin-top:4px}
 
+/* ── SECCIONES ACTIVAS / META EE (modal de evento) ── */
+.ev-secciones-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;border:1px solid var(--border);border-radius:8px;padding:10px}
+@media(max-width:900px){.ev-secciones-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.ev-secciones-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:380px){.ev-secciones-grid{grid-template-columns:1fr}}
+.ev-sec-row{display:flex;flex-direction:column;gap:5px;padding:6px 7px;border:1px solid var(--border);border-radius:7px;background:#f8faff;min-width:0}
+.ev-sec-row-top{display:flex;align-items:center;gap:5px;min-width:0}
+.ev-sec-row-top input[type=checkbox]{width:15px;height:15px;flex-shrink:0;accent-color:var(--pan);cursor:pointer}
+.ev-sec-label{font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ev-sec-meta{width:100%;padding:5px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:11.5px}
+
+/* ── BLOQUEAR TOTAL DE ENCUESTAS (destacado, no debe pasar desapercibido) ── */
+.fg-bloqueo-encuestas{display:flex;align-items:center;gap:10px;background:#fff8e1;border:2px solid #f5a623;border-radius:10px;padding:12px 14px;box-shadow:0 2px 8px rgba(245,166,35,.2)}
+.fg-bloqueo-encuestas input[type=checkbox]{width:22px;height:22px;flex-shrink:0;accent-color:#b45309;cursor:pointer}
+.fg-bloqueo-encuestas label{margin:0;text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.3px;color:#854f0b;cursor:pointer}
+
+/* ── MODAL EVENTO: alto fijo con scroll solo en el cuerpo, para que "Guardar
+   evento" quede siempre visible sin importar cuántas secciones haya (no
+   necesita bajar el zoom del navegador para verlo). Reglas scopeadas a
+   #modal-evento para no afectar a ningún otro modal del sitio. ── */
+#modal-evento .modal{max-height:88vh;padding:0;display:flex;flex-direction:column}
+#modal-evento .modal-hdr{padding:20px 24px 0 24px;flex-shrink:0}
+#modal-evento .modal-body-scroll{overflow-y:auto;padding:0 24px;flex:1 1 auto;min-height:0}
+#modal-evento .modal-footer-fijo{flex-shrink:0;display:flex;gap:8px;padding:16px 24px 22px 24px;border-top:1px solid var(--border)}
+@media(max-width:768px){#modal-evento .modal{max-height:92vh}}
+
 /* ── BUTTONS ── */
 .btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
 .btn-primary{background:var(--pan);color:#fff}
@@ -1047,11 +1073,12 @@ tr:hover td{background:#f8faff}
 
 <!-- MODAL EVENTO -->
 <div id="modal-evento" class="modal-bg" style="display:none">
-  <div class="modal" style="max-width:500px">
+  <div class="modal" style="max-width:940px">
     <div class="modal-hdr">
       <h3 id="modal-ev-titulo">📅 Nuevo Evento</h3>
       <button class="close-btn" onclick="closeModal('modal-evento')">✕</button>
     </div>
+    <div class="modal-body-scroll">
     <input type="hidden" id="ev-edit-id">
     <div class="fg">
       <label>Nombre del evento *</label>
@@ -1081,7 +1108,21 @@ tr:hover td{background:#f8faff}
       <label>Lugar</label>
       <input type="text" id="ev-lugar" placeholder="Ej. Sala 3 Oficinas Centrales...">
     </div>
-    <div style="display:flex;gap:8px;margin-top:1rem">
+
+    <div class="fg">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+        <label style="margin:0">Secciones activas este evento · Meta EE (opcional)</label>
+        <button type="button" class="btn btn-secondary btn-xs" onclick="deseleccionarTodasSecciones()">Deseleccionar todas</button>
+      </div>
+      <div id="ev-secciones-ee" class="ev-secciones-grid"></div>
+    </div>
+    <div class="fg fg-bloqueo-encuestas">
+      <input type="checkbox" id="ev-bloquear-encuestas">
+      <label for="ev-bloquear-encuestas">🔒 Bloquear total de encuestas este evento</label>
+    </div>
+    </div>
+
+    <div class="modal-footer-fijo">
       <button class="btn btn-secondary w-full" onclick="closeModal('modal-evento')">Cancelar</button>
       <button class="btn btn-primary w-full" onclick="guardarEvento()">💾 Guardar evento</button>
     </div>
@@ -1174,7 +1215,7 @@ tr:hover td{background:#f8faff}
       <button class="close-btn" onclick="closeModal('modal-mapas')">✕</button>
     </div>
     <div id="mapas-modal-lista" class="mapas-grid"></div>
-    <div class="fg" style="margin-top:12px">
+    <div class="fg" id="mapas-upload-fg" style="margin-top:12px">
       <label>Subir mapa nuevo (imagen o PDF)</label>
       <input type="file" id="mapas-input-archivo" accept="image/*,application/pdf" onchange="subirMapaSeccion(this)"
         style="padding:8px;border:1.5px dashed var(--border);border-radius:8px;width:100%;font-size:13px;cursor:pointer">
@@ -1273,7 +1314,7 @@ const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
   {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
   {num:'908',encargado:'Ernesto Alonso Ruiz',padrino:'Fernando Amezcua'},
-  {num:'3227',encargado:'Rubí Jurado',padrino:'Fernando Amezcua'},
+  {num:'3227',encargado:'Ruben Perez',padrino:'Fernando Amezcua'},
   {num:'3231',encargado:'Mayela Chavira',padrino:'Fernando Amezcua'},
   {num:'3232',encargado:'Sofia Mejia',padrino:'Fernando Amezcua'},
   {num:'3233',encargado:'Luis Raúl Vargas Ortega',padrino:'Fernando Amezcua'},
@@ -1290,7 +1331,7 @@ const SECCIONES=[
   {num:'3246',encargado:'Sergio Carreón',padrino:'Martin Yáñez'},
   {num:'3255',encargado:'Félix Vázquez',padrino:'Martin Yáñez'},
   {num:'3256',encargado:'José Luis Sánchez',padrino:'Martin Yáñez'},
-  {num:'3259',encargado:'Jesús Borruel',padrino:'Martin Yáñez'},
+  {num:'3259',encargado:'Jesus Rogelio Borruel',padrino:'Martin Yáñez'},
   {num:'3261',encargado:'Yesenia Aróstegui',padrino:'Martin Yáñez'},
   {num:'3263',encargado:'Pedro Hernández',padrino:'Martin Yáñez'},
 ];
@@ -1422,6 +1463,12 @@ async function sbPatch(table,params,body){
 }
 async function sbPost(table,body){
   return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
+}
+// Igual que sbPost, pero devuelve las filas insertadas (para leer el id generado, p.ej. al crear un evento).
+async function sbPostRepresentation(table,body){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(body)});
+  if(!r.ok) return null;
+  return r.json();
 }
 async function sbDelete(table,params){
   return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
@@ -1619,7 +1666,8 @@ let mapasPorSeccion={}; // seccion -> [{id,seccion,cloudinary_url,cloudinary_pub
 let mapasModalSeccion=null;
 
 async function cargarMapasSeccion(){
-  if(currentUser!=='Octavio') return; // solo Octavio ve/usa mapas, no gastamos la consulta en los demás
+  // Octavio (admin) y las Editoras pueden ver/descargar mapas; nadie más, para no gastar la consulta.
+  if(currentUser!=='Octavio' && !EDITORAS.includes(currentUser)) return;
   try{
     const data=await sbGet('mapas_seccion','?order=subido_en.desc');
     mapasPorSeccion={};
@@ -1640,9 +1688,16 @@ function renderSecciones(){
   const lista=secFiltro?SECCIONES.filter(s=>s.padrino===secFiltro):SECCIONES;
   const PAD_COLOR={'Fernando Amezcua':'#003399','Martin Yáñez':'#2d6a4f','Rene Espinoza':'#854f0b'};
   const isAdmin=currentUser==='Octavio';
+  // Las Editoras ven y descargan mapas en todas las secciones, igual que el admin — pero
+  // sin subir ni eliminar (eso sigue restringido a Octavio, ver abrirMapasSeccion).
+  const isEditor=EDITORAS.includes(currentUser);
+  const canViewMapas=isAdmin||isEditor;
   document.getElementById('sec-grid').innerHTML=lista.map(s=>{
     const personas=personalCache.filter(p=>p.seccion===s.num);
     const numMapas=(mapasPorSeccion[s.num]||[]).length;
+    // Admin siempre ve el botón (para poder subir el primer mapa); una Editora solo lo ve
+    // cuando ya hay mapas subidos, porque no puede subir.
+    const mostrarBtnMapas=isAdmin||(isEditor&&numMapas>0);
     return `<div class="sec-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="sec-num">Sec. ${s.num}</div>
@@ -1650,22 +1705,26 @@ function renderSecciones(){
       </div>
       <div class="sec-enc">🗝 ${liderDe(s.num)}</div>
       <div class="sec-chips">${personas.map(p=>`<span class="chip">${(p.nombre||'').split(' ').slice(0,2).join(' ')}</span>`).join('')||'<span style="font-size:11px;color:var(--muted)">sin asignados</span>'}</div>
-      ${isAdmin?`<button type="button" class="btn btn-secondary btn-xs" style="width:100%;margin-top:8px" onclick="abrirMapasSeccion('${s.num}')">📍 ${numMapas?'Mapas ('+numMapas+')':'Subir mapa'}</button>`:''}
+      ${canViewMapas&&mostrarBtnMapas?`<button type="button" class="btn btn-secondary btn-xs" style="width:100%;margin-top:8px" onclick="abrirMapasSeccion('${s.num}')">📍 ${numMapas?'Mapas ('+numMapas+')':'Subir mapa'}</button>`:''}
     </div>`;
   }).join('');
 }
 
 function abrirMapasSeccion(num){
-  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;}
+  const isAdmin=currentUser==='Octavio';
+  if(!isAdmin&&!EDITORAS.includes(currentUser)){showToast('⚠️ Sin permiso');return;}
   mapasModalSeccion=num;
   document.getElementById('mapas-modal-titulo').textContent=`📍 Mapas — Sección ${num}`;
   document.getElementById('mapas-input-archivo').value='';
   document.getElementById('mapas-upload-status').textContent='';
+  // Subir mapas sigue siendo solo de Octavio; las Editoras solo ven/descargan.
+  document.getElementById('mapas-upload-fg').style.display=isAdmin?'':'none';
   renderMapasModalLista();
   document.getElementById('modal-mapas').style.display='flex';
 }
 
 function renderMapasModalLista(){
+  const isAdmin=currentUser==='Octavio';
   const lista=mapasPorSeccion[mapasModalSeccion]||[];
   document.getElementById('mapas-modal-lista').innerHTML=lista.length
     ? lista.map(m=>{
@@ -1676,16 +1735,18 @@ function renderMapasModalLista(){
                <div class="mapa-pdf-badge">PDF</div>
              </div>`
           : `<img class="mapa-thumb" src="${m.cloudinary_url}" onclick="window.open('${m.cloudinary_url}','_blank')" title="Ver imagen">`;
+        // Eliminar sigue siendo solo de Octavio; las Editoras solo ven/descargan.
         return `<div class="mapa-card">
           ${preview}
           <div class="mapa-fecha">${fecha}</div>
-          <button type="button" class="btn btn-danger btn-xs" style="width:100%" onclick="eliminarMapaSeccion('${m.id}')">🗑️ Eliminar</button>
+          ${isAdmin?`<button type="button" class="btn btn-danger btn-xs" style="width:100%" onclick="eliminarMapaSeccion('${m.id}')">🗑️ Eliminar</button>`:''}
         </div>`;
       }).join('')
     : '<div style="font-size:12px;color:var(--muted);padding:8px 0">Sin mapas subidos todavía.</div>';
 }
 
 async function subirMapaSeccion(input){
+  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;} // subir sigue siendo solo de Octavio
   const file=input.files[0];
   if(!file) return;
   const status=document.getElementById('mapas-upload-status');
@@ -1722,6 +1783,7 @@ async function subirMapaSeccion(input){
 }
 
 async function eliminarMapaSeccion(id){
+  if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;} // eliminar sigue siendo solo de Octavio
   if(!confirm('¿Eliminar este mapa? Solo se borra el registro, no afecta el archivo en Cloudinary.')) return;
   await fetch(`${SB_URL}/rest/v1/mapas_seccion?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
   showToast('🗑️ Mapa eliminado');
@@ -2743,10 +2805,14 @@ function abrirFormEvento(){
   document.getElementById('ev-padrino').value='';
   document.getElementById('ev-lugar').value='';
   document.getElementById('modal-ev-titulo').textContent='📅 Nuevo Evento';
+  // Evento nuevo: todas las secciones del catálogo activas por defecto.
+  evActivasOriginales=new Set();
+  evTotalEncuestasOriginal={};
+  renderSeccionesEEForm(new Set(SECCIONES.map(s=>s.num)),{},false);
   document.getElementById('modal-evento').style.display='flex';
 }
 
-function editarEvento(){
+async function editarEvento(){
   const ev=eventosCache.find(e=>e.id===eventoActualId);
   if(!ev) return;
   document.getElementById('ev-edit-id').value=ev.id;
@@ -2758,6 +2824,119 @@ function editarEvento(){
   document.getElementById('ev-lugar').value=ev.lugar||'';
   document.getElementById('modal-ev-titulo').textContent='✏️ Editar Evento';
   document.getElementById('modal-evento').style.display='flex';
+  await cargarConfigEEEvento(ev.id);
+}
+
+// ── SECCIONES ACTIVAS / META EE (modal de evento) ──
+// La asignación de qué sección apoya a cuál YA NO se decide aquí: se elige en
+// campo el mismo día, desde el login del líder (asistencia-seccion.html), que
+// guarda directamente en apoyos_seccion_evento.
+// Snapshot de qué secciones ya estaban activas (y su total_encuestas) al abrir el modal de
+// edición, para poder "desactivar" con seguridad una sección que el admin desmarca: solo se
+// borra su fila de encuestas_seccion si nadie había capturado total_encuestas todavía.
+let evActivasOriginales=new Set();
+let evTotalEncuestasOriginal={};
+
+function renderSeccionesEEForm(activas,metaMap,bloqueado){
+  document.getElementById('ev-bloquear-encuestas').checked=!!bloqueado;
+  document.getElementById('ev-secciones-ee').innerHTML=SECCIONES.map(s=>{
+    const activa=activas.has(s.num);
+    const meta=metaMap[s.num];
+    const etiqueta=`${s.num} — ${s.encargado||''}`;
+    return `<div class="ev-sec-row">
+      <div class="ev-sec-row-top">
+        <input type="checkbox" class="ev-sec-activa" data-sec="${s.num}" ${activa?'checked':''} onchange="onCambioSeccionActivaEvento()">
+        <span class="ev-sec-label" title="${etiqueta}">${etiqueta}</span>
+      </div>
+      <input type="number" min="0" step="1" inputmode="numeric" class="ev-sec-meta" data-sec="${s.num}" placeholder="Meta EE" value="${meta===null||meta===undefined?'':meta}" ${activa?'':'disabled'}>
+    </div>`;
+  }).join('');
+}
+
+function seccionesActivasSeleccionadas(){
+  return Array.from(document.querySelectorAll('.ev-sec-activa:checked')).map(el=>el.dataset.sec);
+}
+
+function onCambioSeccionActivaEvento(){
+  document.querySelectorAll('#ev-secciones-ee .ev-sec-row').forEach(row=>{
+    const chk=row.querySelector('.ev-sec-activa');
+    const metaInp=row.querySelector('.ev-sec-meta');
+    metaInp.disabled=!chk.checked;
+    if(!chk.checked) metaInp.value='';
+  });
+}
+
+// Desmarca de un jalón todas las secciones (sin reordenar la lista); Octavio marca
+// después a mano solo las que necesita para este evento.
+function deseleccionarTodasSecciones(){
+  document.querySelectorAll('#ev-secciones-ee .ev-sec-activa').forEach(chk=>{ chk.checked=false; });
+  onCambioSeccionActivaEvento();
+}
+
+// Carga config existente de un evento (al editar): secciones activas = las que
+// ya tienen fila en encuestas_seccion para ese evento_id; si el evento aún no
+// tiene ninguna fila configurada, se parte de todas activas (mismo default que
+// un evento nuevo) para no obligar a Octavio a marcarlas una por una.
+async function cargarConfigEEEvento(eventoId){
+  const encRows=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion,meta_ee,bloquear_total_encuestas,total_encuestas`);
+  const filas=Array.isArray(encRows)?encRows:[];
+  const metaMap={};
+  let bloqueado=false;
+  let activas;
+  evTotalEncuestasOriginal={};
+  if(filas.length){
+    activas=new Set(filas.map(r=>r.seccion));
+    filas.forEach(r=>{ metaMap[r.seccion]=r.meta_ee; if(r.bloquear_total_encuestas) bloqueado=true; evTotalEncuestasOriginal[r.seccion]=r.total_encuestas; });
+  } else {
+    activas=new Set(SECCIONES.map(s=>s.num));
+  }
+  evActivasOriginales=new Set(activas);
+  renderSeccionesEEForm(activas,metaMap,bloqueado);
+}
+
+// Guarda Meta EE / bloqueo de encuestas (encuestas_seccion) para un evento ya
+// creado/editado. Para secciones que ya tenían fila (p.ej. porque el líder ya
+// capturó su total de encuestas) solo se actualizan meta_ee/bloquear_total_encuestas
+// vía PATCH, sin tocar total_encuestas ni otros campos ya guardados.
+// Devuelve {ok, seccionesFallidas} — antes esta función ignoraba silenciosamente
+// cualquier error de red/permiso al guardar, así que un fallo real (p.ej. el
+// checkbox "Bloquear total de encuestas" no llegaba a guardarse) no se notaba
+// hasta que un líder ya estaba en campo con el enlace.
+async function guardarConfigEEEvento(eventoId,fechaEvento){
+  const bloqueado=document.getElementById('ev-bloquear-encuestas').checked;
+  const activas=seccionesActivasSeleccionadas();
+  const activasSet=new Set(activas);
+  const seccionesFallidas=[];
+  if(activas.length){
+    const existentes=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=in.(${activas.join(',')})&select=seccion`);
+    const yaExisten=new Set((Array.isArray(existentes)?existentes:[]).map(r=>r.seccion));
+    const aInsertar=[];
+    for(const sec of activas){
+      const metaInp=document.querySelector(`.ev-sec-meta[data-sec="${sec}"]`);
+      const raw=metaInp?metaInp.value.trim():'';
+      const meta_ee=raw===''?null:Number(raw);
+      if(yaExisten.has(sec)){
+        const r=await sbPatch('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(sec)}`,{meta_ee,bloquear_total_encuestas:bloqueado});
+        if(!r.ok){ console.error('Error actualizando encuestas_seccion',sec,await r.text()); seccionesFallidas.push(sec); }
+      } else {
+        aInsertar.push({seccion:sec,evento_id:eventoId,meta_ee,bloquear_total_encuestas:bloqueado,fecha:fechaEvento,registrado_por:currentUser,updated_at:new Date().toISOString()});
+      }
+    }
+    if(aInsertar.length){
+      const r=await sbPost('encuestas_seccion',aInsertar);
+      if(!r.ok){ console.error('Error insertando encuestas_seccion',await r.text()); seccionesFallidas.push(...aInsertar.map(f=>f.seccion)); }
+    }
+  }
+  // Secciones que estaban activas y el admin acaba de desmarcar: se borra su fila solo si
+  // nadie había capturado total_encuestas todavía (para no perder datos ya guardados por un líder).
+  for(const sec of evActivasOriginales){
+    if(activasSet.has(sec)) continue;
+    const totalPrevio=evTotalEncuestasOriginal[sec];
+    if(totalPrevio===null||totalPrevio===undefined){
+      await sbDelete('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(sec)}`);
+    }
+  }
+  return {ok:seccionesFallidas.length===0,seccionesFallidas};
 }
 
 // Suma días en UTC sobre los componentes Y-M-D del input date, para no
@@ -2780,7 +2959,8 @@ async function guardarEvento(){
   if(editId){
     const payload={nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()};
     await sbPatch('eventos',`?id=eq.${editId}`,payload);
-    showToast('✓ Evento actualizado');
+    const resConfig=await guardarConfigEEEvento(editId,fecha);
+    showToast(resConfig.ok?'✓ Evento actualizado':`⚠️ Evento actualizado, pero falló Meta EE/bloqueo en sección(es) ${resConfig.seccionesFallidas.join(', ')} — vuelve a intentar`);
     closeModal('modal-evento');
     await cargarEventos();
     return;
@@ -2790,8 +2970,14 @@ async function guardarEvento(){
   const dias=Number.isFinite(diasRaw)&&diasRaw>1?diasRaw:1;
 
   if(dias===1){
-    await sbPost('eventos',{nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()});
-    showToast('✓ Evento creado');
+    const inserted=await sbPostRepresentation('eventos',{nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()});
+    const nuevoId=Array.isArray(inserted)&&inserted[0]?inserted[0].id:null;
+    if(!nuevoId){
+      showToast('⚠️ No se pudo crear el evento — intenta de nuevo');
+      return;
+    }
+    const resConfig=await guardarConfigEEEvento(nuevoId,fecha);
+    showToast(resConfig.ok?'✓ Evento creado':`⚠️ Evento creado, pero falló Meta EE/bloqueo en sección(es) ${resConfig.seccionesFallidas.join(', ')} — edítalo para reintentar`);
   } else {
     const fechaFinal=sumarDiasFecha(fecha,dias-1);
     if(!confirm(`¿Crear ${dias} eventos, uno por día del ${fecha} al ${fechaFinal}?`)) return;
@@ -2803,8 +2989,17 @@ async function guardarEvento(){
       creado_por:currentUser,
       created_at:creadoEn
     }));
-    await sbPost('eventos',payloads);
-    showToast(`✓ ${dias} eventos creados`);
+    const insertados=await sbPostRepresentation('eventos',payloads);
+    let huboFallo=false;
+    if(Array.isArray(insertados)){
+      for(const row of insertados){
+        const resConfig=await guardarConfigEEEvento(row.id,row.fecha);
+        if(!resConfig.ok) huboFallo=true;
+      }
+    } else {
+      huboFallo=true;
+    }
+    showToast(huboFallo?`⚠️ Eventos creados, pero falló Meta EE/bloqueo en alguno — revísalos`:`✓ ${dias} eventos creados`);
   }
   closeModal('modal-evento');
   await cargarEventos();
@@ -3525,7 +3720,7 @@ function goTab(name,btn){
   if(name==='incidencias'){cargarIncidencias();}
   if(name==='nuevos'){cargarNuevos();}
   if(name==='red'){filtrarRed();}
-  if(name==='secciones'){ if(currentUser==='Octavio'){ cargarMapasSeccion().then(renderSecciones); } else { renderSecciones(); } }
+  if(name==='secciones'){ if(currentUser==='Octavio'||EDITORAS.includes(currentUser)){ cargarMapasSeccion().then(renderSecciones); } else { renderSecciones(); } }
   if(name==='bajas')filtrarBajas();
   if(name==='ines')renderInes();
   if(name==='control')renderControl();
