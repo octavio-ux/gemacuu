@@ -557,15 +557,6 @@ async function cargarYRenderizar(){
   const encRow=(Array.isArray(encuestas)&&encuestas[0])?encuestas[0]:null;
   totalEncuestas=encRow?encRow.total_encuestas:null;
   bloquearTotalEncuestas=!!(encRow&&encRow.bloquear_total_encuestas);
-  // ── DEBUG TEMPORAL — quitar una vez diagnosticado el bug de bloqueo ──
-  console.log('[DEBUG bloqueo]', {
-    eventoId, num,
-    urlConsulta:`encuestas_seccion?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}`,
-    respuestaCruda:encuestas,
-    encRow,
-    'encRow.bloquear_total_encuestas':encRow&&encRow.bloquear_total_encuestas,
-    bloquearTotalEncuestas
-  });
 
   // El EE capturado por este líder cuenta hacia la sección que eligió apoyar (si es de apoyo),
   // no hacia su propia sección — así que su meta y su suma se leen de esa sección destino.
@@ -592,12 +583,6 @@ async function cargarYRenderizar(){
 
 function renderSeccion(){
   const s=seccionActual;
-  // ── DEBUG TEMPORAL — quitar una vez diagnosticado el bug de bloqueo ──
-  console.log('[DEBUG bloqueo] justo antes de renderizar el input:', {
-    'seccionActual.num':s.num,
-    bloquearTotalEncuestas,
-    totalEncuestas
-  });
   document.getElementById('seccion-cont').innerHTML=`<div class="card">
     <div class="seccion-hdr">
       <div class="seccion-num">Sección ${s.num}</div>
