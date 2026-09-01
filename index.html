@@ -114,7 +114,7 @@ tr:hover td{background:#f8faff}
 .fg-seccion-hint{font-size:11px;color:var(--pan);font-weight:600;margin-top:4px}
 
 /* ── SECCIONES ACTIVAS / META EE (modal de evento) ── */
-.ev-secciones-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px}
+.ev-secciones-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;border:1px solid var(--border);border-radius:8px;padding:10px}
 @media(max-width:900px){.ev-secciones-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.ev-secciones-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:380px){.ev-secciones-grid{grid-template-columns:1fr}}
@@ -128,6 +128,16 @@ tr:hover td{background:#f8faff}
 .fg-bloqueo-encuestas{display:flex;align-items:center;gap:10px;background:#fff8e1;border:2px solid #f5a623;border-radius:10px;padding:12px 14px;box-shadow:0 2px 8px rgba(245,166,35,.2)}
 .fg-bloqueo-encuestas input[type=checkbox]{width:22px;height:22px;flex-shrink:0;accent-color:#b45309;cursor:pointer}
 .fg-bloqueo-encuestas label{margin:0;text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.3px;color:#854f0b;cursor:pointer}
+
+/* ── MODAL EVENTO: alto fijo con scroll solo en el cuerpo, para que "Guardar
+   evento" quede siempre visible sin importar cuántas secciones haya (no
+   necesita bajar el zoom del navegador para verlo). Reglas scopeadas a
+   #modal-evento para no afectar a ningún otro modal del sitio. ── */
+#modal-evento .modal{max-height:88vh;padding:0;display:flex;flex-direction:column}
+#modal-evento .modal-hdr{padding:20px 24px 0 24px;flex-shrink:0}
+#modal-evento .modal-body-scroll{overflow-y:auto;padding:0 24px;flex:1 1 auto;min-height:0}
+#modal-evento .modal-footer-fijo{flex-shrink:0;display:flex;gap:8px;padding:16px 24px 22px 24px;border-top:1px solid var(--border)}
+@media(max-width:768px){#modal-evento .modal{max-height:92vh}}
 
 /* ── BUTTONS ── */
 .btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
@@ -1063,11 +1073,12 @@ tr:hover td{background:#f8faff}
 
 <!-- MODAL EVENTO -->
 <div id="modal-evento" class="modal-bg" style="display:none">
-  <div class="modal" style="max-width:860px">
+  <div class="modal" style="max-width:940px">
     <div class="modal-hdr">
       <h3 id="modal-ev-titulo">📅 Nuevo Evento</h3>
       <button class="close-btn" onclick="closeModal('modal-evento')">✕</button>
     </div>
+    <div class="modal-body-scroll">
     <input type="hidden" id="ev-edit-id">
     <div class="fg">
       <label>Nombre del evento *</label>
@@ -1109,8 +1120,9 @@ tr:hover td{background:#f8faff}
       <input type="checkbox" id="ev-bloquear-encuestas">
       <label for="ev-bloquear-encuestas">🔒 Bloquear total de encuestas este evento</label>
     </div>
+    </div>
 
-    <div style="display:flex;gap:8px;margin-top:1rem">
+    <div class="modal-footer-fijo">
       <button class="btn btn-secondary w-full" onclick="closeModal('modal-evento')">Cancelar</button>
       <button class="btn btn-primary w-full" onclick="guardarEvento()">💾 Guardar evento</button>
     </div>
