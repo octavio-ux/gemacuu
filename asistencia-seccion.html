@@ -548,6 +548,12 @@ async function cargarYRenderizar(){
   // "Total de encuestas de la app" y su bloqueo siguen atados a la sección que se muestra
   // en la tarjeta (num = la propia del líder, sea o no de apoyo) — sin cambios en esta parte.
   const encuestas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}`);
+  if(!Array.isArray(encuestas)){
+    // sbGet no valida el status HTTP: si esta consulta falla (permisos, red), devuelve un
+    // objeto de error en vez de un arreglo y antes eso se interpretaba en silencio como
+    // "sin bloqueo" — se deja registrado para poder diagnosticarlo desde la consola.
+    console.error('No se pudo leer encuestas_seccion para bloquear_total_encuestas/meta_ee',num,encuestas);
+  }
   const encRow=(Array.isArray(encuestas)&&encuestas[0])?encuestas[0]:null;
   totalEncuestas=encRow?encRow.total_encuestas:null;
   bloquearTotalEncuestas=!!(encRow&&encRow.bloquear_total_encuestas);

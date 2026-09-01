@@ -2852,10 +2852,15 @@ async function cargarConfigEEEvento(eventoId){
 // creado/editado. Para secciones que ya tenían fila (p.ej. porque el líder ya
 // capturó su total de encuestas) solo se actualizan meta_ee/bloquear_total_encuestas
 // vía PATCH, sin tocar total_encuestas ni otros campos ya guardados.
+// Devuelve {ok, seccionesFallidas} — antes esta función ignoraba silenciosamente
+// cualquier error de red/permiso al guardar, así que un fallo real (p.ej. el
+// checkbox "Bloquear total de encuestas" no llegaba a guardarse) no se notaba
+// hasta que un líder ya estaba en campo con el enlace.
 async function guardarConfigEEEvento(eventoId,fechaEvento){
   const bloqueado=document.getElementById('ev-bloquear-encuestas').checked;
   const activas=seccionesActivasSeleccionadas();
   const activasSet=new Set(activas);
+  const seccionesFallidas=[];
   if(activas.length){
     const existentes=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=in.(${activas.join(',')})&select=seccion`);
     const yaExisten=new Set((Array.isArray(existentes)?existentes:[]).map(r=>r.seccion));
@@ -2865,12 +2870,16 @@ async function guardarConfigEEEvento(eventoId,fechaEvento){
       const raw=metaInp?metaInp.value.trim():'';
       const meta_ee=raw===''?null:Number(raw);
       if(yaExisten.has(sec)){
-        await sbPatch('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(sec)}`,{meta_ee,bloquear_total_encuestas:bloqueado});
+        const r=await sbPatch('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(sec)}`,{meta_ee,bloquear_total_encuestas:bloqueado});
+        if(!r.ok){ console.error('Error actualizando encuestas_seccion',sec,await r.text()); seccionesFallidas.push(sec); }
       } else {
         aInsertar.push({seccion:sec,evento_id:eventoId,meta_ee,bloquear_total_encuestas:bloqueado,fecha:fechaEvento,registrado_por:currentUser,updated_at:new Date().toISOString()});
       }
     }
-    if(aInsertar.length) await sbPost('encuestas_seccion',aInsertar);
+    if(aInsertar.length){
+      const r=await sbPost('encuestas_seccion',aInsertar);
+      if(!r.ok){ console.error('Error insertando encuestas_seccion',await r.text()); seccionesFallidas.push(...aInsertar.map(f=>f.seccion)); }
+    }
   }
   // Secciones que estaban activas y el admin acaba de desmarcar: se borra su fila solo si
   // nadie había capturado total_encuestas todavía (para no perder datos ya guardados por un líder).
@@ -2881,6 +2890,7 @@ async function guardarConfigEEEvento(eventoId,fechaEvento){
       await sbDelete('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(sec)}`);
     }
   }
+  return {ok:seccionesFallidas.length===0,seccionesFallidas};
 }
 
 // Suma días en UTC sobre los componentes Y-M-D del input date, para no
@@ -2903,8 +2913,8 @@ async function guardarEvento(){
   if(editId){
     const payload={nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()};
     await sbPatch('eventos',`?id=eq.${editId}`,payload);
-    await guardarConfigEEEvento(editId,fecha);
-    showToast('✓ Evento actualizado');
+    const resConfig=await guardarConfigEEEvento(editId,fecha);
+    showToast(resConfig.ok?'✓ Evento actualizado':`⚠️ Evento actualizado, pero falló Meta EE/bloqueo en sección(es) ${resConfig.seccionesFallidas.join(', ')} — vuelve a intentar`);
     closeModal('modal-evento');
     await cargarEventos();
     return;
@@ -2916,8 +2926,12 @@ async function guardarEvento(){
   if(dias===1){
     const inserted=await sbPostRepresentation('eventos',{nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()});
     const nuevoId=Array.isArray(inserted)&&inserted[0]?inserted[0].id:null;
-    if(nuevoId) await guardarConfigEEEvento(nuevoId,fecha);
-    showToast('✓ Evento creado');
+    if(!nuevoId){
+      showToast('⚠️ No se pudo crear el evento — intenta de nuevo');
+      return;
+    }
+    const resConfig=await guardarConfigEEEvento(nuevoId,fecha);
+    showToast(resConfig.ok?'✓ Evento creado':`⚠️ Evento creado, pero falló Meta EE/bloqueo en sección(es) ${resConfig.seccionesFallidas.join(', ')} — edítalo para reintentar`);
   } else {
     const fechaFinal=sumarDiasFecha(fecha,dias-1);
     if(!confirm(`¿Crear ${dias} eventos, uno por día del ${fecha} al ${fechaFinal}?`)) return;
@@ -2930,10 +2944,16 @@ async function guardarEvento(){
       created_at:creadoEn
     }));
     const insertados=await sbPostRepresentation('eventos',payloads);
+    let huboFallo=false;
     if(Array.isArray(insertados)){
-      for(const row of insertados){ await guardarConfigEEEvento(row.id,row.fecha); }
+      for(const row of insertados){
+        const resConfig=await guardarConfigEEEvento(row.id,row.fecha);
+        if(!resConfig.ok) huboFallo=true;
+      }
+    } else {
+      huboFallo=true;
     }
-    showToast(`✓ ${dias} eventos creados`);
+    showToast(huboFallo?`⚠️ Eventos creados, pero falló Meta EE/bloqueo en alguno — revísalos`:`✓ ${dias} eventos creados`);
   }
   closeModal('modal-evento');
   await cargarEventos();
