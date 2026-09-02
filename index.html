@@ -2928,9 +2928,19 @@ async function guardarConfigEEEvento(eventoId,fechaEvento){
         aInsertar.push({seccion:sec,evento_id:eventoId,meta_ee,bloquear_total_encuestas:bloqueado,fecha:fechaEvento,registrado_por:currentUser,updated_at:new Date().toISOString()});
       }
     }
-    if(aInsertar.length){
-      const r=await sbPost('encuestas_seccion',aInsertar);
-      if(!r.ok){ console.error('Error insertando encuestas_seccion',await r.text()); seccionesFallidas.push(...aInsertar.map(f=>f.seccion)); }
+    // Una fila por request (con on_conflict=seccion,evento_id, el mismo target que ya
+    // usa asistencia-seccion.html para guardar su propio total_encuestas — ver su
+    // postConReintentos(...encuestas_seccion?on_conflict=seccion,evento_id...)), en vez
+    // de un solo POST en bloque con todas las secciones nuevas: un INSERT en bloque es
+    // atómico — si UNA sola fila choca con una fila ya existente (p.ej. el chequeo de
+    // "yaExisten" de arriba no la detectó por cualquier motivo), Postgres rechaza el
+    // bloque COMPLETO y NINGUNA sección nueva de este guardado queda con el bloqueo
+    // aplicado, sin ningún error visible salvo un toast fácil de pasar por alto. Con
+    // on_conflict explícito cada fila además se autocorrige (upsert) en vez de fallar
+    // si ya existía.
+    for(const fila of aInsertar){
+      const r=await sbPost('encuestas_seccion?on_conflict=seccion,evento_id',fila);
+      if(!r.ok){ console.error('Error insertando encuestas_seccion',fila.seccion,await r.text()); seccionesFallidas.push(fila.seccion); }
     }
   }
   // Secciones que estaban activas y el admin acaba de desmarcar: se borra su fila solo si
