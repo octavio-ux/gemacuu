@@ -848,7 +848,7 @@ tr:hover td{background:#f8faff}
       <div class="card-title">📋 Eventos creados</div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Registros</th><th>Link de registro</th><th>Link de resultados</th><th>Galería</th><th>Eliminar</th></tr></thead>
+          <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Registros</th><th>Link de registro</th><th>Link de resultados</th><th>Galería</th><th>Excel</th><th>Eliminar</th></tr></thead>
           <tbody id="em-eventos-tbody"></tbody>
         </table>
       </div>
@@ -3910,7 +3910,7 @@ async function cargarEventosMasivos(){
 function renderEventosMasivos(){
   const tbody=document.getElementById('em-eventos-tbody');
   if(!eventosMasivosCache.length){
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:16px">Sin eventos creados aún.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:16px">Sin eventos creados aún.</td></tr>';
     return;
   }
   const ahora=new Date();
@@ -3927,6 +3927,7 @@ function renderEventosMasivos(){
       <td><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${urlReg}')">📋 copiar</button></td>
       <td><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${urlRes}')">📋 copiar</button></td>
       <td><button class="btn btn-secondary btn-xs" onclick="verGaleriaMasiva('${ev.id}')">🖼️ Ver</button></td>
+      <td><button class="btn btn-secondary btn-xs" onclick="exportarExcelEventoMasivo('${ev.id}')">⬇️ Excel</button></td>
       <td><button class="btn btn-danger btn-xs" onclick="eliminarEventoMasivo('${ev.id}')">🗑️ Eliminar</button></td>
     </tr>`;
   }).join('');
@@ -3944,6 +3945,88 @@ async function eliminarEventoMasivo(eventoId){
   if(!r.ok){ showToast('⚠️ No se pudo eliminar el evento — intenta de nuevo'); return; }
   showToast('✓ Evento eliminado');
   await cargarEventosMasivos();
+}
+
+function slugArchivoEventoMasivo(nombre){
+  return String(nombre||'evento')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quita acentos
+    .toLowerCase().trim()
+    .replace(/\s+/g,'-')
+    .replace(/[^a-z0-9-]/g,'')||'evento';
+}
+function formatearFechaHoraExcel(iso){
+  if(!iso) return '';
+  const d=new Date(iso);
+  if(isNaN(d.getTime())) return '';
+  const pad=n=>String(n).padStart(2,'0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Excel de asistencia de un evento masivo. Columnas: Código, Número de empleado,
+// Nombre completo, Fecha y hora, Asistencia (Sí/No), Fotos (1 link por persona:
+// la primera foto — no existe en el proyecto ningún visor ya armado que agrupe
+// varias fotos por persona, así que se optó por el link simple y confiable en
+// vez de armar un collage de Cloudinary sin poder probarlo contra la cuenta real).
+//
+// Si usa_bd_personal: la fila base es TODO personal_eventos_masivos (universo
+// completo) cruzado contra los registros de este evento por numero_empleado —
+// así salen también los que NO asistieron (Asistencia="No", sin código/fotos).
+// Si no usa_bd_personal: la fila base es solo registros_asistencia_masiva de
+// este evento (no hay universo previo con quién comparar); todas van "Sí".
+async function exportarExcelEventoMasivo(eventoId){
+  const ev=eventosMasivosCache.find(e=>e.id===eventoId);
+  if(!ev){ showToast('⚠️ Evento no encontrado'); return; }
+  const registros=await sbGet('registros_asistencia_masiva',`?evento_id=eq.${eventoId}&select=codigo,numero_empleado,nombre_completo,fecha_hora,fotos`);
+  const listaRegistros=Array.isArray(registros)?registros:[];
+
+  const filas=[]; // {codigo,numero_empleado,nombre_completo,fecha_hora,asistio,foto}
+  if(ev.usa_bd_personal){
+    const personal=await sbGet('personal_eventos_masivos','?select=numero_empleado,nombre_completo');
+    const listaPersonal=Array.isArray(personal)?personal:[];
+    // Si por algún motivo una misma persona quedó con más de un registro en este
+    // evento, se usa el más reciente como representativo.
+    const porEmpleado=new Map();
+    for(const r of listaRegistros){
+      if(!r.numero_empleado) continue;
+      const previo=porEmpleado.get(r.numero_empleado);
+      if(!previo||new Date(r.fecha_hora)>new Date(previo.fecha_hora)) porEmpleado.set(r.numero_empleado,r);
+    }
+    for(const p of listaPersonal){
+      const r=porEmpleado.get(p.numero_empleado);
+      filas.push({
+        codigo:r?r.codigo:'',
+        numero_empleado:p.numero_empleado,
+        nombre_completo:p.nombre_completo,
+        fecha_hora:r?r.fecha_hora:null,
+        asistio:!!r,
+        foto:(r&&Array.isArray(r.fotos)&&r.fotos[0])?r.fotos[0]:''
+      });
+    }
+  } else {
+    for(const r of listaRegistros){
+      filas.push({
+        codigo:r.codigo,
+        numero_empleado:'',
+        nombre_completo:r.nombre_completo,
+        fecha_hora:r.fecha_hora,
+        asistio:true,
+        foto:(Array.isArray(r.fotos)&&r.fotos[0])?r.fotos[0]:''
+      });
+    }
+  }
+
+  const hdr=['Código','Número de empleado','Nombre completo','Fecha y hora','Asistencia','Fotos'];
+  const data=filas.map(f=>[f.codigo||'',f.numero_empleado||'',f.nombre_completo||'',formatearFechaHoraExcel(f.fecha_hora),f.asistio?'Sí':'No',f.foto?'Ver foto':'']);
+  const ws=XLSX.utils.aoa_to_sheet([hdr,...data]);
+  // Hipervínculo real en la columna Fotos (col F), solo en las filas que sí tienen foto.
+  filas.forEach((f,i)=>{
+    if(!f.foto) return;
+    const cellRef=XLSX.utils.encode_cell({r:i+1,c:5});
+    if(ws[cellRef]) ws[cellRef].l={Target:f.foto};
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Asistencia');
+  XLSX.writeFile(wb,`asistencia_${slugArchivoEventoMasivo(ev.nombre)}_${ev.fecha}.xlsx`);
 }
 
 // Escapa texto de usuario antes de insertarlo como HTML — nombre/número de
