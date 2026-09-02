@@ -2885,8 +2885,12 @@ async function cargarConfigEEEvento(eventoId){
   let activas;
   evTotalEncuestasOriginal={};
   if(filas.length){
-    activas=new Set(filas.map(r=>r.seccion));
-    filas.forEach(r=>{ metaMap[r.seccion]=r.meta_ee; if(r.bloquear_total_encuestas) bloqueado=true; evTotalEncuestasOriginal[r.seccion]=r.total_encuestas; });
+    // String(...) es crítico aquí: lo que regresa Supabase para "seccion" no siempre
+    // coincide en tipo con los strings del catálogo SECCIONES (s.num), y Set.has()/===
+    // no hacen conversión — sin esto, una sección ya activa se pinta sin marcar en el
+    // formulario y guardarConfigEEEvento() nunca la toca (el bloqueo no le llega).
+    activas=new Set(filas.map(r=>String(r.seccion)));
+    filas.forEach(r=>{ const sec=String(r.seccion); metaMap[sec]=r.meta_ee; if(r.bloquear_total_encuestas) bloqueado=true; evTotalEncuestasOriginal[sec]=r.total_encuestas; });
   } else {
     activas=new Set(SECCIONES.map(s=>s.num));
   }
@@ -2909,7 +2913,9 @@ async function guardarConfigEEEvento(eventoId,fechaEvento){
   const seccionesFallidas=[];
   if(activas.length){
     const existentes=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=in.(${activas.join(',')})&select=seccion`);
-    const yaExisten=new Set((Array.isArray(existentes)?existentes:[]).map(r=>r.seccion));
+    // Mismo cuidado de tipos que en cargarConfigEEEvento: normalizar a texto para que
+    // coincida con "sec" (siempre string, viene de dataset.sec del checkbox).
+    const yaExisten=new Set((Array.isArray(existentes)?existentes:[]).map(r=>String(r.seccion)));
     const aInsertar=[];
     for(const sec of activas){
       const metaInp=document.querySelector(`.ev-sec-meta[data-sec="${sec}"]`);
