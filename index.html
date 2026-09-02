@@ -848,7 +848,7 @@ tr:hover td{background:#f8faff}
       <div class="card-title">📋 Eventos creados</div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Registros</th><th>Link de registro</th><th>Link de resultados</th><th>Galería</th></tr></thead>
+          <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Registros</th><th>Link de registro</th><th>Link de resultados</th><th>Galería</th><th>Eliminar</th></tr></thead>
           <tbody id="em-eventos-tbody"></tbody>
         </table>
       </div>
@@ -3910,7 +3910,7 @@ async function cargarEventosMasivos(){
 function renderEventosMasivos(){
   const tbody=document.getElementById('em-eventos-tbody');
   if(!eventosMasivosCache.length){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:16px">Sin eventos creados aún.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:16px">Sin eventos creados aún.</td></tr>';
     return;
   }
   const ahora=new Date();
@@ -3927,8 +3927,23 @@ function renderEventosMasivos(){
       <td><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${urlReg}')">📋 copiar</button></td>
       <td><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${urlRes}')">📋 copiar</button></td>
       <td><button class="btn btn-secondary btn-xs" onclick="verGaleriaMasiva('${ev.id}')">🖼️ Ver</button></td>
+      <td><button class="btn btn-danger btn-xs" onclick="eliminarEventoMasivo('${ev.id}')">🗑️ Eliminar</button></td>
     </tr>`;
   }).join('');
+}
+
+// Borra el evento y (vía "on delete cascade" en registros_asistencia_masiva.evento_id)
+// todos sus registros/fotos asociados. NUNCA toca personal_eventos_masivos — esa tabla
+// es compartida entre eventos, no le pertenece a ninguno en particular.
+async function eliminarEventoMasivo(eventoId){
+  const ev=eventosMasivosCache.find(e=>e.id===eventoId);
+  const nombre=ev?ev.nombre:'este evento';
+  const confirmado=confirm(`¿Seguro que quieres eliminar "${nombre}"? Esto eliminará el evento y TODOS sus registros y fotos. Esta acción no se puede deshacer.`);
+  if(!confirmado) return;
+  const r=await sbDelete('eventos_asistencia_masiva',`?id=eq.${eventoId}`);
+  if(!r.ok){ showToast('⚠️ No se pudo eliminar el evento — intenta de nuevo'); return; }
+  showToast('✓ Evento eliminado');
+  await cargarEventosMasivos();
 }
 
 // Escapa texto de usuario antes de insertarlo como HTML — nombre/número de
