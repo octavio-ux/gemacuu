@@ -258,7 +258,7 @@ let personalExterno=[];         // gente de OTRAS secciones que este líder agre
 let asistenciaPersonas={};      // { personal_id: {estado, actividad} } — viene de asistencia_eventos
 let apoyosSeccion=[];
 let totalEncuestas=null;
-let bloquearTotalEncuestas=false; // toggle por evento (encuestas_seccion.bloquear_total_encuestas) — sección propia mostrada
+let bloquearTotalEncuestas=false; // toggle por evento (encuestas_seccion.bloquear_total_encuestas) de seccionEEDestino
 let metaEE=null;                  // encuestas_seccion.meta_ee de seccionEEDestino
 let eeCapturasSuma=0;             // SUM(cantidad_ee) de ee_capturas_seccion para seccionEEDestino+evento
 let fotosSeccion=[];
@@ -545,28 +545,23 @@ async function cargarYRenderizar(){
   const apoyos=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
   apoyosSeccion=Array.isArray(apoyos)?apoyos:[];
 
-  // "Total de encuestas de la app" y su bloqueo siguen atados a la sección que se muestra
-  // en la tarjeta (num = la propia del líder, sea o no de apoyo) — sin cambios en esta parte.
-  const encuestas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}`);
+  // "Total de encuestas de la app", su bloqueo y la meta EE son datos de la sección OFICIAL
+  // que este líder está viendo/apoyando — nunca de su propia sección (num), que en modo apoyo
+  // ni siquiera tiene fila en encuestas_seccion (por eso salió el selector de apoyo: su sección
+  // no está activa este evento). Antes se leían con num y el candado/total/meta de un líder en
+  // apoyo salían siempre vacíos, sin importar el valor real de la sección oficial que apoyaba.
+  seccionEEDestino=seccionEsApoyo?seccionDestinoApoyo:num;
+  const encuestas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(seccionEEDestino)}`);
   if(!Array.isArray(encuestas)){
     // sbGet no valida el status HTTP: si esta consulta falla (permisos, red), devuelve un
     // objeto de error en vez de un arreglo y antes eso se interpretaba en silencio como
     // "sin bloqueo" — se deja registrado para poder diagnosticarlo desde la consola.
-    console.error('No se pudo leer encuestas_seccion para bloquear_total_encuestas/meta_ee',num,encuestas);
+    console.error('No se pudo leer encuestas_seccion para bloquear_total_encuestas/meta_ee',seccionEEDestino,encuestas);
   }
   const encRow=(Array.isArray(encuestas)&&encuestas[0])?encuestas[0]:null;
   totalEncuestas=encRow?encRow.total_encuestas:null;
   bloquearTotalEncuestas=!!(encRow&&encRow.bloquear_total_encuestas);
-
-  // El EE capturado por este líder cuenta hacia la sección que eligió apoyar (si es de apoyo),
-  // no hacia su propia sección — así que su meta y su suma se leen de esa sección destino.
-  seccionEEDestino=seccionEsApoyo?seccionDestinoApoyo:num;
-  let metaRow=encRow;
-  if(seccionEEDestino!==num){
-    const metaRows=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(seccionEEDestino)}&select=meta_ee`);
-    metaRow=(Array.isArray(metaRows)&&metaRows[0])?metaRows[0]:null;
-  }
-  metaEE=metaRow?metaRow.meta_ee:null;
+  metaEE=encRow?encRow.meta_ee:null;
 
   const eeCapturas=await sbGet('ee_capturas_seccion',`?evento_id=eq.${eventoId}&seccion_destino=eq.${encodeURIComponent(seccionEEDestino)}&select=cantidad_ee`);
   eeCapturasSuma=(Array.isArray(eeCapturas)?eeCapturas:[]).reduce((s,r)=>s+(typeof r.cantidad_ee==='number'?r.cantidad_ee:0),0);
@@ -966,7 +961,10 @@ async function guardarTodo(){
       btn.disabled=false;btn.textContent=textoOriginal;
       return;
     }
-    encuestasPayload={seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,total_encuestas:n,enlace_token:token,registrado_por:registradoPor,updated_at:new Date().toISOString()};
+    // seccionEEDestino, no seccionActual.num: en modo apoyo, seccionActual.num es la sección
+    // propia del líder (no oficial/activa este evento, sin fila en encuestas_seccion) — guardar
+    // ahí creaba una fila fantasma en vez de actualizar la sección oficial que en realidad apoya.
+    encuestasPayload={seccion:seccionEEDestino,fecha:hoy,evento_id:eventoId,total_encuestas:n,enlace_token:token,registrado_por:registradoPor,updated_at:new Date().toISOString()};
   }
 
   // Respaldo idempotente: espera autoguardados en curso y vuelve a mandar un snapshot completo
