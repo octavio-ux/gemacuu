@@ -82,6 +82,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .ee-meta-cumplida{color:#2d6a4f;font-weight:800}
 .ee-meta-faltan{color:#cc0000;font-weight:800}
 .ee-total-row{font-size:13px;font-weight:700;margin-top:6px}
+.ee-aclaracion-ee{background:#fef3c7;border:2px solid #f5a623;border-radius:10px;color:#000;font-weight:800;font-size:15px;text-align:center;padding:10px 12px;margin-bottom:10px}
+.ee-aviso-equipo{background:#fce8e8;border:2px solid var(--red);color:var(--red);font-weight:700;font-size:13px;border-radius:10px;padding:10px 12px;margin-top:8px}
 .apoyo-form{display:flex;gap:8px;flex-wrap:wrap;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
 .apoyo-form input{flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
 .apoyo-form select{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
@@ -634,11 +636,13 @@ function renderSeccion(){
     </div>
 
     <div class="fg">
-      <label>EE — ¿cuántas hiciste tú?</label>
+      <label>EE — ¿cuántas hizo tu equipo?</label>
+      <div class="ee-aclaracion-ee">EE = Encuesta Efectiva (con Nombre y Teléfono de la persona)</div>
       <div style="display:flex;gap:8px">
         <input type="number" min="0" step="1" inputmode="numeric" id="input-ee-propio" placeholder="0" style="flex:1" value="${miEEPropioActual??''}">
         <button type="button" class="btn btn-primary" id="btn-guardar-ee" onclick="guardarEEPropio()">Guardar</button>
       </div>
+      <div class="ee-aviso-equipo">Escribe aquí el TOTAL de Encuestas Efectivas de TU EQUIPO. No mezcles este número con el de otra sección a la que estés apoyando — cada sección reporta el suyo por separado.</div>
       <div class="ee-total-row" id="ee-total-row">${renderEETotalHtml()}</div>
     </div>
 
