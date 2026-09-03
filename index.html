@@ -373,6 +373,7 @@ tr:hover td{background:#f8faff}
     <button class="ntab" style="--c:#334155;--c-bg:#e4e6e9" id="tab-control" onclick="goTab('control',this)"><span class="ntab-ico">⚙️</span>Control</button>
     <button class="ntab" style="--c:#92400e;--c-bg:#f1e6e0" id="tab-bajas" onclick="goTab('bajas',this)"><span class="ntab-ico">🚫</span>Bajas (30)</button>
     <button class="ntab" style="--c:#3730a3;--c-bg:#e5e4f3" id="tab-historial" onclick="goTab('historial',this)"><span class="ntab-ico">📜</span>Historial de cambios</button>
+    <button class="ntab" style="--c:#7c3aed;--c-bg:#ede9fe" id="tab-masivos" onclick="goTab('masivos',this)"><span class="ntab-ico">🎟️</span>Asistencia Masiva</button>
   </div>
 
   <!-- PANEL: BASE OPERATIVA -->
@@ -776,6 +777,79 @@ tr:hover td{background:#f8faff}
         <table>
           <thead><tr><th>Fecha/hora</th><th>Evento</th><th>Persona</th><th>Sección</th><th>Antes</th><th>Después</th><th>Modificado por</th></tr></thead>
           <tbody id="hist-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: ASISTENCIA DE EVENTOS MASIVOS (solo Octavio) -->
+  <!-- Módulo aparte, conceptualmente separado de los eventos de encuestas/apoyos/EE de arriba:
+       registro público con fotos para eventos grandes (50-500+ personas), tablas propias
+       (eventos_asistencia_masiva / personal_eventos_masivos / registros_asistencia_masiva),
+       sin mezclarse con "eventos"/"personal"/"encuestas_seccion". -->
+  <div id="panel-masivos" class="panel">
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">🎟️ Crear evento de asistencia masiva</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg" style="margin-bottom:0">
+          <label>Nombre del evento *</label>
+          <input type="text" id="em-nombre" placeholder="Ej. Evento Centro de Convenciones">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Fecha *</label>
+          <input type="date" id="em-fecha">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div class="fg" style="margin-bottom:0">
+          <label>Expira el (fecha y hora) *</label>
+          <input type="datetime-local" id="em-expiracion">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Radio de geocerca (metros)</label>
+          <input type="number" id="em-radio" min="10" step="10" value="500" inputmode="numeric">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div class="fg" style="margin-bottom:0">
+          <label>Latitud del recinto</label>
+          <input type="text" id="em-lat" value="28.65435570888233" inputmode="decimal">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Longitud del recinto</label>
+          <input type="text" id="em-lng" value="-106.07563052496731" inputmode="decimal">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin:2px 0 10px">Default: Centro de Convenciones, Chihuahua capital. Cámbialo si el evento es en otro lugar.</div>
+      <div class="fg" style="display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:10px;padding:10px 14px;margin-bottom:0">
+        <input type="checkbox" id="em-usa-bd-personal">
+        <label for="em-usa-bd-personal" style="margin:0;text-transform:none;font-size:13px;color:var(--text)">¿Este evento usa la base de datos de personal? (número de empleado, en vez de nombre libre)</label>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn btn-primary" onclick="crearEventoMasivo()">➕ Crear evento</button>
+      </div>
+      <div id="em-crear-resultado" style="margin-top:10px"></div>
+    </div>
+
+    <!-- Catálogo de personal compartido entre eventos (solo aplica a eventos con "usa_bd_personal") -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">📇 Base de personal para eventos masivos</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
+        Compartida entre todos los eventos que usen "base de datos de personal". Columnas requeridas en el Excel: <b>numero_empleado</b>, <b>nombre_completo</b> (opcional: <b>foto_referencia</b>, URL). Si un número de empleado ya existe, se actualiza su nombre/foto.
+      </div>
+      <input type="file" id="em-input-excel" accept=".xlsx,.xls" onchange="subirExcelPersonalMasivo(this)"
+        style="padding:8px;border:1.5px dashed var(--border);border-radius:8px;width:100%;font-size:13px;cursor:pointer">
+      <div id="em-excel-status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+      <div id="em-excel-total" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
+    </div>
+
+    <!-- Lista de eventos ya creados -->
+    <div class="card">
+      <div class="card-title">📋 Eventos creados</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Registros</th><th>Link de registro</th><th>Link de resultados</th><th>Galería</th><th>Excel</th><th>Eliminar</th></tr></thead>
+          <tbody id="em-eventos-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -1227,6 +1301,21 @@ tr:hover td{background:#f8faff}
   </div>
 </div>
 
+<!-- MODAL GALERÍA — evento de asistencia masiva -->
+<div id="modal-galeria-masiva" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-hdr">
+      <h3 id="em-galeria-titulo">📷 Galería</h3>
+      <button class="close-btn" onclick="closeModal('modal-galeria-masiva')">✕</button>
+    </div>
+    <div id="em-galeria-total" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+    <div id="em-galeria-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;max-height:60vh;overflow:auto"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-galeria-masiva')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NUEVO AMIGO -->
 <div id="modal-nuevo-amigo" class="modal-bg" style="display:none">
   <div class="modal" style="max-width:580px">
@@ -1439,6 +1528,7 @@ async function doLogin(){
   document.getElementById('tab-bajas').style.display=(isAdmin||isEditor)?'block':'none';
   document.getElementById('tab-correccion').style.display=(isAdmin||isEditor||isPadrino)?'block':'none';
   document.getElementById('tab-historial').style.display=isAdmin?'block':'none';
+  document.getElementById('tab-masivos').style.display=isAdmin?'block':'none';
   await cargarPersonal();
   renderStats();
   renderPersonal();
@@ -3724,6 +3814,298 @@ async function exportarIncidencias(){
 }
 
 // ── NAV ──
+// ══════════════════════════════════════════════════════════════════
+// ASISTENCIA DE EVENTOS MASIVOS — módulo aparte, tablas propias
+// (eventos_asistencia_masiva / personal_eventos_masivos /
+// registros_asistencia_masiva), sin tocar personal/eventos/encuestas_seccion.
+// ══════════════════════════════════════════════════════════════════
+let eventosMasivosCache=[];
+let registrosMasivosCache=[];
+
+function urlRegistroMasivo(slug){
+  return `${location.origin}${location.pathname.replace(/index\.html$/,'')}asistencia-masiva.html?slug=${slug}`;
+}
+function urlResultadosMasivo(slugResultados){
+  return `${location.origin}${location.pathname.replace(/index\.html$/,'')}asistencia-masiva.html?r=${slugResultados}`;
+}
+
+// 5 caracteres alfanuméricos mixtos (sin separadores) — a propósito no deletrea
+// nada reconocible, pero igual se revisa contra una lista de palabras prohibidas
+// y contra la base de datos antes de usarlo (columna slug o slug_resultados).
+const MASIVO_SLUG_CHARS='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const MASIVO_SLUG_PROHIBIDAS=['asistencia','evento','gemacuu','masiv','registro','personal','result'];
+function generarCandidatoSlugMasivo(){
+  let s='';
+  for(let i=0;i<5;i++) s+=MASIVO_SLUG_CHARS[Math.floor(Math.random()*MASIVO_SLUG_CHARS.length)];
+  return s;
+}
+async function generarSlugMasivoUnico(columna){
+  for(let intento=0;intento<20;intento++){
+    const candidato=generarCandidatoSlugMasivo();
+    if(MASIVO_SLUG_PROHIBIDAS.some(p=>candidato.toLowerCase().includes(p))) continue;
+    const existe=await sbGet('eventos_asistencia_masiva',`?or=(slug.eq.${candidato},slug_resultados.eq.${candidato})&select=id&limit=1`);
+    if(Array.isArray(existe)&&existe.length===0) return candidato;
+  }
+  throw new Error('No se pudo generar un enlace único — intenta de nuevo');
+}
+
+async function crearEventoMasivo(){
+  const nombre=document.getElementById('em-nombre').value.trim();
+  const fecha=document.getElementById('em-fecha').value;
+  const expiracionRaw=document.getElementById('em-expiracion').value;
+  const radio_metros=parseInt(document.getElementById('em-radio').value,10)||500;
+  const lat=parseFloat(document.getElementById('em-lat').value);
+  const lng=parseFloat(document.getElementById('em-lng').value);
+  const usa_bd_personal=document.getElementById('em-usa-bd-personal').checked;
+  if(!nombre||!fecha){showToast('⚠️ Nombre y fecha son obligatorios');return;}
+  if(!expiracionRaw){showToast('⚠️ Falta la fecha/hora de expiración');return;}
+  const fecha_expiracion=new Date(expiracionRaw);
+  if(isNaN(fecha_expiracion.getTime())){showToast('⚠️ Fecha/hora de expiración inválida');return;}
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)){showToast('⚠️ Latitud/longitud inválidas');return;}
+  if(!Number.isFinite(radio_metros)||radio_metros<10){showToast('⚠️ Radio de geocerca inválido');return;}
+
+  let slug,slug_resultados;
+  try{
+    slug=await generarSlugMasivoUnico('slug');
+    slug_resultados=await generarSlugMasivoUnico('slug_resultados');
+  }catch(e){ showToast('⚠️ '+e.message); return; }
+
+  const r=await sbPost('eventos_asistencia_masiva',{
+    nombre,fecha,fecha_expiracion:fecha_expiracion.toISOString(),radio_metros,lat,lng,usa_bd_personal,slug,slug_resultados
+  });
+  if(!r.ok){ showToast('⚠️ Error al crear el evento — intenta de nuevo'); return; }
+
+  const urlReg=urlRegistroMasivo(slug);
+  const urlRes=urlResultadosMasivo(slug_resultados);
+  document.getElementById('em-crear-resultado').innerHTML=`
+    <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
+      ✅ Evento creado:<br>
+      <b>Link de registro:</b> ${urlReg}
+      <div style="margin:4px 0 8px"><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${urlReg}')">📋 copiar link de registro</button></div>
+      <b>Link de resultados (solo lectura, para el jefe):</b> ${urlRes}
+      <div style="margin-top:4px"><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${urlRes}')">📋 copiar link de resultados</button></div>
+    </div>`;
+  document.getElementById('em-nombre').value='';
+  document.getElementById('em-fecha').value='';
+  document.getElementById('em-expiracion').value='';
+  document.getElementById('em-radio').value='500';
+  document.getElementById('em-lat').value='28.65435570888233';
+  document.getElementById('em-lng').value='-106.07563052496731';
+  document.getElementById('em-usa-bd-personal').checked=false;
+  showToast('✓ Evento creado');
+  await cargarEventosMasivos();
+}
+
+async function cargarEventosMasivos(){
+  const [eventos,registros]=await Promise.all([
+    sbGet('eventos_asistencia_masiva','?order=creado_en.desc'),
+    sbGet('registros_asistencia_masiva','?select=id,evento_id,fotos')
+  ]);
+  eventosMasivosCache=Array.isArray(eventos)?eventos:[];
+  registrosMasivosCache=Array.isArray(registros)?registros:[];
+  renderEventosMasivos();
+  actualizarConteoPersonalMasivo();
+}
+
+function renderEventosMasivos(){
+  const tbody=document.getElementById('em-eventos-tbody');
+  if(!eventosMasivosCache.length){
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:16px">Sin eventos creados aún.</td></tr>';
+    return;
+  }
+  const ahora=new Date();
+  tbody.innerHTML=eventosMasivosCache.map(ev=>{
+    const total=registrosMasivosCache.filter(r=>r.evento_id===ev.id).length;
+    const expirado=new Date(ev.fecha_expiracion)<ahora;
+    const urlReg=urlRegistroMasivo(ev.slug);
+    const urlRes=urlResultadosMasivo(ev.slug_resultados);
+    return `<tr>
+      <td>${escapeHtml(ev.nombre)}</td>
+      <td>${escapeHtml(ev.fecha)}</td>
+      <td>${expirado?'<span style="color:var(--red);font-weight:700">Expirado</span>':'<span style="color:#2d6a4f;font-weight:700">Activo</span>'}</td>
+      <td>${total}</td>
+      <td><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${urlReg}')">📋 copiar</button></td>
+      <td><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${urlRes}')">📋 copiar</button></td>
+      <td><button class="btn btn-secondary btn-xs" onclick="verGaleriaMasiva('${ev.id}')">🖼️ Ver</button></td>
+      <td><button class="btn btn-secondary btn-xs" onclick="exportarExcelEventoMasivo('${ev.id}')">⬇️ Excel</button></td>
+      <td><button class="btn btn-danger btn-xs" onclick="eliminarEventoMasivo('${ev.id}')">🗑️ Eliminar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// Borra el evento y (vía "on delete cascade" en registros_asistencia_masiva.evento_id)
+// todos sus registros/fotos asociados. NUNCA toca personal_eventos_masivos — esa tabla
+// es compartida entre eventos, no le pertenece a ninguno en particular.
+async function eliminarEventoMasivo(eventoId){
+  const ev=eventosMasivosCache.find(e=>e.id===eventoId);
+  const nombre=ev?ev.nombre:'este evento';
+  const confirmado=confirm(`¿Seguro que quieres eliminar "${nombre}"? Esto eliminará el evento y TODOS sus registros y fotos. Esta acción no se puede deshacer.`);
+  if(!confirmado) return;
+  const r=await sbDelete('eventos_asistencia_masiva',`?id=eq.${eventoId}`);
+  if(!r.ok){ showToast('⚠️ No se pudo eliminar el evento — intenta de nuevo'); return; }
+  showToast('✓ Evento eliminado');
+  await cargarEventosMasivos();
+}
+
+function slugArchivoEventoMasivo(nombre){
+  return String(nombre||'evento')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quita acentos
+    .toLowerCase().trim()
+    .replace(/\s+/g,'-')
+    .replace(/[^a-z0-9-]/g,'')||'evento';
+}
+function formatearFechaHoraExcel(iso){
+  if(!iso) return '';
+  const d=new Date(iso);
+  if(isNaN(d.getTime())) return '';
+  const pad=n=>String(n).padStart(2,'0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Excel de asistencia de un evento masivo. Columnas: Código, Número de empleado,
+// Nombre completo, Fecha y hora, Asistencia (Sí/No), Fotos (1 link por persona:
+// la primera foto — no existe en el proyecto ningún visor ya armado que agrupe
+// varias fotos por persona, así que se optó por el link simple y confiable en
+// vez de armar un collage de Cloudinary sin poder probarlo contra la cuenta real).
+//
+// Si usa_bd_personal: la fila base es TODO personal_eventos_masivos (universo
+// completo) cruzado contra los registros de este evento por numero_empleado —
+// así salen también los que NO asistieron (Asistencia="No", sin código/fotos).
+// Si no usa_bd_personal: la fila base es solo registros_asistencia_masiva de
+// este evento (no hay universo previo con quién comparar); todas van "Sí".
+async function exportarExcelEventoMasivo(eventoId){
+  const ev=eventosMasivosCache.find(e=>e.id===eventoId);
+  if(!ev){ showToast('⚠️ Evento no encontrado'); return; }
+  const registros=await sbGet('registros_asistencia_masiva',`?evento_id=eq.${eventoId}&select=codigo,numero_empleado,nombre_completo,fecha_hora,fotos`);
+  const listaRegistros=Array.isArray(registros)?registros:[];
+
+  const filas=[]; // {codigo,numero_empleado,nombre_completo,fecha_hora,asistio,foto}
+  if(ev.usa_bd_personal){
+    const personal=await sbGet('personal_eventos_masivos','?select=numero_empleado,nombre_completo');
+    const listaPersonal=Array.isArray(personal)?personal:[];
+    // Si por algún motivo una misma persona quedó con más de un registro en este
+    // evento, se usa el más reciente como representativo.
+    const porEmpleado=new Map();
+    for(const r of listaRegistros){
+      if(!r.numero_empleado) continue;
+      const previo=porEmpleado.get(r.numero_empleado);
+      if(!previo||new Date(r.fecha_hora)>new Date(previo.fecha_hora)) porEmpleado.set(r.numero_empleado,r);
+    }
+    for(const p of listaPersonal){
+      const r=porEmpleado.get(p.numero_empleado);
+      filas.push({
+        codigo:r?r.codigo:'',
+        numero_empleado:p.numero_empleado,
+        nombre_completo:p.nombre_completo,
+        fecha_hora:r?r.fecha_hora:null,
+        asistio:!!r,
+        foto:(r&&Array.isArray(r.fotos)&&r.fotos[0])?r.fotos[0]:''
+      });
+    }
+  } else {
+    for(const r of listaRegistros){
+      filas.push({
+        codigo:r.codigo,
+        numero_empleado:'',
+        nombre_completo:r.nombre_completo,
+        fecha_hora:r.fecha_hora,
+        asistio:true,
+        foto:(Array.isArray(r.fotos)&&r.fotos[0])?r.fotos[0]:''
+      });
+    }
+  }
+
+  const hdr=['Código','Número de empleado','Nombre completo','Fecha y hora','Asistencia','Fotos'];
+  const data=filas.map(f=>[f.codigo||'',f.numero_empleado||'',f.nombre_completo||'',formatearFechaHoraExcel(f.fecha_hora),f.asistio?'Sí':'No',f.foto?'Ver foto':'']);
+  const ws=XLSX.utils.aoa_to_sheet([hdr,...data]);
+  // Hipervínculo real en la columna Fotos (col F), solo en las filas que sí tienen foto.
+  filas.forEach((f,i)=>{
+    if(!f.foto) return;
+    const cellRef=XLSX.utils.encode_cell({r:i+1,c:5});
+    if(ws[cellRef]) ws[cellRef].l={Target:f.foto};
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Asistencia');
+  XLSX.writeFile(wb,`asistencia_${slugArchivoEventoMasivo(ev.nombre)}_${ev.fecha}.xlsx`);
+}
+
+// Escapa texto de usuario antes de insertarlo como HTML — nombre/número de
+// empleado nunca deben ir como HTML crudo (ver también asistencia-masiva.html).
+function escapeHtml(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function verGaleriaMasiva(eventoId){
+  const ev=eventosMasivosCache.find(e=>e.id===eventoId);
+  const registros=registrosMasivosCache.filter(r=>r.evento_id===eventoId);
+  const fotos=registros.flatMap(r=>Array.isArray(r.fotos)?r.fotos:[]);
+  document.getElementById('em-galeria-titulo').textContent=`📷 Galería — ${ev?ev.nombre:''}`;
+  document.getElementById('em-galeria-total').textContent=`${registros.length} registro(s) · ${fotos.length} foto(s)`;
+  document.getElementById('em-galeria-grid').innerHTML=fotos.length
+    ? fotos.map(url=>`<img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer" onclick="window.open('${url}','_blank')">`).join('')
+    : '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:16px">Sin fotos todavía.</div>';
+  document.getElementById('modal-galeria-masiva').style.display='flex';
+}
+
+async function actualizarConteoPersonalMasivo(){
+  const data=await sbGet('personal_eventos_masivos','?select=numero_empleado');
+  const n=Array.isArray(data)?data.length:0;
+  document.getElementById('em-excel-total').textContent=`Actualmente hay ${n} empleado(s) cargados en la base compartida.`;
+}
+
+async function subirExcelPersonalMasivo(input){
+  const file=input.files&&input.files[0];
+  if(!file) return;
+  const statusEl=document.getElementById('em-excel-status');
+  statusEl.textContent='⏳ Leyendo archivo…';
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const filas=XLSX.utils.sheet_to_json(ws,{defval:''});
+    if(!filas.length){ statusEl.textContent='⚠️ El archivo no tiene filas.'; input.value=''; return; }
+    // Encuentra los encabezados reales sin importar mayúsculas/espacios.
+    const encabezados=Object.keys(filas[0]);
+    const buscarCol=nombreObjetivo=>encabezados.find(h=>h.trim().toLowerCase()===nombreObjetivo);
+    const colNum=buscarCol('numero_empleado');
+    const colNombre=buscarCol('nombre_completo');
+    const colFoto=buscarCol('foto_referencia');
+    if(!colNum||!colNombre){
+      statusEl.textContent='⚠️ El Excel debe tener las columnas numero_empleado y nombre_completo.';
+      input.value='';
+      return;
+    }
+    const porEmpleado=new Map(); // dedupe por numero_empleado — gana la última fila
+    for(const fila of filas){
+      const numero_empleado=String(fila[colNum]??'').trim();
+      const nombre_completo=String(fila[colNombre]??'').trim();
+      if(!numero_empleado||!nombre_completo) continue;
+      const foto_referencia=colFoto?(String(fila[colFoto]??'').trim()||null):null;
+      porEmpleado.set(numero_empleado,{numero_empleado,nombre_completo,foto_referencia});
+    }
+    const filasValidas=[...porEmpleado.values()];
+    if(!filasValidas.length){
+      statusEl.textContent='⚠️ Ninguna fila tiene numero_empleado y nombre_completo válidos.';
+      input.value='';
+      return;
+    }
+    let fallidas=0;
+    for(let i=0;i<filasValidas.length;i+=500){
+      const lote=filasValidas.slice(i,i+500);
+      const r=await sbPost('personal_eventos_masivos?on_conflict=numero_empleado',lote);
+      if(!r.ok) fallidas+=lote.length;
+    }
+    statusEl.textContent=fallidas
+      ? `⚠️ ${filasValidas.length-fallidas} de ${filasValidas.length} empleado(s) cargados — ${fallidas} fallaron, intenta de nuevo.`
+      : `✓ ${filasValidas.length} empleado(s) cargados/actualizados.`;
+    await actualizarConteoPersonalMasivo();
+  }catch(e){
+    console.error('Error leyendo Excel de personal masivo',e);
+    statusEl.textContent='⚠️ No se pudo leer el archivo — verifica que sea un Excel válido.';
+  }
+  input.value='';
+}
+
 function goTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
@@ -3740,6 +4122,7 @@ function goTab(name,btn){
   if(name==='bajas')filtrarBajas();
   if(name==='ines')renderInes();
   if(name==='control')renderControl();
+  if(name==='masivos'){cargarEventosMasivos();}
 }
 
 // ── MODAL ──
