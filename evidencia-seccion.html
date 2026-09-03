@@ -2,123 +2,121 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>GEMACUU · Evidencia por sección</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEMACUU — Evidencia por sección</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --pan:#003399;--red:#cc0000;--green:#2d6a4f;
-  --bg:#f0f4ff;--text:#1a1a2e;--muted:#6b7280;
-  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
-  --radius:14px;--radius-sm:8px;
-}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:32px}
-.hidden{display:none!important}
-.topbar{background:var(--pan);color:#fff;padding:18px 16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,102,.2)}
-.topbar-logo{font-size:19px;font-weight:800;letter-spacing:.06em}
-.topbar-sub{font-size:12px;opacity:.85;margin-top:4px}
-.wrap{max-width:640px;margin:0 auto;padding:16px}
-.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;box-shadow:var(--shadow);margin-bottom:1rem}
-.center-msg{text-align:center;padding:3rem 1.5rem;color:var(--muted);font-size:14px}
-.center-msg .ico{font-size:40px;margin-bottom:10px}
-.estado-banner{border-radius:var(--radius);padding:16px;text-align:center;font-weight:800;font-size:18px;margin-bottom:1rem}
-.estado-banner.ok{background:#eaf3de;color:var(--green);border:1.5px solid #a3d977}
-.estado-banner.pendiente{background:#f0f0f0;color:var(--muted);border:1.5px solid var(--border);font-size:14px}
-.estado-banner .sub{font-size:12px;font-weight:600;margin-top:6px;opacity:.85}
-.datos-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.dato-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:2px}
-.dato-valor{font-size:14px;font-weight:700}
-.card-title{font-size:15px;font-weight:800;color:var(--pan);margin-bottom:12px}
-.foto-item{margin-bottom:18px}
-.foto-item:last-child{margin-bottom:0}
-.foto-item img{width:100%;border-radius:var(--radius-sm);border:1px solid var(--border);display:block;margin-bottom:8px;background:var(--bg)}
-.btn-descarga{display:block;width:100%;text-align:center;padding:11px;background:var(--pan);color:#fff;border-radius:var(--radius-sm);font-size:13px;font-weight:700;text-decoration:none}
-.footer{text-align:center;font-size:11px;color:var(--muted);margin-top:24px}
-@media(max-width:420px){ .datos-grid{grid-template-columns:1fr} }
+  :root{
+    --ink:#0F1B33;
+    --paper:#EEF1F8;
+    --card:#FFFFFF;
+    --brand:#1D3FA0;
+    --brand-deep:#132B72;
+    --green:#1F8F5F;
+    --green-bg:#E6F4ED;
+    --line:#E1E5F0;
+    --muted:#616B87;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+    padding-bottom:40px;
+  }
+  .hidden{display:none!important}
+  .center-msg{text-align:center;padding:4rem 1.5rem;color:var(--muted);font-size:16px}
+  .center-msg .ico{font-size:48px;margin-bottom:12px}
+  .page{max-width:640px;margin:0 auto;}
+
+  .hero{
+    background:linear-gradient(160deg, var(--brand) 0%, var(--brand-deep) 100%);
+    color:#fff;padding:26px 20px 30px;text-align:center;
+  }
+  .hero-brand{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;opacity:.92;margin-bottom:4px;}
+  .hero-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;line-height:1.2;}
+  .hero-date{font-size:12.5px;color:#B8C4E8;font-weight:500;margin-top:4px;}
+
+  .body{padding:18px 16px 40px;}
+
+  .estado-banner{border-radius:16px;padding:16px;text-align:center;font-weight:800;font-size:15px;margin-bottom:14px;}
+  .estado-banner.ok{background:var(--green-bg);color:var(--green);border:1.5px solid #B9E2CD;}
+  .estado-banner.pendiente{background:#EEF0F6;color:var(--muted);border:1.5px solid var(--line);font-weight:700;font-size:13.5px;}
+  .estado-banner .sub{font-size:11.5px;font-weight:600;margin-top:6px;opacity:.85;}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;margin-bottom:14px;}
+  .datos-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .dato-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:2px;}
+  .dato-valor{font-size:14px;font-weight:700;}
+  @media(max-width:420px){ .datos-grid{grid-template-columns:1fr} }
+
+  .panel-head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .panel-head-row h2{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;color:var(--ink);}
+  .btn-download-all{border:none;background:var(--brand);color:#fff;font-size:11.5px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;}
+  .btn-download-all:disabled{opacity:.6;cursor:not-allowed;}
+
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .photo-thumb{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
+  .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-dl{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:8px;border:none;background:rgba(15,27,51,0.72);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;}
+  @media (min-width:480px){ .photo-grid{grid-template-columns:repeat(4,1fr);} }
+
+  .footer{text-align:center;font-size:11px;color:var(--muted);margin-top:16px;}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-logo">🧹 GEMACUU</div>
-  <div class="topbar-sub">Evidencia por sección</div>
+<div id="loading" class="center-msg">
+  <div class="ico">⏳</div>
+  Cargando…
 </div>
 
-<div class="wrap">
+<div id="error-box" class="page hidden" style="padding:24px">
+  <div class="panel center-msg">
+    <div class="ico">⚠️</div>
+    <div id="error-msg"></div>
+  </div>
+</div>
 
-  <div id="loading" class="center-msg">
-    <div class="ico">⏳</div>
-    Cargando…
+<div id="contenido" class="hidden">
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-brand">🧹 GEMACUU</div>
+    <div class="hero-title" id="d-evento"></div>
+    <div class="hero-date" id="d-fecha"></div>
   </div>
 
-  <div id="error-box" class="card hidden">
-    <div class="center-msg">
-      <div class="ico">⚠️</div>
-      <div id="error-msg"></div>
-    </div>
-  </div>
-
-  <div id="contenido" class="hidden">
+  <div class="body">
     <div id="estado-banner" class="estado-banner"></div>
 
-    <div class="card">
+    <div class="panel">
       <div class="datos-grid">
-        <div>
-          <div class="dato-label">Sección</div>
-          <div class="dato-valor" id="d-seccion"></div>
-        </div>
-        <div>
-          <div class="dato-label">Evento</div>
-          <div class="dato-valor" id="d-evento"></div>
-        </div>
-        <div>
-          <div class="dato-label">Fecha</div>
-          <div class="dato-valor" id="d-fecha"></div>
-        </div>
-        <div>
-          <div class="dato-label">Líder responsable</div>
-          <div class="dato-valor" id="d-lider"></div>
-        </div>
+        <div><div class="dato-label">Sección</div><div class="dato-valor" id="d-seccion"></div></div>
+        <div><div class="dato-label">Líder responsable</div><div class="dato-valor" id="d-lider"></div></div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title" id="fotos-titulo">📸 Evidencia fotográfica</div>
+    <div class="panel">
+      <div class="panel-head-row">
+        <h2 id="fotos-titulo">📸 Fotos</h2>
+        <button class="btn-download-all" id="btn-descargar-todas" onclick="descargarTodasFotos(this)" hidden>⬇ Descargar todas</button>
+      </div>
       <div id="fotos-cont"></div>
     </div>
   </div>
 
   <div class="footer">Documento generado por GEMACUU</div>
 </div>
+</div>
 
 <script>
 const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
-const SECCIONES=[
-  {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
-  {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
-  {num:'908',encargado:'Ernesto Alonso Ruiz',padrino:'Fernando Amezcua'},
-  {num:'3227',encargado:'Rubí Jurado',padrino:'Fernando Amezcua'},
-  {num:'3231',encargado:'Mayela Chavira',padrino:'Fernando Amezcua'},
-  {num:'3232',encargado:'Sofia Mejia',padrino:'Fernando Amezcua'},
-  {num:'3233',encargado:'Luis Raúl Vargas Ortega',padrino:'Fernando Amezcua'},
-  {num:'3228',encargado:'Lluvia Aceves',padrino:'Rene Espinoza'},
-  {num:'3234',encargado:'Alberto Yahir Favela',padrino:'Rene Espinoza'},
-  {num:'3235',encargado:'Fabián González',padrino:'Rene Espinoza'},
-  {num:'3236',encargado:'Noé Morales',padrino:'Rene Espinoza'},
-  {num:'3237',encargado:'Víctor TG',padrino:'Rene Espinoza'},
-  {num:'3238',encargado:'Ana Payán',padrino:'Rene Espinoza'},
-  {num:'3245',encargado:'Jesús González',padrino:'Rene Espinoza'},
-  {num:'3239',encargado:'Elizabeth Chalaca',padrino:'Rene Espinoza'},
-  {num:'909',encargado:'Saúl Bustillo',padrino:'Martin Yáñez'},
-  {num:'3244',encargado:'Carlos Daniel Pérez',padrino:'Martin Yáñez'},
-  {num:'3246',encargado:'Sergio Carreón',padrino:'Martin Yáñez'},
-  {num:'3255',encargado:'Félix Vázquez',padrino:'Martin Yáñez'},
-  {num:'3256',encargado:'José Luis Sánchez',padrino:'Martin Yáñez'},
-  {num:'3259',encargado:'Jesús Borruel',padrino:'Martin Yáñez'},
-  {num:'3261',encargado:'Yesenia Aróstegui',padrino:'Martin Yáñez'},
-  {num:'3263',encargado:'Pedro Hernández',padrino:'Martin Yáñez'},
-];
+
+let fotosSeccion=[];
 
 async function sbGet(table,params=''){
   const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
@@ -149,6 +147,7 @@ async function init(){
     const eventoRows=await sbGet('eventos',`?id=eq.${encodeURIComponent(eventoId)}`);
     evento=Array.isArray(eventoRows)?eventoRows[0]:null;
     if(!evento){ mostrarError('No se encontró el evento indicado en este enlace.'); return; }
+    if(evento.evidencia_publica===false){ mostrarError('Esta evidencia ya no está disponible públicamente.'); return; }
 
     // Personal cuya sección real es esta, para cruzar con asistencia_eventos
     const personalRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(seccion)}&select=id`);
@@ -164,6 +163,7 @@ async function init(){
     const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&or=(${condiciones.join(',')})&select=updated_at`);
     asisRows=Array.isArray(asisData)?asisData:[];
 
+    // Solo las fotos de ESTA sección — nunca las de otras secciones del mismo evento.
     const fotosData=await sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&seccion=eq.${encodeURIComponent(seccion)}&order=creado_en.asc`);
     fotos=Array.isArray(fotosData)?fotosData:[];
   }catch(e){
@@ -172,8 +172,12 @@ async function init(){
     return;
   }
 
+  fotosSeccion=fotos;
+
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('contenido').classList.remove('hidden');
+  document.getElementById('d-evento').textContent=evento.nombre||'—';
+  document.getElementById('d-fecha').textContent=evento.fecha||'—';
 
   const banner=document.getElementById('estado-banner');
   if(asisRows.length){
@@ -187,21 +191,41 @@ async function init(){
   }
 
   document.getElementById('d-seccion').textContent=seccion;
-  document.getElementById('d-evento').textContent=evento.nombre||'—';
-  document.getElementById('d-fecha').textContent=evento.fecha||'—';
   document.getElementById('d-lider').textContent=(Array.isArray(liderRows)&&liderRows[0]?.nombre)||'— sin líder activo —';
 
-  document.getElementById('fotos-titulo').textContent=`📸 Evidencia fotográfica (${fotos.length})`;
+  document.getElementById('fotos-titulo').textContent=`📸 Fotos (${fotos.length})`;
+  document.getElementById('btn-descargar-todas').hidden=fotos.length===0;
   const fotosCont=document.getElementById('fotos-cont');
-  if(!fotos.length){
-    fotosCont.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:1rem 0">Sin evidencia fotográfica todavía.</div>';
-  } else {
-    fotosCont.innerHTML=fotos.map((f,i)=>`
-      <div class="foto-item">
-        <img src="${f.cloudinary_url}" loading="lazy" alt="Evidencia ${i+1}">
-        <a class="btn-descarga" href="${urlDescarga(f.cloudinary_url)}" download>⬇ Descargar foto ${i+1}</a>
-      </div>`).join('');
-  }
+  fotosCont.innerHTML=fotos.length
+    ? `<div class="photo-grid">${fotos.map((f,i)=>`
+        <div class="photo-thumb">
+          <img src="${f.cloudinary_url}" loading="lazy" alt="Evidencia sección ${seccion} ${i+1}">
+          <a class="photo-dl" href="${urlDescarga(f.cloudinary_url)}" download title="Descargar esta foto">⬇</a>
+        </div>`).join('')}</div>`
+    : '<div style="text-align:center;color:var(--muted);font-size:13px;padding:1rem 0">Sin evidencia fotográfica todavía.</div>';
+}
+
+// Dispara la descarga de cada foto una por una (con un pequeño intervalo entre cada una, para
+// que el navegador no las bloquee por venir "todas de golpe"). Mismo mecanismo que ya usa
+// evidencia-evento.html para descargar todas las fotos de una sección.
+function descargarTodasFotos(btn){
+  if(!fotosSeccion.length) return;
+  btn.disabled=true;
+  const textoOriginal=btn.textContent;
+  let i=0;
+  const disparar=()=>{
+    if(i>=fotosSeccion.length){ btn.disabled=false; btn.textContent=textoOriginal; return; }
+    const a=document.createElement('a');
+    a.href=urlDescarga(fotosSeccion[i].cloudinary_url);
+    a.download='';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    i++;
+    setTimeout(disparar,400);
+  };
+  btn.textContent='Descargando…';
+  disparar();
 }
 
 init();
