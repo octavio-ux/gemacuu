@@ -265,6 +265,7 @@ let totalEncuestas=null;
 let bloquearTotalEncuestas=false; // toggle por evento (encuestas_seccion.bloquear_total_encuestas) de seccionEEDestino
 let metaEE=null;                  // encuestas_seccion.meta_ee de seccionEEDestino
 let eeCapturasSuma=0;             // SUM(cantidad_ee) de ee_capturas_seccion para seccionEEDestino+evento
+let eeMetaCumplida=false;         // true si seccionEEDestino ya alcanzó su meta_ee — bloquea el campo EE propio
 let miEEPropioActual=null;        // MI propia fila (por lider_nombre) en ee_capturas_seccion — null si aún no he capturado
 let fotosSeccion=[];
 let mapasSeccion=[];            // mapas del lugar físico de la sección (no dependen del evento)
@@ -409,8 +410,25 @@ async function confirmarAcceso(){
     const activaRows=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(numSeccion)}&select=seccion&limit=1`);
     esActiva=Array.isArray(activaRows)&&activaRows.length>0;
     if(!esActiva){
-      const todasActivas=await sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion`);
-      seccionesActivasEvento=[...new Set((Array.isArray(todasActivas)?todasActivas:[]).map(r=>r.seccion))];
+      // No se ofrece apoyar a una sección que ya cumplió su meta EE (misma meta_ee/suma que
+      // bloquea su propio campo EE) — no tendría caso mandar apoyo ahí.
+      const [todasActivas,eeCapturasTodas]=await Promise.all([
+        sbGet('encuestas_seccion',`?evento_id=eq.${eventoId}&select=seccion,meta_ee`),
+        sbGet('ee_capturas_seccion',`?evento_id=eq.${eventoId}&select=seccion_destino,cantidad_ee`)
+      ]);
+      const sumaPorSeccion={};
+      (Array.isArray(eeCapturasTodas)?eeCapturasTodas:[]).forEach(c=>{
+        sumaPorSeccion[c.seccion_destino]=(sumaPorSeccion[c.seccion_destino]||0)+(typeof c.cantidad_ee==='number'?c.cantidad_ee:0);
+      });
+      const filasActivas=Array.isArray(todasActivas)?todasActivas:[];
+      seccionesActivasEvento=[...new Set(
+        filasActivas
+          .filter(r=>{
+            if(typeof r.meta_ee!=='number') return true; // sin meta configurada: no se excluye
+            return (sumaPorSeccion[r.seccion]||0)<r.meta_ee;
+          })
+          .map(r=>r.seccion)
+      )];
     }
   }catch(e){
     btn.disabled=false;
@@ -575,6 +593,10 @@ async function cargarYRenderizar(){
   // guardado para poder corregirlo, no partir en blanco como si nunca hubiera capturado.
   const miFilaEE=filasEE.find(r=>r.lider_nombre===registradoPor);
   miEEPropioActual=miFilaEE?miFilaEE.cantidad_ee:null;
+  // Bloqueo por SECCIÓN (seccionEEDestino), no por persona ni por link: si la sección propia
+  // ya cumplió su meta se bloquea aquí; si en cambio estás de apoyo a otra sección que todavía
+  // no cumple la suya, este mismo cálculo da false y el campo sigue editable normal.
+  eeMetaCumplida=typeof metaEE==='number'&&eeCapturasSuma>=metaEE;
 
   const fotos=await sbGet('fotos_actividad_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
   fotosSeccion=Array.isArray(fotos)?fotos:[];
@@ -644,9 +666,10 @@ function renderSeccion(){
         <span class="linea2">Cuenta como Encuesta Efectiva si ya capturaste el Nombre y Teléfono de esa persona en tu hoja/formato de campo — NO se escribe aquí.</span>
       </div>
       <div style="display:flex;gap:8px">
-        <input type="number" min="0" step="1" inputmode="numeric" id="input-ee-propio" placeholder="0" style="flex:1" value="${miEEPropioActual??''}">
-        <button type="button" class="btn btn-primary" id="btn-guardar-ee" onclick="guardarEEPropio()">Guardar</button>
+        <input type="number" min="0" step="1" inputmode="numeric" id="input-ee-propio" placeholder="0" style="flex:1${eeMetaCumplida?';opacity:.55;cursor:not-allowed':''}" value="${miEEPropioActual??''}" ${eeMetaCumplida?'disabled':''}>
+        <button type="button" class="btn btn-primary" id="btn-guardar-ee" onclick="guardarEEPropio()" ${eeMetaCumplida?'disabled':''}>Guardar</button>
       </div>
+      ${eeMetaCumplida?'<div style="font-size:11px;color:var(--muted);margin-top:4px">🔒 Esta sección ya cumplió su meta. Si necesitas corregir un número, contacta al administrador.</div>':''}
       <div class="ee-aviso-equipo">Escribe aquí el TOTAL de Encuestas Efectivas de TU EQUIPO. No mezcles este número con el de otra sección a la que estés apoyando — cada sección reporta el suyo por separado.</div>
       <div class="ee-total-row" id="ee-total-row">${renderEETotalHtml()}</div>
     </div>
@@ -711,6 +734,9 @@ function renderEETotalHtml(){
 // puede corregir lo que ELLA MISMA capturó, sea dueña de la sección o esté dando apoyo.
 // Requiere la restricción única (evento_id, seccion_destino, lider_nombre) en la tabla.
 async function guardarEEPropio(){
+  // Refuerzo del bloqueo por sección (además de deshabilitar el campo/botón en el HTML):
+  // si la sección ya cumplió su meta, no se guarda aunque alguien fuerce el envío.
+  if(eeMetaCumplida){ showToast('🔒 Esta sección ya cumplió su meta — contacta al administrador para corregir'); return; }
   const inp=document.getElementById('input-ee-propio');
   const raw=inp.value.trim();
   if(raw===''){ showToast('⚠️ Escribe cuántas EE hiciste'); return; }
