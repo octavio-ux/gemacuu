@@ -2,96 +2,231 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>GEMACUU · Evidencia por evento</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEMACUU — Evidencia por evento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --pan:#003399;--pan2:#1a4fc4;--red:#cc0000;--green:#2d6a4f;--amber:#854f0b;
-  --bg:#f0f4ff;--text:#1a1a2e;--muted:#6b7280;
-  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
-  --radius:16px;--radius-sm:9px;
-}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
-.hidden{display:none!important}
-.center-msg{text-align:center;padding:4rem 1.5rem;color:var(--muted);font-size:16px}
-.center-msg .ico{font-size:48px;margin-bottom:12px}
+  :root{
+    --ink:#0F1B33;
+    --paper:#EEF1F8;
+    --card:#FFFFFF;
+    --brand:#1D3FA0;
+    --brand-deep:#132B72;
+    --gold:#C9922F;
+    --green:#1F8F5F;
+    --green-bg:#E6F4ED;
+    --amber:#C67C1E;
+    --amber-bg:#FBF0DF;
+    --red:#C43B3B;
+    --red-bg:#FBE9E9;
+    --line:#E1E5F0;
+    --muted:#616B87;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+    padding-bottom:40px;
+  }
+  .hidden{display:none!important}
+  .center-msg{text-align:center;padding:4rem 1.5rem;color:var(--muted);font-size:16px}
+  .center-msg .ico{font-size:48px;margin-bottom:12px}
+  .page{max-width:1100px;margin:0 auto;}
 
-/* ── BANNER ── */
-.banner{background:linear-gradient(135deg,var(--pan) 0%,var(--pan2) 100%);color:#fff;padding:32px 24px;text-align:center;box-shadow:0 4px 16px rgba(0,0,102,.25)}
-.banner-logo{font-size:14px;font-weight:700;letter-spacing:.12em;opacity:.75;margin-bottom:10px}
-.banner-nombre{font-size:clamp(22px,4vw,36px);font-weight:800;line-height:1.2}
-.banner-fecha{font-size:16px;opacity:.85;margin-top:8px;font-weight:600}
+  /* Status strip */
+  .status-strip{
+    background:var(--ink);
+    color:#C9D3EC;
+    font-size:12.5px;
+    font-weight:600;
+    padding:9px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .status-strip .live{display:flex;align-items:center;gap:7px;}
+  .pulse{
+    width:7px;height:7px;border-radius:50%;
+    background:#4ADE80;
+    box-shadow:0 0 0 0 rgba(74,222,128,0.6);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(74,222,128,0.5);}
+    70%{box-shadow:0 0 0 6px rgba(74,222,128,0);}
+    100%{box-shadow:0 0 0 0 rgba(74,222,128,0);}
+  }
 
-.wrap{max-width:1100px;margin:0 auto;padding:24px}
+  /* Hero */
+  .hero{
+    background:linear-gradient(160deg, var(--brand) 0%, var(--brand-deep) 100%);
+    color:#fff;
+    padding:26px 20px 30px;
+  }
+  .hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;}
+  .hero-brand{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;letter-spacing:0.2px;opacity:0.92;}
+  .hero-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:23px;line-height:1.2;margin:2px 0 2px;}
+  .hero-date{font-size:12.5px;color:#B8C4E8;font-weight:500;}
+  .hero-badge{
+    background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.22);
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:11px;
+    font-weight:700;
+    text-align:right;
+    line-height:1.4;
+  }
 
-/* ── STATS ── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
-.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;text-align:center;box-shadow:var(--shadow)}
-.stat-num{font-size:clamp(30px,4vw,42px);font-weight:800;line-height:1}
-.stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-top:6px}
+  .ee-hero{
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:18px;
+    padding:20px 20px 18px;
+  }
+  .ee-hero-label{font-size:12.5px;font-weight:600;color:#C4D0EF;margin-bottom:6px;}
+  .ee-hero-num{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:44px;line-height:1;
+    display:flex;align-items:baseline;gap:8px;
+  }
+  .ee-hero-num .meta{font-size:19px;font-weight:500;color:#AEBBE0;}
+  .ee-bar-track{background:rgba(255,255,255,0.16);border-radius:999px;height:10px;margin:14px 0 10px;overflow:hidden;}
+  .ee-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg, var(--gold), #E4B45D);}
+  .ee-hero-foot{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:#D7DEF3;}
 
-/* ── CARD ── */
-.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);margin-bottom:24px}
-.card-title{font-size:17px;font-weight:800;color:var(--pan);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  /* Body */
+  .body{padding:18px 16px 40px;}
 
-/* ── TOP 3 ── */
-.top3-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.top3-item{display:flex;align-items:center;gap:14px;padding:16px;border-radius:var(--radius-sm);border:1px solid #fac775;background:linear-gradient(135deg,#fffbea 0%,#fff 100%)}
-.top3-medalla{font-size:34px;line-height:1;flex-shrink:0}
-.top3-info{flex:1;min-width:0}
-.top3-seccion{font-size:15px;font-weight:800;color:var(--pan)}
-.top3-lider{font-size:12px;font-weight:600;color:var(--text)}
-.top3-padrino{font-size:11px;color:var(--muted)}
-.top3-num{font-size:28px;font-weight:800;color:var(--amber);text-align:right;flex-shrink:0}
+  .lead-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px;}
+  .tile .num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px;color:var(--ink);line-height:1;}
+  .tile .lab{font-size:12px;font-weight:600;color:var(--muted);margin-top:6px;}
 
-/* ── EE POR SECCIÓN ── */
-.ee-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.ee-row{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:#f8faff;border:1px solid var(--border);border-radius:var(--radius-sm)}
-.ee-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.ee-seccion{font-size:15px;font-weight:800;color:var(--pan)}
-.ee-fraccion{font-size:13px;font-weight:700;color:var(--text)}
-.ee-badge{font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;align-self:flex-start}
-.ee-badge-faltan{background:#fce8e8;color:var(--red)}
-.ee-badge-cumplida{background:#eaf3de;color:var(--green)}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;margin-bottom:14px;}
+  .panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+  .panel-head h2{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;margin:0;color:var(--ink);}
+  .panel-head .sub{font-size:12px;color:var(--muted);font-weight:500;}
 
-/* ── FALTARON ── */
-.faltaron-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
-.faltaron-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#fce8e8;border:1px solid #f5c2c2;border-radius:var(--radius-sm)}
-.faltaron-nombre{font-size:13px;font-weight:700;color:var(--red)}
-.faltaron-acum{font-size:11px;font-weight:700;color:#fff;background:var(--red);padding:2px 9px;border-radius:20px;white-space:nowrap}
-.vacio{text-align:center;color:var(--muted);font-size:14px;padding:1.2rem 0}
+  .seg-bar{display:flex;height:14px;border-radius:999px;overflow:hidden;background:#EEF0F6;margin-bottom:14px;}
+  .seg{height:100%;}
+  .seg.asis{background:var(--green);}
+  .seg.falta{background:var(--red);}
+  .seg.vac{background:var(--gold);}
+  .seg.inc{background:#8B5CF6;}
+  .seg.sinreg{background:#D5DAE8;}
 
-/* ── SECCIONES ── */
-.seccion-item{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden}
-.seccion-hdr{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;background:#fff;flex-wrap:wrap}
-.seccion-hdr:hover{background:#f8faff}
-.seccion-hdr-num{font-size:16px;font-weight:800;color:var(--pan);min-width:64px}
-.seccion-hdr-lider{flex:1;min-width:140px}
-.seccion-hdr-lider .nombre{font-size:13px;font-weight:700}
-.seccion-hdr-lider .padrino{font-size:11px;color:var(--muted)}
-.seccion-hdr-metric{text-align:center;min-width:78px}
-.seccion-hdr-metric .n{font-size:18px;font-weight:800;color:var(--pan)}
-.seccion-hdr-metric .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-.seccion-arrow{font-size:14px;color:var(--muted);transition:transform .15s;flex-shrink:0}
-.seccion-item.open .seccion-arrow{transform:rotate(180deg)}
-.seccion-detail{display:none;padding:16px;border-top:1px solid var(--border);background:#f8faff}
-.seccion-item.open .seccion-detail{display:block}
-.seccion-detail-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.asis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-bottom:16px}
-.asis-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 11px;background:#fff;border:1px solid var(--border);border-radius:7px;font-size:12.5px}
-.asis-estado{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
-.e-ASISTENCIA{background:#eaf3de;color:var(--green)}
-.e-FALTA{background:#fce8e8;color:var(--red)}
-.e-VACACIONES{background:#e6eeff;color:var(--pan)}
-.e-INCAPACIDAD{background:#fef3c7;color:var(--amber)}
-.e-SIN{background:#f0f0f0;color:var(--muted)}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;}
+  .legend-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);}
+  .dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+  .dot.asis{background:var(--green);}
+  .dot.falta{background:var(--red);}
+  .dot.vac{background:var(--gold);}
+  .dot.inc{background:#8B5CF6;}
+  .dot.sinreg{background:#D5DAE8;}
+  .legend-item .val{margin-left:auto;color:var(--muted);font-weight:700;}
 
-.fotos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
-.foto-item img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);display:block;margin-bottom:8px;background:var(--bg)}
-.btn-descarga{display:block;width:100%;text-align:center;padding:8px;background:var(--pan);color:#fff;border-radius:var(--radius-sm);font-size:12px;font-weight:700;text-decoration:none}
+  .foot-stats{display:flex;gap:18px;padding:2px 4px 4px;margin-bottom:16px;}
+  .foot-stat{display:flex;flex-direction:column;}
+  .foot-stat .num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:var(--ink);}
+  .foot-stat .lab{font-size:11.5px;color:var(--muted);font-weight:600;}
 
-.footer{text-align:center;font-size:11px;color:var(--muted);margin-top:16px}
+  .section-label{display:flex;align-items:baseline;justify-content:space-between;margin:6px 4px 12px;}
+  .section-label h2{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin:0;color:var(--ink);}
+  .section-label .sub{font-size:12px;color:var(--muted);font-weight:500;}
+
+  .sec-list{display:flex;flex-direction:column;gap:9px;}
+  .sec-row{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--red);border-radius:14px;padding:14px 16px;}
+  .sec-row.amber{border-left-color:var(--amber);}
+  .sec-row.green{border-left-color:var(--green);}
+  .sec-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .sec-name{font-weight:700;font-size:14.5px;color:var(--ink);}
+  .sec-frac{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;color:var(--muted);}
+  .sec-bar-track{background:#EEF0F6;border-radius:999px;height:8px;overflow:hidden;margin-bottom:8px;}
+  .sec-bar-fill{height:100%;border-radius:999px;background:var(--red);}
+  .sec-row.amber .sec-bar-fill{background:var(--amber);}
+  .sec-row.green .sec-bar-fill{background:var(--green);}
+  .sec-status{font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;}
+  .sec-status.red{background:var(--red-bg);color:var(--red);}
+  .sec-status.amber{background:var(--amber-bg);color:var(--amber);}
+  .sec-status.green{background:var(--green-bg);color:var(--green);}
+
+  .vacio{text-align:center;color:var(--muted);font-size:13.5px;padding:1rem 0;}
+
+  /* Top 3 (solo eventos sin sistema de EE) */
+  .top3-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}
+  .top3-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;border:1px solid #EBD9BC;background:linear-gradient(135deg,#FBF6EC 0%,#fff 100%);}
+  .top3-medalla{font-size:30px;line-height:1;flex-shrink:0;}
+  .top3-info{flex:1;min-width:0;}
+  .top3-seccion{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;color:var(--brand);}
+  .top3-lider{font-size:12px;font-weight:600;color:var(--ink);}
+  .top3-padrino{font-size:11px;color:var(--muted);}
+  .top3-num{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:var(--gold);text-align:right;flex-shrink:0;}
+
+  /* Faltaron (solo eventos sin sistema de EE) */
+  .faltaron-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;}
+  .faltaron-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--red-bg);border:1px solid #F0C9C9;border-radius:12px;}
+  .faltaron-nombre{font-size:13px;font-weight:700;color:var(--red);}
+  .faltaron-acum{font-size:11px;font-weight:700;color:#fff;background:var(--red);padding:2px 9px;border-radius:999px;white-space:nowrap;}
+
+  @media (min-width:720px){
+    .lead-tiles{grid-template-columns:repeat(4,1fr);}
+    .sec-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .body{padding:24px 28px 44px;}
+    .hero{padding:32px 28px 36px;}
+  }
+
+  /* Detalle de sección (acordeón) */
+  .helper-hint{background:var(--amber-bg);color:#8A5A0A;font-size:12.5px;font-weight:700;padding:10px 14px;border-radius:12px;margin:0 0 14px;}
+  .sec-accordion{display:flex;flex-direction:column;gap:10px;}
+  .detail-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;}
+  .detail-card.collapsed{padding-bottom:16px;}
+  .detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+  .detail-sec{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--ink);}
+  .detail-lider{font-size:13.5px;font-weight:600;color:var(--ink);margin-top:2px;}
+  .detail-padrino{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  .detail-pills{display:flex;gap:8px;margin-bottom:18px;}
+  .d-pill{flex:1;background:var(--paper);border-radius:12px;padding:10px 8px;text-align:center;}
+  .d-pill .num{display:block;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:var(--ink);}
+  .d-pill .lab{display:block;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:2px;}
+
+  .detail-block{margin-bottom:18px;}
+  .detail-block:last-child{margin-bottom:0;}
+  .detail-block-head{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+  .detail-block-head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .detail-block-head-row .detail-block-head{margin-bottom:0;}
+
+  .attend-list{display:flex;flex-direction:column;gap:7px;}
+  .attend-chip{display:flex;align-items:center;gap:8px;background:var(--paper);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--ink);}
+  .attend-chip .otra{font-size:10.5px;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line);padding:1px 7px;border-radius:999px;}
+  .attend-tag{margin-left:auto;font-weight:800;font-size:12px;padding:2px 9px;border-radius:999px;white-space:nowrap;}
+  .attend-tag.asis{color:var(--green);background:transparent;font-size:15px;padding:0;}
+  .attend-tag.falta{color:var(--red);background:var(--red-bg);}
+  .attend-tag.vac{color:var(--brand);background:#E6ECFB;}
+  .attend-tag.inc{color:var(--amber);background:var(--amber-bg);}
+  .attend-tag.sin{color:var(--muted);background:#EEF0F6;}
+
+  .btn-download-all{border:none;background:var(--brand);color:#fff;font-size:11.5px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;}
+  .btn-download-all:disabled{opacity:.6;cursor:not-allowed;}
+
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .photo-thumb{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
+  .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-dl{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:8px;border:none;background:rgba(15,27,51,0.72);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;}
+  @media (min-width:480px){ .photo-grid{grid-template-columns:repeat(4,1fr);} }
+
+  .detail-toggle-btn{
+    width:100%;margin-top:14px;border:1.5px solid var(--brand);background:#EEF2FC;color:var(--brand);
+    font-size:13px;font-weight:700;padding:11px;border-radius:11px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .detail-toggle-btn.expanded{background:var(--ink);border-color:var(--ink);color:#fff;}
+  .detail-toggle-btn .chev{font-size:12px;}
+
+  .footer{text-align:center;font-size:11px;color:var(--muted);margin-top:16px;}
 </style>
 </head>
 <body>
@@ -101,69 +236,102 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   Cargando…
 </div>
 
-<div id="error-box" class="wrap hidden">
-  <div class="card center-msg">
+<div id="error-box" class="page hidden" style="padding:24px">
+  <div class="panel center-msg">
     <div class="ico">⚠️</div>
     <div id="error-msg"></div>
   </div>
 </div>
 
-<div id="revocado-box" class="wrap hidden">
-  <div class="card center-msg">
+<div id="revocado-box" class="page hidden" style="padding:24px">
+  <div class="panel center-msg">
     <div class="ico">🔒</div>
     <div>Esta evidencia ya no está disponible públicamente.</div>
   </div>
 </div>
 
 <div id="contenido" class="hidden">
+<div class="page">
 
-  <div class="banner">
-    <div class="banner-logo">🧹 GEMACUU</div>
-    <div class="banner-nombre" id="d-evento"></div>
-    <div class="banner-fecha" id="d-fecha"></div>
+  <div class="status-strip">
+    <span class="live"><span class="pulse"></span>En vivo</span>
+    <span id="status-actualizado">Actualizado hace instantes</span>
   </div>
 
-  <div class="wrap">
-
-    <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📋 Resumen de hoy</div>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num" id="rh-participaron" style="color:var(--green)">0</div><div class="stat-label">Participaron hoy</div></div>
-      <div class="stat-card"><div class="stat-num" id="rh-secciones-activas" style="color:var(--pan)">0</div><div class="stat-label">Secciones activas</div></div>
-      <div class="stat-card"><div class="stat-num" id="rh-ee-total" style="color:var(--amber)">0 / 0</div><div class="stat-label">EE total / meta total</div></div>
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-brand">🧹 GEMACUU</div>
+        <div class="hero-title" id="d-evento"></div>
+        <div class="hero-date" id="d-fecha"></div>
+      </div>
+      <div class="hero-badge" id="hero-secciones-activas"></div>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num" id="st-asistencia" style="color:var(--green)">0</div><div class="stat-label">Asistencia</div></div>
-      <div class="stat-card"><div class="stat-num" id="st-falta" style="color:var(--red)">0</div><div class="stat-label">Falta</div></div>
-      <div class="stat-card"><div class="stat-num" id="st-vacaciones" style="color:var(--pan)">0</div><div class="stat-label">Vacaciones</div></div>
-      <div class="stat-card"><div class="stat-num" id="st-incapacidad" style="color:var(--amber)">0</div><div class="stat-label">Incapacidad</div></div>
-      <div class="stat-card"><div class="stat-num" id="st-total" style="color:var(--text)">0</div><div class="stat-label">Total personal</div></div>
-      <div class="stat-card"><div class="stat-num" id="st-encuestas" style="color:var(--pan2)">0</div><div class="stat-label">Encuestas totales</div></div>
+    <div class="ee-hero">
+      <div class="ee-hero-label">Encuestas efectivas — avance total</div>
+      <div class="ee-hero-num" id="ee-hero-num"></div>
+      <div class="ee-bar-track"><div class="ee-bar-fill" id="ee-hero-bar" style="width:0%;"></div></div>
+      <div class="ee-hero-foot">
+        <span id="ee-hero-pct"></span>
+        <span id="ee-hero-faltan"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <div class="lead-tiles">
+      <div class="tile"><div class="num" id="rh-participaron">0</div><div class="lab">Participaron hoy</div></div>
+      <div class="tile"><div class="num" id="st-total">0</div><div class="lab">Total de personal</div></div>
     </div>
 
-    <div class="card" id="card-top3">
-      <div class="card-title">🏆 Top 3 secciones — Encuestas/puertas</div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Personal de hoy</h2>
+        <span class="sub" id="personal-hoy-sub">0 en total</span>
+      </div>
+      <div class="seg-bar" id="seg-bar"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="panel" id="card-top3" hidden>
+      <div class="panel-head"><h2>🏆 Top 3 secciones</h2><span class="sub">Encuestas/puertas</span></div>
       <div id="top3-cont"></div>
     </div>
 
-    <div class="card" id="card-ee" hidden>
-      <div class="card-title">🎯 EE por sección — avance contra meta</div>
-      <div id="ee-cont"></div>
+    <div id="card-ee" hidden>
+      <div class="section-label">
+        <h2>Secciones — por número</h2>
+        <span class="sub" id="ee-count-sub"></span>
+      </div>
+      <div class="sec-list" id="ee-cont"></div>
     </div>
 
-    <div class="card" id="card-faltaron">
-      <div class="card-title">❌ Faltaron (<span id="faltaron-count">0</span>)</div>
+    <div class="foot-stats" style="margin-top:16px;">
+      <div class="foot-stat">
+        <span class="num" id="st-encuestas">0</span>
+        <span class="lab">Encuestas totales (app)</span>
+      </div>
+    </div>
+
+    <div class="panel" id="card-faltaron" hidden>
+      <div class="panel-head"><h2>❌ Faltaron</h2><span class="sub" id="faltaron-count">0</span></div>
       <div id="faltaron-cont"></div>
     </div>
 
-    <div class="card">
-      <div class="card-title">📍 Secciones</div>
-      <div id="secciones-cont"></div>
+    <div class="section-label" style="margin-top:12px;">
+      <h2>Secciones</h2>
+      <span class="sub">Toca cualquiera</span>
     </div>
+    <p class="helper-hint">👆 Toca "Ver detalles" en cualquier sección para ver su asistencia y sus fotos.</p>
+
+    <div class="sec-accordion" id="secciones-cont"></div>
 
   </div>
 
   <div class="footer">Documento generado por GEMACUU</div>
+</div>
 </div>
 
 <script>
@@ -213,6 +381,7 @@ let metaEEPorSeccion={};    // seccion -> meta_ee (solo secciones con meta_ee ca
 let eeCapturadoPorSeccion={}; // seccion -> SUM(cantidad_ee) de ee_capturas_seccion este evento
 let seccionesActivasEvento=new Set(); // secciones con fila en encuestas_seccion para este evento (activas, con o sin meta_ee)
 const seccionesExpandidas=new Set();
+let cargadoEn=null;
 
 function liderDe(seccionNum){
   return liderPorSeccion[seccionNum]||'— sin líder activo —';
@@ -239,6 +408,13 @@ function mostrarRevocado(){
 // la descarga real del archivo en vez de solo abrir la imagen en el navegador.
 function urlDescarga(cloudinaryUrl){
   return cloudinaryUrl.replace('/upload/','/upload/fl_attachment/');
+}
+
+function actualizarTiempoTranscurrido(){
+  if(!cargadoEn) return;
+  const min=Math.floor((Date.now()-cargadoEn)/60000);
+  document.getElementById('status-actualizado').textContent=
+    min<1?'Actualizado hace instantes':`Actualizado hace ${min} min`;
 }
 
 async function init(){
@@ -297,6 +473,10 @@ async function init(){
   document.getElementById('d-evento').textContent=evento.nombre||'—';
   document.getElementById('d-fecha').textContent=evento.fecha||'—';
 
+  cargadoEn=Date.now();
+  actualizarTiempoTranscurrido();
+  setInterval(actualizarTiempoTranscurrido,60000);
+
   renderResumenHoy();
   renderStats();
   renderTop3();
@@ -307,7 +487,7 @@ async function init(){
 
 // Participaron hoy = suma de ASISTENCIA en TODAS las secciones activas del evento (dueños +
 // líderes de apoyo, vía capturado_en_seccion), sin importar el tamaño del equipo asignado.
-// Secciones activas / EE total-meta total reflejan lo mismo que ya se usa en el bloque de EE.
+// Secciones activas / EE total-meta total alimentan el hero (mismos números de siempre).
 function renderResumenHoy(){
   let participaron=0;
   seccionesActivasEvento.forEach(sec=>{
@@ -317,24 +497,45 @@ function renderResumenHoy(){
   const metaKeys=Object.keys(metaEEPorSeccion);
   const eeTotal=Object.values(eeCapturadoPorSeccion).reduce((s,n)=>s+n,0);
   const metaTotal=metaKeys.reduce((s,k)=>s+(metaEEPorSeccion[k]||0),0);
+  const pct=metaTotal>0?Math.round((eeTotal/metaTotal)*1000)/10:0;
+  const faltan=metaTotal-eeTotal;
+
   document.getElementById('rh-participaron').textContent=participaron;
-  document.getElementById('rh-secciones-activas').textContent=metaKeys.length;
-  document.getElementById('rh-ee-total').textContent=`${eeTotal} / ${metaTotal}`;
+  document.getElementById('hero-secciones-activas').innerHTML=`${metaKeys.length} secciones<br>activas hoy`;
+  document.getElementById('ee-hero-num').innerHTML=`${eeTotal}<span class="meta">/ ${metaTotal}</span>`;
+  document.getElementById('ee-hero-bar').style.width=`${Math.min(pct,100)}%`;
+  document.getElementById('ee-hero-pct').textContent=`${pct}% de la meta`;
+  document.getElementById('ee-hero-faltan').textContent=faltan>0?`Faltan ${faltan}`:'✅ Meta cumplida';
 }
 
+// "Personal de hoy": una sola barra segmentada (Asistencia/Falta/Vacaciones/Incapacidad +
+// Sin registrar = total - suma de los otros cuatro), en vez de 5 tarjetas sueltas.
 function renderStats(){
   const conteo={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
   personalCache.forEach(p=>{
     const v=asisMap[p.id];
     if(v&&conteo.hasOwnProperty(v)) conteo[v]++;
   });
+  const total=personalCache.length;
+  const sinRegistrar=Math.max(0,total-(conteo.ASISTENCIA+conteo.FALTA+conteo.VACACIONES+conteo.INCAPACIDAD));
   const encuestasTotales=Object.values(encuestasPorSeccion).reduce((s,n)=>s+n,0);
-  document.getElementById('st-asistencia').textContent=conteo.ASISTENCIA;
-  document.getElementById('st-falta').textContent=conteo.FALTA;
-  document.getElementById('st-vacaciones').textContent=conteo.VACACIONES;
-  document.getElementById('st-incapacidad').textContent=conteo.INCAPACIDAD;
-  document.getElementById('st-total').textContent=personalCache.length;
+  const pctOf=n=>total>0?(n/total*100):0;
+
+  document.getElementById('st-total').textContent=total;
   document.getElementById('st-encuestas').textContent=encuestasTotales;
+  document.getElementById('personal-hoy-sub').textContent=`${total} en total`;
+  document.getElementById('seg-bar').innerHTML=`
+    <div class="seg asis" style="width:${pctOf(conteo.ASISTENCIA)}%"></div>
+    <div class="seg falta" style="width:${pctOf(conteo.FALTA)}%"></div>
+    <div class="seg vac" style="width:${pctOf(conteo.VACACIONES)}%"></div>
+    <div class="seg inc" style="width:${pctOf(conteo.INCAPACIDAD)}%"></div>
+    <div class="seg sinreg" style="width:${pctOf(sinRegistrar)}%"></div>`;
+  document.getElementById('legend').innerHTML=`
+    <div class="legend-item"><span class="dot asis"></span>Asistencia<span class="val">${conteo.ASISTENCIA}</span></div>
+    <div class="legend-item"><span class="dot sinreg"></span>Sin registrar<span class="val">${sinRegistrar}</span></div>
+    <div class="legend-item"><span class="dot falta"></span>Falta<span class="val">${conteo.FALTA}</span></div>
+    <div class="legend-item"><span class="dot vac"></span>Vacaciones<span class="val">${conteo.VACACIONES}</span></div>
+    <div class="legend-item"><span class="dot inc"></span>Incapacidad<span class="val">${conteo.INCAPACIDAD}</span></div>`;
 }
 
 // El Top 3 se basa en total_encuestas, que para eventos con el sistema de EE está bloqueado
@@ -367,30 +568,42 @@ function renderTop3(){
     </div>`).join('')}</div>`;
 }
 
-// Solo secciones con meta_ee capturada en este evento (las demás no aparecen).
+// Solo secciones con meta_ee capturada en este evento (las demás no aparecen), ordenadas
+// por NÚMERO DE SECCIÓN ascendente. Color del borde/barra según % de avance contra su meta:
+// rojo <60%, ámbar 60-99%, verde >=100% — mismo dato de siempre (suma vs meta_ee), solo con
+// un tercer nivel de color que antes no existía (antes era binario: faltan / cumplida).
 function renderEE(){
   const card=document.getElementById('card-ee');
-  const secciones=SECCIONES.filter(s=>typeof metaEEPorSeccion[s.num]==='number');
+  const secciones=SECCIONES
+    .filter(s=>typeof metaEEPorSeccion[s.num]==='number')
+    .sort((a,b)=>parseInt(a.num,10)-parseInt(b.num,10));
   if(!secciones.length){ card.hidden=true; return; }
   card.hidden=false;
+  document.getElementById('ee-count-sub').textContent=`${secciones.length} activas`;
   const cont=document.getElementById('ee-cont');
-  cont.innerHTML=`<div class="ee-grid">${secciones.map(s=>{
+  cont.innerHTML=secciones.map(s=>{
     const meta=metaEEPorSeccion[s.num];
     const suma=eeCapturadoPorSeccion[s.num]||0;
     const faltan=meta-suma;
-    const badge=faltan>0
-      ? `<span class="ee-badge ee-badge-faltan">Faltan ${faltan}</span>`
-      : `<span class="ee-badge ee-badge-cumplida">✅ META CUMPLIDA</span>`;
-    return `<div class="ee-row">
-      <div class="ee-row-top"><span class="ee-seccion">Sec. ${s.num}</span><span class="ee-fraccion">${suma} / ${meta}</span></div>
-      ${badge}
+    const pct=meta>0?(suma/meta*100):100;
+    const nivel=pct>=100?'green':(pct>=60?'amber':'red');
+    const estado=faltan>0
+      ? `<span class="sec-status ${nivel}">Falta${faltan===1?'':'n'} ${faltan}</span>`
+      : `<span class="sec-status ${nivel}">✓ Meta cumplida</span>`;
+    return `<div class="sec-row ${nivel==='red'?'':nivel}">
+      <div class="sec-top">
+        <span class="sec-name">Sección ${s.num}</span>
+        <span class="sec-frac">${suma} / ${meta}</span>
+      </div>
+      <div class="sec-bar-track"><div class="sec-bar-fill" style="width:${Math.min(pct,100)}%"></div></div>
+      ${estado}
     </div>`;
-  }).join('')}</div>`;
+  }).join('');
 }
 
 // La tarjeta "Faltaron" se oculta por completo en eventos que ya tienen meta_ee capturada
-// en al menos una sección (se reemplaza por el resumen de arriba y el bloque de EE). Los
-// reportes de eventos viejos, sin ese dato, la siguen mostrando como siempre.
+// en al menos una sección (se reemplaza por el hero y el bloque de EE). Los reportes de
+// eventos viejos, sin ese dato, la siguen mostrando como siempre.
 function renderFaltaron(){
   const card=document.getElementById('card-faltaron');
   if(Object.keys(metaEEPorSeccion).length>0){ card.hidden=true; return; }
@@ -409,6 +622,14 @@ function renderFaltaron(){
       <span class="faltaron-acum">${acum} falta${acum===1?'':'s'} total${acum===1?'':'es'}</span>
     </div>`;
   }).join('')}</div>`;
+}
+
+function etiquetaEstado(estado){
+  if(estado==='ASISTENCIA') return '<span class="attend-tag asis">✓</span>';
+  if(estado==='FALTA') return '<span class="attend-tag falta">Falta</span>';
+  if(estado==='VACACIONES') return '<span class="attend-tag vac">Vacaciones</span>';
+  if(estado==='INCAPACIDAD') return '<span class="attend-tag inc">Incapacidad</span>';
+  return '<span class="attend-tag sin">Sin capturar</span>';
 }
 
 function renderSecciones(){
@@ -435,19 +656,23 @@ function renderSecciones(){
   }
   cont.innerHTML=listaFiltrada.map(({s,nativos,mapaSeccion,participaron,encuestas,fotos})=>{
     const abierta=seccionesExpandidas.has(s.num);
-    return `<div class="seccion-item ${abierta?'open':''}" id="seccion-item-${s.num}">
-      <div class="seccion-hdr" onclick="toggleSeccion('${s.num}')">
-        <div class="seccion-hdr-num">Sec. ${s.num}</div>
-        <div class="seccion-hdr-lider">
-          <div class="nombre">${liderDe(s.num)}</div>
-          <div class="padrino">${s.padrino||''}</div>
+    return `<div class="detail-card ${abierta?'':'collapsed'}" id="seccion-item-${s.num}">
+      <div class="detail-head">
+        <div>
+          <div class="detail-sec">Sección ${s.num}</div>
+          <div class="detail-lider">${liderDe(s.num)}</div>
+          <div class="detail-padrino">Padrino: ${s.padrino||''}</div>
         </div>
-        <div class="seccion-hdr-metric"><div class="n">${participaron}</div><div class="l">Participaron</div></div>
-        <div class="seccion-hdr-metric"><div class="n">${encuestas}</div><div class="l">Encuestas</div></div>
-        <div class="seccion-hdr-metric"><div class="n">${fotos.length}</div><div class="l">Fotos</div></div>
-        <div class="seccion-arrow">▼</div>
       </div>
-      <div class="seccion-detail">${abierta?renderSeccionDetalle(s.num,nativos,mapaSeccion,fotos):''}</div>
+      <div class="detail-pills">
+        <div class="d-pill"><span class="num">${participaron}</span><span class="lab">Participaron</span></div>
+        <div class="d-pill"><span class="num">${encuestas}</span><span class="lab">Encuestas</span></div>
+        <div class="d-pill"><span class="num">${fotos.length}</span><span class="lab">Fotos</span></div>
+      </div>
+      <button class="detail-toggle-btn ${abierta?'expanded':''}" onclick="toggleSeccion('${s.num}')">
+        ${abierta?'Ocultar detalles':'Ver detalles'} <span class="chev">${abierta?'︿':'⌄'}</span>
+      </button>
+      ${abierta?renderSeccionDetalle(s.num,nativos,mapaSeccion,fotos):''}
     </div>`;
   }).join('');
 }
@@ -472,24 +697,60 @@ function renderSeccionDetalle(num,nativos,mapaSeccion,fotos){
   const filas=[...filasNativos,...filasExternas];
 
   const asisHtml=filas.length
-    ? `<div class="asis-grid">${filas.map(f=>{
-        const cls=f.estado?`e-${f.estado}`:'e-SIN';
-        const label=f.estado?ESTADO_LABEL[f.estado]:'Sin capturar';
-        const tag=f.esExterno?' <span style="color:var(--muted);font-size:10px">(otra sección)</span>':'';
-        return `<div class="asis-row"><span>${f.nombre}${tag}</span><span class="asis-estado ${cls}">${label}</span></div>`;
+    ? `<div class="attend-list">${filas.map(f=>{
+        const tag=f.esExterno?'<span class="otra">otra sección</span>':'';
+        return `<div class="attend-chip"><span>${f.nombre}</span>${tag}${etiquetaEstado(f.estado)}</div>`;
       }).join('')}</div>`
     : '<div class="vacio">Sin personal activo registrado en esta sección.</div>';
 
   const fotosHtml=fotos.length
-    ? `<div class="fotos-grid">${fotos.map((f,i)=>`
-        <div class="foto-item">
+    ? `<div class="photo-grid">${fotos.map((f,i)=>`
+        <div class="photo-thumb">
           <img src="${f.cloudinary_url}" loading="lazy" alt="Evidencia sección ${num} ${i+1}">
-          <a class="btn-descarga" href="${urlDescarga(f.cloudinary_url)}" download>⬇ Descargar</a>
+          <a class="photo-dl" href="${urlDescarga(f.cloudinary_url)}" download title="Descargar esta foto">⬇</a>
         </div>`).join('')}</div>`
     : '<div class="vacio">Sin evidencia fotográfica todavía</div>';
 
-  return `<div class="seccion-detail-title">👥 Asistencia</div>${asisHtml}
-    <div class="seccion-detail-title" style="margin-top:16px">📸 Fotos (${fotos.length})</div>${fotosHtml}`;
+  const botonDescargarTodas=fotos.length
+    ? `<button class="btn-download-all" onclick="descargarTodasFotos('${num}',this)">⬇ Descargar todas</button>`
+    : '';
+
+  return `
+    <div class="detail-block" style="margin-top:16px">
+      <div class="detail-block-head">Asistencia</div>
+      ${asisHtml}
+    </div>
+    <div class="detail-block">
+      <div class="detail-block-head-row">
+        <div class="detail-block-head">Fotos (${fotos.length})</div>
+        ${botonDescargarTodas}
+      </div>
+      ${fotosHtml}
+    </div>`;
+}
+
+// Dispara la descarga de cada foto de la sección una por una (con un pequeño intervalo
+// entre cada una, para que el navegador no las bloquee por venir "todas de golpe"). Reusa
+// exactamente el mismo link de descarga individual (urlDescarga) que ya usa cada miniatura.
+function descargarTodasFotos(num,btn){
+  const fotos=fotosPorSeccion[num]||[];
+  if(!fotos.length) return;
+  btn.disabled=true;
+  const textoOriginal=btn.textContent;
+  let i=0;
+  const disparar=()=>{
+    if(i>=fotos.length){ btn.disabled=false; btn.textContent=textoOriginal; return; }
+    const a=document.createElement('a');
+    a.href=urlDescarga(fotos[i].cloudinary_url);
+    a.download='';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    i++;
+    setTimeout(disparar,400);
+  };
+  btn.textContent='Descargando…';
+  disparar();
 }
 
 function toggleSeccion(num){
