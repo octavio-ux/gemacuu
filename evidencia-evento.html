@@ -212,6 +212,15 @@
   .btn-download-all{border:none;background:var(--brand);color:#fff;font-size:11.5px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;}
   .btn-download-all:disabled{opacity:.6;cursor:not-allowed;}
 
+  /* Resumen de evidencia de campo (tipos + calles) — punto 4 */
+  .detail-block-head-row .sub{font-size:12px;color:var(--muted);font-weight:500;}
+  .tabla-wrap{overflow-x:auto;}
+  .tabla-calles{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .tabla-calles th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1.5px solid var(--line);white-space:nowrap;}
+  .tabla-calles td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink);font-weight:600;white-space:nowrap;}
+  .tabla-calles td.num-col,.tabla-calles th.num-col{text-align:center;}
+  .tabla-calles tr:last-child td{border-bottom:none;}
+
   .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   .photo-thumb{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
   .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -330,6 +339,12 @@
       </div>
     </div>
 
+    <div class="panel" id="card-resumen-tipos" hidden>
+      <div class="panel-head"><h2>📋 Evidencia de campo</h2><span class="sub" id="resumen-tipos-sub">0 registros</span></div>
+      <div class="lead-tiles" id="tipos-tiles-global" style="margin-bottom:14px;"></div>
+      <div id="tabla-calles-global-cont"></div>
+    </div>
+
     <div class="panel" id="card-faltaron" hidden>
       <div class="panel-head"><h2>❌ Faltaron</h2><span class="sub" id="faltaron-count">0</span></div>
       <div id="faltaron-cont"></div>
@@ -381,6 +396,8 @@ const SECCIONES=[
 ];
 const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
 const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
+const TIPOS_EVIDENCIA=['Terreno','Negocio','Casa deshabitada','Otro'];
+const TIPO_ICONO={'Terreno':'🌳','Negocio':'🏪','Casa deshabitada':'🏚️','Otro':'📦'};
 
 let evento=null;
 let personalCache=[];
@@ -397,6 +414,7 @@ let liderPorSeccion={};     // seccion -> nombre de quien tiene es_lider_seccion
 let metaEEPorSeccion={};    // seccion -> meta_ee (solo secciones con meta_ee capturada este evento)
 let eeCapturadoPorSeccion={}; // seccion -> SUM(cantidad_ee) de ee_capturas_seccion este evento
 let seccionesActivasEvento=new Set(); // secciones con fila en encuestas_seccion para este evento (activas, con o sin meta_ee)
+let evidenciasCampoTodas=[]; // filas de evidencias_campo de TODAS las secciones de este evento (via foto_url)
 const seccionesExpandidas=new Set();
 let cargadoEn=null;
 
@@ -479,6 +497,14 @@ async function init(){
     (Array.isArray(eeCapturas)?eeCapturas:[]).forEach(c=>{
       eeCapturadoPorSeccion[c.seccion_destino]=(eeCapturadoPorSeccion[c.seccion_destino]||0)+(typeof c.cantidad_ee==='number'?c.cantidad_ee:0);
     });
+
+    // evidencias_campo no tiene evento_id — se relaciona con las fotos de este evento por
+    // foto_url. Se consulta después de tener el listado de fotos de arriba.
+    const urlsFotos=(Array.isArray(fotos)?fotos:[]).map(f=>f.cloudinary_url);
+    if(urlsFotos.length){
+      const evidencias=await sbGet('evidencias_campo',`?foto_url=in.(${urlsFotos.map(u=>encodeURIComponent(u)).join(',')})`);
+      evidenciasCampoTodas=Array.isArray(evidencias)?evidencias:[];
+    }
   }catch(e){
     console.error(e);
     mostrarError('No se pudo cargar la evidencia de este evento. Intenta de nuevo más tarde.');
@@ -499,6 +525,7 @@ async function init(){
   renderTop3();
   renderEE();
   renderFaltaron();
+  renderResumenTiposCallesGlobal();
   renderSecciones();
 }
 
@@ -649,6 +676,86 @@ function etiquetaEstado(estado){
   return '<span class="attend-tag sin">Sin capturar</span>';
 }
 
+// Escapa texto libre capturado por el usuario (calle, nota) antes de insertarlo como HTML —
+// nunca se debe confiar en ese texto tal cual.
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Agrupa filas de evidencias_campo: totales por tipo (para las 4 tarjetas) y desglose por
+// calle (para la tabla) — cada calle acumula cuántos registros tiene de cada tipo + su total.
+function resumenTiposCalles(filas){
+  const porTipo={};
+  TIPOS_EVIDENCIA.forEach(t=>porTipo[t]=0);
+  const porCalle={};
+  filas.forEach(f=>{
+    const tipo=TIPOS_EVIDENCIA.includes(f.tipo)?f.tipo:'Otro';
+    porTipo[tipo]=(porTipo[tipo]||0)+1;
+    const calle=(f.calle||'').trim()||'(sin calle registrada)';
+    if(!porCalle[calle]) porCalle[calle]={calle,total:0,'Terreno':0,'Negocio':0,'Casa deshabitada':0,'Otro':0};
+    porCalle[calle][tipo]=(porCalle[calle][tipo]||0)+1;
+    porCalle[calle].total++;
+  });
+  const calles=Object.values(porCalle).sort((a,b)=>b.total-a.total||a.calle.localeCompare(b.calle,'es'));
+  return {porTipo,calles,total:filas.length};
+}
+
+function tiposTilesHtml(porTipo){
+  return TIPOS_EVIDENCIA.map(t=>`
+    <div class="tile"><div class="num">${porTipo[t]||0}</div><div class="lab">${TIPO_ICONO[t]} ${escapeHtml(t)}</div></div>`).join('');
+}
+
+function tablaCallesHtml(calles){
+  const filasHtml=calles.map(c=>`<tr>
+      <td>${escapeHtml(c.calle)}</td>
+      <td class="num-col">${c['Terreno']||0}</td>
+      <td class="num-col">${c['Negocio']||0}</td>
+      <td class="num-col">${c['Casa deshabitada']||0}</td>
+      <td class="num-col">${c['Otro']||0}</td>
+      <td class="num-col"><strong>${c.total}</strong></td>
+    </tr>`).join('');
+  return `<div class="tabla-wrap"><table class="tabla-calles">
+      <thead><tr>
+        <th>Calle</th>
+        <th class="num-col">Terreno</th>
+        <th class="num-col">Negocio</th>
+        <th class="num-col">Casa desh.</th>
+        <th class="num-col">Otro</th>
+        <th class="num-col">Total</th>
+      </tr></thead>
+      <tbody>${filasHtml}</tbody>
+    </table></div>`;
+}
+
+// Resumen global del evento (todas las secciones) — tarjeta arriba, antes del acordeón
+// de secciones. Se oculta por completo si todavía no hay evidencia de campo capturada.
+function renderResumenTiposCallesGlobal(){
+  const panel=document.getElementById('card-resumen-tipos');
+  if(!evidenciasCampoTodas.length){ panel.hidden=true; return; }
+  panel.hidden=false;
+  const {porTipo,calles,total}=resumenTiposCalles(evidenciasCampoTodas);
+  document.getElementById('resumen-tipos-sub').textContent=`${total} registro${total===1?'':'s'}`;
+  document.getElementById('tipos-tiles-global').innerHTML=tiposTilesHtml(porTipo);
+  document.getElementById('tabla-calles-global-cont').innerHTML=tablaCallesHtml(calles);
+}
+
+// Mismo resumen, repetido dentro del detalle de cada sección (solo con las filas de esa
+// sección) — devuelve '' si esa sección no tiene evidencia de campo capturada todavía.
+function resumenTiposCallesSeccionHtml(num){
+  const filas=evidenciasCampoTodas.filter(e=>e.seccion===num);
+  if(!filas.length) return '';
+  const {porTipo,calles,total}=resumenTiposCalles(filas);
+  return `
+    <div class="detail-block">
+      <div class="detail-block-head-row">
+        <div class="detail-block-head">📋 Evidencia de campo</div>
+        <span class="sub">${total} registro${total===1?'':'s'}</span>
+      </div>
+      <div class="lead-tiles" style="margin-bottom:14px;">${tiposTilesHtml(porTipo)}</div>
+      ${tablaCallesHtml(calles)}
+    </div>`;
+}
+
 function renderSecciones(){
   const cont=document.getElementById('secciones-cont');
   const filas=SECCIONES.map(s=>{
@@ -735,18 +842,25 @@ function renderSeccionDetalle(num,nativos,mapaSeccion,fotos){
     ? `<button class="btn-download-all" onclick="descargarTodasFotos('${num}',this)">⬇ Descargar todas</button>`
     : '';
 
-  return `
-    <div class="detail-block" style="margin-top:16px">
+  // La asistencia se sigue guardando siempre en la base de datos — este bloque solo
+  // controla si se MUESTRA en el reporte público, según el interruptor del evento.
+  const bloques=[];
+  if(evento.ocultar_asistencia!==true){
+    bloques.push(`<div class="detail-block">
       <div class="detail-block-head">Asistencia</div>
       ${asisHtml}
-    </div>
-    <div class="detail-block">
+    </div>`);
+  }
+  bloques.push(`<div class="detail-block">
       <div class="detail-block-head-row">
         <div class="detail-block-head">Fotos (${fotos.length})</div>
         ${botonDescargarTodas}
       </div>
       ${fotosHtml}
-    </div>`;
+    </div>`);
+  bloques.push(resumenTiposCallesSeccionHtml(num));
+
+  return `<div style="margin-top:16px">${bloques.join('')}</div>`;
 }
 
 // Dispara la descarga de cada foto de la sección una por una (con un pequeño intervalo
