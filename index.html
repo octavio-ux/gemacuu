@@ -2906,6 +2906,21 @@ async function cargarConfigEEEvento(eventoId){
 // cualquier error de red/permiso al guardar, así que un fallo real (p.ej. el
 // checkbox "Bloquear total de encuestas" no llegaba a guardarse) no se notaba
 // hasta que un líder ya estaba en campo con el enlace.
+// Arma un mensaje explícito para el toast cuando guardarConfigEEEvento() no salió limpio —
+// distingue secciones que fallaron al guardar (meta/bloqueo) de secciones que no se pudieron
+// desactivar (por error real, o porque ya tienen total_encuestas capturado y se protegen a
+// propósito), en vez del genérico "falló Meta EE/bloqueo" que no decía nada de esto último.
+function mensajeConfigEEFallida(resConfig){
+  const partes=[];
+  if(resConfig.seccionesFallidas&&resConfig.seccionesFallidas.length){
+    partes.push(`falló Meta EE/bloqueo en sección(es) ${resConfig.seccionesFallidas.join(', ')}`);
+  }
+  if(resConfig.seccionesNoDesactivadas&&resConfig.seccionesNoDesactivadas.length){
+    partes.push(`no se pudo desactivar sección(es) ${resConfig.seccionesNoDesactivadas.join(', ')} (puede que ya tengan total de encuestas capturado este evento)`);
+  }
+  return partes.join(' y ');
+}
+
 async function guardarConfigEEEvento(eventoId,fechaEvento){
   const bloqueado=document.getElementById('ev-bloquear-encuestas').checked;
   const activas=seccionesActivasSeleccionadas();
@@ -2944,15 +2959,25 @@ async function guardarConfigEEEvento(eventoId,fechaEvento){
     }
   }
   // Secciones que estaban activas y el admin acaba de desmarcar: se borra su fila solo si
-  // nadie había capturado total_encuestas todavía (para no perder datos ya guardados por un líder).
+  // nadie había capturado total_encuestas todavía (para no perder datos ya guardados por un
+  // líder). "!totalPrevio" en vez de "===null||===undefined": las filas nuevas se crean con
+  // total_encuestas=0 (no null), y 0 no es null/undefined en JS — con la comparación estricta
+  // el DELETE nunca se intentaba para una sección recién creada, y la sección desmarcada volvía
+  // a aparecer activa al reabrir el modal, sin ningún error visible (el DELETE ni se mandaba).
+  // 0 se trata igual que null/undefined (nadie ha capturado nada real todavía); cualquier
+  // número mayor a 0 se sigue protegiendo igual que antes.
+  const seccionesNoDesactivadas=[];
   for(const sec of evActivasOriginales){
     if(activasSet.has(sec)) continue;
     const totalPrevio=evTotalEncuestasOriginal[sec];
-    if(totalPrevio===null||totalPrevio===undefined){
-      await sbDelete('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(sec)}`);
+    if(!totalPrevio){
+      const r=await sbDelete('encuestas_seccion',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(sec)}`);
+      if(!r.ok){ console.error('Error desactivando sección',sec,await r.text()); seccionesNoDesactivadas.push(sec); }
+    } else {
+      seccionesNoDesactivadas.push(sec); // protegida a propósito: ya tiene total_encuestas capturado
     }
   }
-  return {ok:seccionesFallidas.length===0,seccionesFallidas};
+  return {ok:seccionesFallidas.length===0&&seccionesNoDesactivadas.length===0,seccionesFallidas,seccionesNoDesactivadas};
 }
 
 // Suma días en UTC sobre los componentes Y-M-D del input date, para no
@@ -2976,7 +3001,7 @@ async function guardarEvento(){
     const payload={nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()};
     await sbPatch('eventos',`?id=eq.${editId}`,payload);
     const resConfig=await guardarConfigEEEvento(editId,fecha);
-    showToast(resConfig.ok?'✓ Evento actualizado':`⚠️ Evento actualizado, pero falló Meta EE/bloqueo en sección(es) ${resConfig.seccionesFallidas.join(', ')} — vuelve a intentar`);
+    showToast(resConfig.ok?'✓ Evento actualizado':`⚠️ Evento actualizado, pero ${mensajeConfigEEFallida(resConfig)} — vuelve a intentar`);
     closeModal('modal-evento');
     await cargarEventos();
     return;
@@ -2993,7 +3018,7 @@ async function guardarEvento(){
       return;
     }
     const resConfig=await guardarConfigEEEvento(nuevoId,fecha);
-    showToast(resConfig.ok?'✓ Evento creado':`⚠️ Evento creado, pero falló Meta EE/bloqueo en sección(es) ${resConfig.seccionesFallidas.join(', ')} — edítalo para reintentar`);
+    showToast(resConfig.ok?'✓ Evento creado':`⚠️ Evento creado, pero ${mensajeConfigEEFallida(resConfig)} — edítalo para reintentar`);
   } else {
     const fechaFinal=sumarDiasFecha(fecha,dias-1);
     if(!confirm(`¿Crear ${dias} eventos, uno por día del ${fecha} al ${fechaFinal}?`)) return;
