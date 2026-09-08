@@ -57,6 +57,20 @@
   .btn-download-all{border:none;background:var(--brand);color:#fff;font-size:11.5px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;}
   .btn-download-all:disabled{opacity:.6;cursor:not-allowed;}
 
+  /* Resumen de evidencia de campo (tipos + calles) — punto 4 */
+  .lead-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .tile{background:var(--paper);border-radius:12px;padding:14px 12px;}
+  .tile .num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;color:var(--ink);line-height:1;}
+  .tile .lab{font-size:11.5px;font-weight:600;color:var(--muted);margin-top:6px;}
+  .sub{font-size:12px;color:var(--muted);font-weight:500;}
+  .tabla-wrap{overflow-x:auto;}
+  .tabla-calles{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .tabla-calles th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1.5px solid var(--line);white-space:nowrap;}
+  .tabla-calles td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink);font-weight:600;white-space:nowrap;}
+  .tabla-calles td.num-col,.tabla-calles th.num-col{text-align:center;}
+  .tabla-calles tr:last-child td{border-bottom:none;}
+  @media (min-width:480px){ .lead-tiles{grid-template-columns:repeat(4,1fr);} }
+
   .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   .photo-thumb{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
   .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -106,6 +120,15 @@
       </div>
       <div id="fotos-cont"></div>
     </div>
+
+    <div class="panel" id="card-resumen-tipos" hidden>
+      <div class="panel-head-row">
+        <h2>📋 Evidencia de campo</h2>
+        <span class="sub" id="resumen-tipos-sub">0 registros</span>
+      </div>
+      <div class="lead-tiles" id="tipos-tiles" style="margin-bottom:14px;"></div>
+      <div id="tabla-calles-cont"></div>
+    </div>
   </div>
 
   <div class="footer">Documento generado por GEMACUU</div>
@@ -115,6 +138,9 @@
 <script>
 const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+
+const TIPOS_EVIDENCIA=['Terreno','Negocio','Casa deshabitada','Otro'];
+const TIPO_ICONO={'Terreno':'🌳','Negocio':'🏪','Casa deshabitada':'🏚️','Otro':'📦'};
 
 let fotosSeccion=[];
 
@@ -142,7 +168,7 @@ async function init(){
   const seccion=params.get('seccion');
   if(!eventoId||!seccion){ mostrarError('Este enlace no incluye evento o sección válidos.'); return; }
 
-  let evento,fotos,asisRows,liderRows;
+  let evento,fotos,asisRows,liderRows,evidenciasCampo=[];
   try{
     const eventoRows=await sbGet('eventos',`?id=eq.${encodeURIComponent(eventoId)}`);
     evento=Array.isArray(eventoRows)?eventoRows[0]:null;
@@ -166,6 +192,14 @@ async function init(){
     // Solo las fotos de ESTA sección — nunca las de otras secciones del mismo evento.
     const fotosData=await sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&seccion=eq.${encodeURIComponent(seccion)}&order=creado_en.asc`);
     fotos=Array.isArray(fotosData)?fotosData:[];
+
+    // evidencias_campo no tiene evento_id — se relaciona con las fotos de esta sección
+    // (ya filtradas arriba por evento+sección) por foto_url.
+    const urlsFotos=fotos.map(f=>f.cloudinary_url);
+    if(urlsFotos.length){
+      const evidenciasData=await sbGet('evidencias_campo',`?foto_url=in.(${urlsFotos.map(u=>encodeURIComponent(u)).join(',')})`);
+      evidenciasCampo=Array.isArray(evidenciasData)?evidenciasData:[];
+    }
   }catch(e){
     console.error(e);
     mostrarError('No se pudo cargar la evidencia de esta sección. Intenta de nuevo más tarde.');
@@ -203,6 +237,61 @@ async function init(){
           <a class="photo-dl" href="${urlDescarga(f.cloudinary_url)}" download title="Descargar esta foto">⬇</a>
         </div>`).join('')}</div>`
     : '<div style="text-align:center;color:var(--muted);font-size:13px;padding:1rem 0">Sin evidencia fotográfica todavía.</div>';
+
+  renderResumenTipos(evidenciasCampo);
+}
+
+// Escapa texto libre capturado por el usuario (calle, nota) antes de insertarlo como HTML —
+// nunca se debe confiar en ese texto tal cual.
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Agrupa filas de evidencias_campo: totales por tipo (para las 4 tarjetas) y desglose por
+// calle (para la tabla) — cada calle acumula cuántos registros tiene de cada tipo + su total.
+function resumenTiposCalles(filas){
+  const porTipo={};
+  TIPOS_EVIDENCIA.forEach(t=>porTipo[t]=0);
+  const porCalle={};
+  filas.forEach(f=>{
+    const tipo=TIPOS_EVIDENCIA.includes(f.tipo)?f.tipo:'Otro';
+    porTipo[tipo]=(porTipo[tipo]||0)+1;
+    const calle=(f.calle||'').trim()||'(sin calle registrada)';
+    if(!porCalle[calle]) porCalle[calle]={calle,total:0,'Terreno':0,'Negocio':0,'Casa deshabitada':0,'Otro':0};
+    porCalle[calle][tipo]=(porCalle[calle][tipo]||0)+1;
+    porCalle[calle].total++;
+  });
+  const calles=Object.values(porCalle).sort((a,b)=>b.total-a.total||a.calle.localeCompare(b.calle,'es'));
+  return {porTipo,calles,total:filas.length};
+}
+
+function renderResumenTipos(filas){
+  const panel=document.getElementById('card-resumen-tipos');
+  if(!filas.length){ panel.hidden=true; return; }
+  panel.hidden=false;
+  const {porTipo,calles,total}=resumenTiposCalles(filas);
+  document.getElementById('resumen-tipos-sub').textContent=`${total} registro${total===1?'':'s'}`;
+  document.getElementById('tipos-tiles').innerHTML=TIPOS_EVIDENCIA.map(t=>`
+    <div class="tile"><div class="num">${porTipo[t]||0}</div><div class="lab">${TIPO_ICONO[t]} ${escapeHtml(t)}</div></div>`).join('');
+  const filasHtml=calles.map(c=>`<tr>
+      <td>${escapeHtml(c.calle)}</td>
+      <td class="num-col">${c['Terreno']||0}</td>
+      <td class="num-col">${c['Negocio']||0}</td>
+      <td class="num-col">${c['Casa deshabitada']||0}</td>
+      <td class="num-col">${c['Otro']||0}</td>
+      <td class="num-col"><strong>${c.total}</strong></td>
+    </tr>`).join('');
+  document.getElementById('tabla-calles-cont').innerHTML=`<div class="tabla-wrap"><table class="tabla-calles">
+      <thead><tr>
+        <th>Calle</th>
+        <th class="num-col">Terreno</th>
+        <th class="num-col">Negocio</th>
+        <th class="num-col">Casa desh.</th>
+        <th class="num-col">Otro</th>
+        <th class="num-col">Total</th>
+      </tr></thead>
+      <tbody>${filasHtml}</tbody>
+    </table></div>`;
 }
 
 // Dispara la descarga de cada foto una por una (con un pequeño intervalo entre cada una, para

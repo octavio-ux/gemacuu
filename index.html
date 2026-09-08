@@ -1109,6 +1109,11 @@ tr:hover td{background:#f8faff}
       <input type="text" id="ev-lugar" placeholder="Ej. Sala 3 Oficinas Centrales...">
     </div>
 
+    <div class="fg fg-bloqueo-encuestas">
+      <input type="checkbox" id="ev-ocultar-asistencia">
+      <label for="ev-ocultar-asistencia">🙈 Ocultar bloque de asistencia en el reporte público de este evento</label>
+    </div>
+
     <div class="fg">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
         <label style="margin:0">Secciones activas este evento · Meta EE (opcional)</label>
@@ -2804,6 +2809,7 @@ function abrirFormEvento(){
   document.getElementById('ev-dias-wrap').style.display='';
   document.getElementById('ev-padrino').value='';
   document.getElementById('ev-lugar').value='';
+  document.getElementById('ev-ocultar-asistencia').checked=false;
   document.getElementById('modal-ev-titulo').textContent='📅 Nuevo Evento';
   // Evento nuevo: todas las secciones del catálogo activas por defecto.
   evActivasOriginales=new Set();
@@ -2822,6 +2828,7 @@ async function editarEvento(){
   document.getElementById('ev-dias-wrap').style.display='none'; // varios días solo aplica al crear, no al editar
   document.getElementById('ev-padrino').value=ev.padrino||'';
   document.getElementById('ev-lugar').value=ev.lugar||'';
+  document.getElementById('ev-ocultar-asistencia').checked=!!ev.ocultar_asistencia;
   document.getElementById('modal-ev-titulo').textContent='✏️ Editar Evento';
   document.getElementById('modal-evento').style.display='flex';
   await cargarConfigEEEvento(ev.id);
@@ -2995,10 +3002,11 @@ async function guardarEvento(){
   if(!nombre||!fecha){showToast('⚠️ Nombre y fecha son obligatorios');return;}
   const padrino=document.getElementById('ev-padrino').value;
   const lugar=document.getElementById('ev-lugar').value.trim();
+  const ocultarAsistencia=document.getElementById('ev-ocultar-asistencia').checked;
   const editId=document.getElementById('ev-edit-id').value;
 
   if(editId){
-    const payload={nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()};
+    const payload={nombre,fecha,padrino,lugar,ocultar_asistencia:ocultarAsistencia,creado_por:currentUser,created_at:new Date().toISOString()};
     await sbPatch('eventos',`?id=eq.${editId}`,payload);
     const resConfig=await guardarConfigEEEvento(editId,fecha);
     showToast(resConfig.ok?'✓ Evento actualizado':`⚠️ Evento actualizado, pero ${mensajeConfigEEFallida(resConfig)} — vuelve a intentar`);
@@ -3011,7 +3019,7 @@ async function guardarEvento(){
   const dias=Number.isFinite(diasRaw)&&diasRaw>1?diasRaw:1;
 
   if(dias===1){
-    const inserted=await sbPostRepresentation('eventos',{nombre,fecha,padrino,lugar,creado_por:currentUser,created_at:new Date().toISOString()});
+    const inserted=await sbPostRepresentation('eventos',{nombre,fecha,padrino,lugar,ocultar_asistencia:ocultarAsistencia,creado_por:currentUser,created_at:new Date().toISOString()});
     const nuevoId=Array.isArray(inserted)&&inserted[0]?inserted[0].id:null;
     if(!nuevoId){
       showToast('⚠️ No se pudo crear el evento — intenta de nuevo');
@@ -3027,6 +3035,7 @@ async function guardarEvento(){
       nombre:`${nombre} Día ${i+1}`,
       fecha:sumarDiasFecha(fecha,i),
       padrino,lugar,
+      ocultar_asistencia:ocultarAsistencia,
       creado_por:currentUser,
       created_at:creadoEn
     }));
