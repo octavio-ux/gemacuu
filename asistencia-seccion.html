@@ -107,6 +107,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .foto-card .fg{margin-bottom:10px}
 .foto-card .fg:last-of-type{margin-bottom:0}
 .foto-card .fg-ayuda{font-size:11px;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:normal;font-weight:500}
+.fg-gps{margin-bottom:10px}
+.gps-estado{font-size:12px;margin-top:6px;line-height:1.5}
+.gps-estado .gps-ok{color:#2d6a4f;font-weight:600}
+.gps-estado .gps-error{color:var(--red);font-weight:600}
+.gps-estado .gps-info{color:var(--muted);font-weight:600}
+.foto-card input.autocompletado{background:#eef2ff;border-color:var(--pan)}
 .tipo-opciones{display:flex;flex-direction:column;gap:8px;margin-top:2px}
 .tipo-opcion{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text)}
 .tipo-opcion input{width:16px;height:16px;flex-shrink:0}
@@ -999,11 +1005,27 @@ function renderFotosCards(){
   return fotosSeccion.map((f,i)=>renderFotoCard(f,i)).join('');
 }
 
+// Texto inicial del estado de GPS al pintar una tarjeta cuyo detalle ya se había guardado
+// antes (con coordenadas) — para que el líder vea que ya hay ubicación sin tener que
+// volver a capturarla, aunque siempre puede hacerlo de nuevo si quiere corregirla.
+function textoGpsPrevio(ev){
+  if(!ev||typeof ev.latitud!=='number'||typeof ev.longitud!=='number') return '';
+  const prec=typeof ev.precision_metros==='number'?` · precisión: ${Math.round(ev.precision_metros)} m`:'';
+  return `<span class="gps-ok">✅ Ubicación guardada: ${ev.latitud.toFixed(6)}, ${ev.longitud.toFixed(6)}${prec}</span>`;
+}
+
 function renderFotoCard(f,i){
   const ev=evidenciasCampoPorFoto[f.cloudinary_url]||null;
   const domId=`foto-${i}`;
   return `<div class="foto-card" data-foto-url="${escapeAttr(f.cloudinary_url)}">
     <div class="foto-card-img-wrap"><img class="foto-card-img" src="${f.cloudinary_url}" loading="lazy"></div>
+    <div class="fg-gps">
+      <button type="button" class="btn btn-secondary w-full" id="${domId}-gps-btn" onclick="capturarUbicacionFoto('${domId}')">📍 Capturar ubicación GPS</button>
+      <div class="gps-estado" id="${domId}-gps-estado">${textoGpsPrevio(ev)}</div>
+    </div>
+    <input type="hidden" id="${domId}-lat" value="${ev&&typeof ev.latitud==='number'?ev.latitud:''}">
+    <input type="hidden" id="${domId}-lon" value="${ev&&typeof ev.longitud==='number'?ev.longitud:''}">
+    <input type="hidden" id="${domId}-precision" value="${ev&&typeof ev.precision_metros==='number'?ev.precision_metros:''}">
     <div class="fg">
       <label>Calle</label>
       <input type="text" id="${domId}-calle" placeholder="Ej. Calle Comanche" value="${escapeAttr(ev?.calle||'')}">
@@ -1043,12 +1065,89 @@ function onCambioTipoFoto(domId){
   otroInp.classList.toggle('hidden',!(seleccionado&&seleccionado.value==='Otro'));
 }
 
+// Captura GPS (alta precisión) + geocodificación inversa gratuita (OpenStreetMap/Nominatim,
+// sin API key) para autocompletar "Calle" — modo híbrido: si Nominatim encuentra un nombre
+// de calle lo llena y lo marca visualmente, pero el campo sigue editable en todo momento
+// para que el trabajador lo corrija si sale mal o incompleto. Si falla el GPS o la consulta
+// al mapa, se avisa con claridad pero nunca se bloquea el formulario.
+function capturarUbicacionFoto(domId){
+  const estadoEl=document.getElementById(`${domId}-gps-estado`);
+  const btn=document.getElementById(`${domId}-gps-btn`);
+  const campoCalle=document.getElementById(`${domId}-calle`);
+
+  if(!navigator.geolocation){
+    estadoEl.innerHTML='<span class="gps-error">⚠️ Este navegador no soporta GPS — escribe la calle manualmente.</span>';
+    return;
+  }
+
+  btn.disabled=true;
+  campoCalle.classList.remove('autocompletado');
+  estadoEl.innerHTML='<span class="gps-info">⏳ Obteniendo ubicación… espera unos segundos.</span>';
+
+  navigator.geolocation.getCurrentPosition(
+    async function(posicion){
+      const lat=posicion.coords.latitude;
+      const lon=posicion.coords.longitude;
+      const precision=posicion.coords.accuracy;
+
+      document.getElementById(`${domId}-lat`).value=lat;
+      document.getElementById(`${domId}-lon`).value=lon;
+      document.getElementById(`${domId}-precision`).value=precision;
+
+      const lineaCoords=`<span class="gps-ok">✅ Ubicación capturada (${lat.toFixed(6)}, ${lon.toFixed(6)} · precisión: ${Math.round(precision)} m)</span>`;
+      estadoEl.innerHTML=`${lineaCoords}<br><span class="gps-info">Buscando nombre de la calle…</span>`;
+
+      try{
+        const respuesta=await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+          {headers:{'Accept-Language':'es'}}
+        );
+        const datos=await respuesta.json();
+        const direccion=datos.address||{};
+        // Nominatim puede devolver el nombre de la calle en distintos campos según la zona.
+        const nombreCalle=direccion.road||direccion.pedestrian||direccion.residential||direccion.neighbourhood||'';
+
+        if(nombreCalle){
+          campoCalle.value=nombreCalle;
+          campoCalle.classList.add('autocompletado');
+          estadoEl.innerHTML=`${lineaCoords}<br><span class="gps-ok">✅ Calle autocompletada: "${escapeAttr(nombreCalle)}". Puedes editarla si no es correcta.</span>`;
+        } else {
+          estadoEl.innerHTML=`${lineaCoords}<br><span class="gps-error">⚠️ No se encontró nombre de calle en esta zona — escríbela manualmente.</span>`;
+        }
+      }catch(e){
+        console.error('Error consultando Nominatim',e);
+        estadoEl.innerHTML=`${lineaCoords}<br><span class="gps-error">⚠️ No se pudo consultar el mapa (revisa tu conexión) — escribe la calle manualmente.</span>`;
+      }
+
+      btn.disabled=false;
+      btn.textContent='📍 Volver a capturar ubicación';
+    },
+    function(error){
+      let mensaje='No se pudo obtener la ubicación. ';
+      if(error.code===error.PERMISSION_DENIED) mensaje+='Negaste el permiso de ubicación — actívalo en la configuración del navegador e intenta de nuevo.';
+      else if(error.code===error.POSITION_UNAVAILABLE) mensaje+='La ubicación no está disponible (revisa que el GPS esté activado).';
+      else if(error.code===error.TIMEOUT) mensaje+='Se agotó el tiempo de espera — intenta de nuevo en un lugar abierto.';
+      else mensaje+='Intenta de nuevo.';
+      estadoEl.innerHTML=`<span class="gps-error">⚠️ ${mensaje}</span>`;
+      btn.disabled=false;
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+
 async function guardarDetalleFoto(domId,fotoUrl){
   const seleccionado=document.querySelector(`input[name="${domId}-tipo"]:checked`);
   if(!seleccionado){ showToast('⚠️ Elige una opción (Terreno, Negocio, Casa deshabitada u Otro)'); return; }
   const tipo=seleccionado.value;
   const tipoOtro=document.getElementById(`${domId}-tipo-otro`).value.trim();
   if(tipo==='Otro'&&!tipoOtro){ showToast('⚠️ Especifica el tipo — el campo no puede quedar vacío'); return; }
+
+  // GPS es opcional: si no se capturó, se guarda igual (advertencia, no bloqueo) para no
+  // trabar el flujo si el GPS falla en campo — solo se avisa en el mensaje de confirmación.
+  const latRaw=document.getElementById(`${domId}-lat`).value;
+  const lonRaw=document.getElementById(`${domId}-lon`).value;
+  const precRaw=document.getElementById(`${domId}-precision`).value;
+  const sinGps=!latRaw||!lonRaw;
 
   const btn=document.getElementById(`${domId}-guardar-btn`);
   const textoOriginal=btn?btn.textContent:'';
@@ -1062,7 +1161,10 @@ async function guardarDetalleFoto(domId,fotoUrl){
     tipo_otro:tipo==='Otro'?tipoOtro:null,
     nota:document.getElementById(`${domId}-nota`).value.trim()||null,
     foto_url:fotoUrl,
-    responsable:registradoPor
+    responsable:registradoPor,
+    latitud:sinGps?null:Number(latRaw),
+    longitud:sinGps?null:Number(lonRaw),
+    precision_metros:precRaw!==''?Number(precRaw):null
   };
   const r=await sbPost('evidencias_campo?on_conflict=foto_url',payload);
   if(btn){ btn.disabled=false; btn.textContent=textoOriginal; }
@@ -1074,7 +1176,7 @@ async function guardarDetalleFoto(domId,fotoUrl){
     marcaGuardado.classList.remove('hidden');
     setTimeout(()=>marcaGuardado.classList.add('hidden'),2000);
   }
-  showToast('✓ Detalle guardado');
+  showToast(sinGps?'✓ Detalle guardado (sin ubicación GPS — captúrala si puedes)':'✓ Detalle guardado');
 }
 
 // POST con reintentos (2 intentos extra con espera creciente) — misma lógica que
