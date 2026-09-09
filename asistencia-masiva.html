@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Registro de Asistencia</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pan:#003399;--red:#cc0000;--green:#2d6a4f;
+  --bg:#f0f4ff;--white:#fff;--text:#1a1a2e;--muted:#6b7280;
+  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --radius:14px;--radius-sm:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px}
+.hidden{display:none!important}
+.wrap{max-width:460px;margin:0 auto}
+.card-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:22px 18px;box-shadow:var(--shadow);margin-top:24px;text-align:center}
+.card-wrap.izq{text-align:left}
+h1{font-size:1.05rem;font-weight:800;color:var(--pan);margin-bottom:14px;text-align:center}
+.ico{font-size:44px;margin-bottom:12px}
+p{font-size:14px;color:var(--muted);line-height:1.5}
+.fg{margin-bottom:16px;text-align:left}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.fg input[type="text"]{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;color:var(--text);outline:none;background:#fff}
+.fg input:focus{border-color:var(--pan)}
+.btn{width:100%;padding:14px;border-radius:var(--radius-sm);font-size:1rem;font-weight:700;cursor:pointer;border:none;transition:opacity .15s;margin-top:6px}
+.btn-primary{background:var(--pan);color:#fff}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-secondary{background:#eef2ff;color:var(--pan);border:1px solid var(--border);width:auto;flex:1;font-size:13px;padding:12px 10px}
+.foto-btns{display:flex;gap:8px;margin-top:8px}
+.error-msg{color:var(--red);font-size:12px;font-weight:700;margin-top:6px}
+.status-msg{font-size:13px;color:var(--muted);margin-top:10px;text-align:center}
+.empleado-confirm{display:flex;align-items:center;gap:10px;background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px;color:var(--green);font-weight:600}
+.empleado-foto{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+.foto-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--bg);border:1px solid var(--border)}
+.foto-thumb img{width:100%;height:100%;object-fit:cover}
+.foto-quitar{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;cursor:pointer;line-height:1}
+.marca-agua{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;opacity:.32}
+.marca-agua-inner{position:absolute;top:-60%;left:-60%;width:220%;height:220%;display:flex;flex-wrap:wrap;align-content:flex-start;transform:rotate(-30deg)}
+.marca-agua-item{font-size:20px;font-weight:800;color:#000;white-space:nowrap;padding:16px 22px}
+.resultados-total{font-size:13px;color:var(--muted);margin-bottom:14px;text-align:center}
+.resultado-foto{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer}
+#resultados-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loading" class="card-wrap">
+    <div class="ico">⏳</div>
+    <p>Cargando…</p>
+  </div>
+
+  <div id="error-box" class="card-wrap hidden">
+    <div class="ico">⚠️</div>
+    <p id="error-msg" style="font-weight:700;color:var(--red)"></p>
+  </div>
+
+  <!-- Pantalla 3: registro cerrado -->
+  <div id="cerrado-box" class="card-wrap hidden">
+    <div class="ico">🔒</div>
+    <p style="font-weight:700;color:var(--text)">Registro cerrado. El periodo para registrar asistencia a este evento ya terminó.</p>
+  </div>
+
+  <!-- Pantalla 0: candado -->
+  <div id="candado-box" class="card-wrap hidden">
+    <h1 id="candado-evento-nombre"></h1>
+    <div class="ico">📍</div>
+    <p>Toca para validar tu acceso.</p>
+    <button class="btn btn-primary" id="btn-validar" onclick="validarAcceso()">Validar acceso</button>
+    <div class="status-msg" id="candado-status"></div>
+  </div>
+
+  <!-- Bloqueo total (ubicación negada, fallida, o fuera de radio) -->
+  <div id="bloqueado-box" class="card-wrap hidden">
+    <div class="ico">🚫</div>
+    <p style="font-weight:700;color:var(--text)">No se pudo validar tu ubicación. Verifica que tu GPS esté activado y que estés dentro del lugar del evento, y vuelve a intentar.</p>
+    <button class="btn btn-primary" onclick="reintentarValidacion()">Reintentar</button>
+  </div>
+
+  <!-- Pantalla 1: formulario (con marca de agua ya activa) -->
+  <div id="formulario-box" class="card-wrap izq hidden">
+    <h1 id="form-evento-nombre"></h1>
+
+    <div class="fg hidden" id="fg-empleado">
+      <label>Número de empleado</label>
+      <input type="text" id="inp-numero-empleado" inputmode="numeric" placeholder="Ej. 10234">
+      <div class="empleado-confirm hidden" id="empleado-confirm"></div>
+      <div class="error-msg hidden" id="empleado-error"></div>
+    </div>
+
+    <div class="fg hidden" id="fg-nombre-libre">
+      <label>Nombre completo</label>
+      <input type="text" id="inp-nombre-libre" placeholder="Tu nombre completo">
+    </div>
+
+    <div class="fg">
+      <label>Fotos del evento (hasta 3)</label>
+      <div class="foto-grid" id="foto-grid"></div>
+      <div class="foto-btns">
+        <button type="button" class="btn btn-secondary" id="btn-selfie" onclick="document.getElementById('inp-foto-selfie').click()">🤳 Tomar selfie</button>
+        <button type="button" class="btn btn-secondary" id="btn-galeria" onclick="document.getElementById('inp-foto-galeria').click()">🖼️ Elegir de galería</button>
+      </div>
+      <input type="file" id="inp-foto-selfie" accept="image/*" capture="user" class="hidden" onchange="agregarFotos(this)">
+      <input type="file" id="inp-foto-galeria" accept="image/*" multiple class="hidden" onchange="agregarFotos(this)">
+    </div>
+
+    <button class="btn btn-primary" id="btn-confirmar" disabled onclick="confirmarAsistencia()">Confirmar asistencia</button>
+    <div class="status-msg" id="form-status"></div>
+  </div>
+
+  <!-- Pantalla 2: confirmación -->
+  <div id="confirmacion-box" class="card-wrap hidden">
+    <div class="ico">✅</div>
+    <p style="font-weight:700;color:var(--text)">Tu registro y tus fotos fueron recibidos. Gracias por participar.</p>
+  </div>
+
+  <!-- Vista de resultados de solo lectura (link ?r=) -->
+  <div id="resultados-box" class="card-wrap izq hidden">
+    <h1 id="resultados-evento-nombre"></h1>
+    <div class="resultados-total" id="resultados-total"></div>
+    <div id="resultados-grid"></div>
+  </div>
+
+</div>
+
+<div class="marca-agua hidden" id="marca-agua"><div class="marca-agua-inner" id="marca-agua-inner"></div></div>
+
+<script>
+const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+const CLOUD='da7m6y3kk';
+const PRESET='barrido_electoral';
+
+const params=new URLSearchParams(location.search);
+const slugRegistro=params.get('slug');
+const slugResultados=params.get('r');
+
+let evento=null;
+let usaBdPersonal=false;
+let empleadoValido=false;
+let numeroEmpleadoActual=null;
+let nombreCompletoActual=null;
+let fotosSeleccionadas=[];
+let codigoActual=null;
+let posActual=null; // {lat,lng} capturada al validar el acceso (pantalla 0)
+
+async function sbGet(table,qs=''){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}${qs}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+  return r.json();
+}
+async function sbPost(table,body){
+  return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+}
+
+function ocultar(id){document.getElementById(id).classList.add('hidden');}
+function mostrar(id){document.getElementById(id).classList.remove('hidden');}
+
+function mostrarError(msg){
+  ocultar('loading');
+  document.getElementById('error-msg').textContent=msg;
+  mostrar('error-box');
+}
+
+// ── ARRANQUE ──
+(async function init(){
+  if(slugResultados){ await initResultados(); return; }
+  if(!slugRegistro){ mostrarError('Link inválido.'); return; }
+  let rows;
+  try{ rows=await sbGet('eventos_asistencia_masiva',`?slug=eq.${encodeURIComponent(slugRegistro)}&limit=1`); }
+  catch(e){ mostrarError('No se pudo cargar el evento — verifica tu conexión.'); return; }
+  if(!Array.isArray(rows)||!rows[0]){ mostrarError('Link inválido o evento no encontrado.'); return; }
+  evento=rows[0];
+  usaBdPersonal=!!evento.usa_bd_personal;
+  ocultar('loading');
+
+  if(new Date(evento.fecha_expiracion)<new Date()){ mostrar('cerrado-box'); return; }
+
+  // Un registro por navegador/dispositivo para este evento — fricción básica contra
+  // reenvíos accidentales, no es seguridad real (no hay servidor propio para rate limit por IP).
+  if(localStorage.getItem('gemacuu_masivo_ok_'+evento.slug)==='1'){
+    mostrar('confirmacion-box');
+    return;
+  }
+
+  document.getElementById('candado-evento-nombre').textContent=evento.nombre;
+  mostrar('candado-box');
+})();
+
+// ── GEOCERCA ──
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371e3;
+  const p1=lat1*Math.PI/180,p2=lat2*Math.PI/180;
+  const dp=(lat2-lat1)*Math.PI/180,dl=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function validarAcceso(){
+  const btn=document.getElementById('btn-validar');
+  btn.disabled=true;
+  document.getElementById('candado-status').textContent='📍 Validando tu ubicación…';
+  if(!navigator.geolocation){ mostrarBloqueado(); return; }
+  navigator.geolocation.getCurrentPosition(
+    async (pos)=>{
+      const dist=haversine(pos.coords.latitude,pos.coords.longitude,evento.lat,evento.lng);
+      if(dist>evento.radio_metros){ mostrarBloqueado(); return; }
+      posActual={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      await prepararFormulario();
+    },
+    ()=>{ mostrarBloqueado(); },
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
+function mostrarBloqueado(){
+  ocultar('candado-box');
+  mostrar('bloqueado-box');
+}
+function reintentarValidacion(){
+  ocultar('bloqueado-box');
+  document.getElementById('btn-validar').disabled=false;
+  document.getElementById('candado-status').textContent='';
+  mostrar('candado-box');
+}
+
+// ── CÓDIGO ÚNICO + MARCA DE AGUA ──
+const COD_LETRAS='ABCDEFGHJKLMNPQRSTUVWXYZ'; // sin O/I
+const COD_DIGITOS='23456789'; // sin 0/1
+const COD_ALFANUM=COD_LETRAS+COD_DIGITOS;
+function generarCandidatoCodigo(){
+  const l=()=>COD_LETRAS[Math.floor(Math.random()*COD_LETRAS.length)];
+  const d=()=>COD_DIGITOS[Math.floor(Math.random()*COD_DIGITOS.length)];
+  const a=()=>COD_ALFANUM[Math.floor(Math.random()*COD_ALFANUM.length)];
+  let suf=''; for(let i=0;i<5;i++) suf+=a();
+  return `${l()}${l()}${d()}-${suf}`;
+}
+async function generarCodigoUnico(){
+  for(let i=0;i<20;i++){
+    const cand=generarCandidatoCodigo();
+    const existe=await sbGet('registros_asistencia_masiva',`?evento_id=eq.${evento.id}&codigo=eq.${encodeURIComponent(cand)}&select=id&limit=1`);
+    if(Array.isArray(existe)&&existe.length===0) return cand;
+  }
+  throw new Error('No se pudo generar un código único — vuelve a intentar');
+}
+function pintarMarcaDeAgua(codigo){
+  const inner=document.getElementById('marca-agua-inner');
+  inner.innerHTML='';
+  const frag=document.createDocumentFragment();
+  for(let i=0;i<140;i++){
+    const span=document.createElement('span');
+    span.className='marca-agua-item';
+    span.textContent=codigo; // texto plano, nunca HTML
+    frag.appendChild(span);
+  }
+  inner.appendChild(frag);
+  mostrar('marca-agua');
+}
+
+async function prepararFormulario(){
+  ocultar('candado-box');
+  try{
+    codigoActual=await generarCodigoUnico();
+  }catch(e){
+    document.getElementById('candado-status').textContent='⚠️ '+e.message;
+    mostrar('candado-box');
+    document.getElementById('btn-validar').disabled=false;
+    return;
+  }
+  pintarMarcaDeAgua(codigoActual);
+  document.getElementById('form-evento-nombre').textContent=evento.nombre;
+  if(usaBdPersonal) mostrar('fg-empleado'); else mostrar('fg-nombre-libre');
+  mostrar('formulario-box');
+}
+
+// ── CAMPO PRINCIPAL (empleado o nombre libre) ──
+let debounceEmpleado=null;
+document.getElementById('inp-numero-empleado').addEventListener('input',()=>{
+  empleadoValido=false;
+  document.getElementById('empleado-confirm').classList.add('hidden');
+  document.getElementById('empleado-error').classList.add('hidden');
+  actualizarBotonConfirmar();
+  clearTimeout(debounceEmpleado);
+  debounceEmpleado=setTimeout(buscarEmpleado,500);
+});
+async function buscarEmpleado(){
+  const val=document.getElementById('inp-numero-empleado').value.trim();
+  const confirmEl=document.getElementById('empleado-confirm');
+  const errEl=document.getElementById('empleado-error');
+  confirmEl.classList.add('hidden'); confirmEl.innerHTML='';
+  errEl.classList.add('hidden'); errEl.textContent='';
+  if(!val){ empleadoValido=false; actualizarBotonConfirmar(); return; }
+  const rows=await sbGet('personal_eventos_masivos',`?numero_empleado=eq.${encodeURIComponent(val)}&limit=1`);
+  if(Array.isArray(rows)&&rows[0]){
+    numeroEmpleadoActual=val;
+    nombreCompletoActual=rows[0].nombre_completo;
+    empleadoValido=true;
+    if(rows[0].foto_referencia){
+      const img=document.createElement('img');
+      img.src=rows[0].foto_referencia;
+      img.alt='';
+      img.className='empleado-foto';
+      confirmEl.appendChild(img);
+    }
+    // Nombre siempre como texto plano — nunca HTML crudo con datos de la base.
+    const span=document.createElement('span');
+    span.textContent=`¿Eres tú? ${rows[0].nombre_completo}`;
+    confirmEl.appendChild(span);
+    confirmEl.classList.remove('hidden');
+  } else {
+    empleadoValido=false;
+    errEl.textContent='Número de empleado no encontrado.';
+    errEl.classList.remove('hidden');
+  }
+  actualizarBotonConfirmar();
+}
+document.getElementById('inp-nombre-libre').addEventListener('input',(e)=>{
+  nombreCompletoActual=e.target.value.trim();
+  numeroEmpleadoActual=null;
+  actualizarBotonConfirmar();
+});
+
+function campoPrincipalValido(){
+  return usaBdPersonal ? empleadoValido : !!(nombreCompletoActual&&nombreCompletoActual.length);
+}
+function actualizarBotonConfirmar(){
+  document.getElementById('btn-confirmar').disabled=!(campoPrincipalValido()&&fotosSeleccionadas.length>=1);
+}
+
+// ── FOTOS ──
+function agregarFotos(input){
+  const restantes=3-fotosSeleccionadas.length;
+  const nuevos=Array.from(input.files).slice(0,restantes);
+  fotosSeleccionadas.push(...nuevos);
+  input.value='';
+  renderFotoGrid();
+  actualizarBotonConfirmar();
+}
+function quitarFoto(idx){
+  fotosSeleccionadas.splice(idx,1);
+  renderFotoGrid();
+  actualizarBotonConfirmar();
+}
+function renderFotoGrid(){
+  const grid=document.getElementById('foto-grid');
+  grid.innerHTML='';
+  fotosSeleccionadas.forEach((file,idx)=>{
+    const div=document.createElement('div');
+    div.className='foto-thumb';
+    const img=document.createElement('img');
+    img.src=URL.createObjectURL(file);
+    div.appendChild(img);
+    const btnX=document.createElement('button');
+    btnX.type='button'; btnX.className='foto-quitar'; btnX.textContent='✕';
+    btnX.onclick=()=>quitarFoto(idx);
+    div.appendChild(btnX);
+    grid.appendChild(div);
+  });
+  document.getElementById('btn-selfie').disabled=fotosSeleccionadas.length>=3;
+  document.getElementById('btn-galeria').disabled=fotosSeleccionadas.length>=3;
+}
+
+// ── GUARDAR ──
+async function subirFotoCloudinary(file){
+  const fd=new FormData();
+  fd.append('file',file);
+  fd.append('upload_preset',PRESET);
+  fd.append('folder',`gemacuu/eventos-masivos/${evento.slug}`);
+  const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+  const d=await r.json();
+  if(!d.secure_url) throw new Error('Error subiendo foto');
+  return d.secure_url;
+}
+
+async function confirmarAsistencia(){
+  const btn=document.getElementById('btn-confirmar');
+  const statusEl=document.getElementById('form-status');
+  btn.disabled=true;
+  statusEl.textContent='Subiendo fotos…';
+  try{
+    const urls=[];
+    for(const file of fotosSeleccionadas){ urls.push(await subirFotoCloudinary(file)); }
+
+    statusEl.textContent='Guardando…';
+    const payloadBase={
+      evento_id:evento.id,
+      numero_empleado:numeroEmpleadoActual,
+      nombre_completo:nombreCompletoActual,
+      fotos:urls,
+      lat_registro:posActual?posActual.lat:null,
+      lng_registro:posActual?posActual.lng:null
+    };
+    let ok=false;
+    for(let intento=0;intento<2&&!ok;intento++){
+      const r=await sbPost('registros_asistencia_masiva',{...payloadBase,codigo:codigoActual});
+      if(r.ok){ ok=true; break; }
+      if(r.status===409){
+        // Choque de código (muy raro): se regenera y se reintenta una vez, sin perder
+        // las fotos ya subidas — el usuario nunca lo nota.
+        codigoActual=await generarCodigoUnico();
+        pintarMarcaDeAgua(codigoActual);
+        continue;
+      }
+      break;
+    }
+    if(!ok) throw new Error('No se pudo guardar tu registro');
+
+    try{ localStorage.setItem('gemacuu_masivo_ok_'+evento.slug,'1'); }catch(e){}
+    mostrarConfirmacion();
+  }catch(e){
+    console.error(e);
+    statusEl.textContent='⚠️ No se pudo guardar tu registro — vuelve a intentar.';
+    btn.disabled=false;
+  }
+}
+
+function mostrarConfirmacion(){
+  ocultar('marca-agua');
+  ocultar('formulario-box');
+  mostrar('confirmacion-box');
+}
+
+// ── VISTA DE RESULTADOS (solo lectura, link ?r=) ──
+async function initResultados(){
+  let rows;
+  try{ rows=await sbGet('eventos_asistencia_masiva',`?slug_resultados=eq.${encodeURIComponent(slugResultados)}&limit=1`); }
+  catch(e){ mostrarError('No se pudo cargar el evento — verifica tu conexión.'); return; }
+  ocultar('loading');
+  if(!Array.isArray(rows)||!rows[0]){ mostrarError('Link inválido.'); return; }
+  const ev=rows[0];
+  const registros=await sbGet('registros_asistencia_masiva',`?evento_id=eq.${ev.id}&select=fotos`);
+  const lista=Array.isArray(registros)?registros:[];
+  const fotos=lista.flatMap(r=>Array.isArray(r.fotos)?r.fotos:[]);
+  document.getElementById('resultados-evento-nombre').textContent=ev.nombre;
+  document.getElementById('resultados-total').textContent=`${lista.length} registro(s) · ${fotos.length} foto(s)`;
+  const grid=document.getElementById('resultados-grid');
+  grid.innerHTML='';
+  fotos.forEach(url=>{
+    const img=document.createElement('img');
+    img.src=url;
+    img.className='resultado-foto';
+    img.onclick=()=>window.open(url,'_blank');
+    grid.appendChild(img);
+  });
+  mostrar('resultados-box');
+}
+</script>
+</body>
+</html>
