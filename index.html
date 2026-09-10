@@ -91,6 +91,58 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     margin-left:64px;
     width:calc(100% - 64px);
   }
+
+  /* .topbar y .panel son hijos directos de .main-wrap (que es display:flex) — como
+     elementos flex, por defecto se niegan a encogerse por debajo del ancho mínimo de
+     su propio contenido ("min-width:auto" en un flex item). Eso es lo que seguía
+     empujando el topbar más allá del borde aunque .main-wrap ya midiera bien: con
+     min-width:0 sí respeta el ancho disponible y deja que su propio overflow-x:auto
+     (agregado abajo) resuelva lo que no quepa, igual que ya hacía .rbar. */
+  .topbar{min-width:0}
+
+  /* .panel tiene "margin:0 auto" para centrarse en pantallas anchas (max-width:1200px) —
+     pero esos márgenes automáticos, dentro de un contenedor flex en columna como
+     .main-wrap, DESACTIVAN el "stretch" que normalmente ajusta el panel al ancho
+     disponible: en vez de ocupar los 311px de .main-wrap, el panel se dimensiona por
+     el ancho que pida su propio contenido (p.ej. la tabla de Resultados con
+     min-width:760px, o la lista de enlaces), y por eso se salía por la derecha aunque
+     esos elementos internos ya tuvieran su propio scroll (r-table-wrap) o wrap
+     (flex-wrap) — nunca llegaban a necesitarlos porque el panel ya era así de ancho.
+     En mobile el centrado no hace falta (el panel siempre es más angosto que la
+     pantalla), así que se quitan esos márgenes automáticos y se fuerza 100% del
+     ancho de .main-wrap; con eso, el contenido interno de cada panel sí vuelve a
+     respetar los 311px y cada quien resuelve su propio desbordamiento como ya
+     estaba pensado (scroll, wrap, etc.). */
+  .panel{width:100%;margin-left:0;margin-right:0}
+
+  /* Topbar: menos relleno/tamaño para que quepa más antes de necesitar scroll, y
+     overflow-x:auto como respaldo (con la barra de scroll oculta) si aun así no cabe. */
+  .topbar{padding:0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .topbar::-webkit-scrollbar{display:none}
+  .tlogo{font-size:14px}
+  .tuser{font-size:11px}
+  .tbtn{padding:5px 10px;font-size:11px}
+
+  /* .rbar ya se encogía bien (overflow-x:auto) — solo se le agrega el indicio visual
+     de que hay más contenido a la derecha, y scroll táctil suave en iOS. */
+  .rbar{position:relative;-webkit-overflow-scrolling:touch}
+  .rbar::after{
+    content:'';position:absolute;top:0;right:0;bottom:0;width:26px;
+    background:linear-gradient(to right,rgba(0,26,102,0),#001a66);
+    pointer-events:none;
+  }
+
+  /* Los 4 recuadros de resumen de Resultados (repeat(4,1fr) sin minmax) se negaban a
+     bajar de un ancho mínimo por su propio contenido y volvían a empujar el panel
+     completo (arrastrando con él la tabla de abajo). 2 columnas + minmax(0,1fr) —
+     así cada columna sí puede encogerse por debajo del ancho de su etiqueta más
+     larga ("PARTICIPACIÓN PROMEDIO"), que en vez de forzar ancho de sobra pasa a
+     partirse en dos líneas dentro de la tarjeta. */
+  /* "body" de más solo para igualar/superar la especificidad de la regla
+     #panel-resultados .r-stats{...} que se define más abajo, dentro del <style>
+     propio del panel de Resultados — sin esto, esa regla (misma especificidad,
+     pero posterior en el documento) seguía ganando aunque el media query aplicara. */
+  body #panel-resultados .r-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
 /* ── RESUMEN BAR ── */
