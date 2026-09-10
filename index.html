@@ -14,6 +14,7 @@
   --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
   --radius:14px;--radius-sm:8px;
 }
+html,body{overflow-x:hidden}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* ── LOGIN ── */
@@ -86,7 +87,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 @media(max-width:900px){
   .sidebar{position:fixed;left:0;top:0;bottom:0}
   .sidebar:not(.collapsed){box-shadow:4px 0 18px rgba(0,0,0,.25)}
-  .main-wrap{margin-left:64px}
+  .main-wrap{
+    margin-left:64px;
+    width:calc(100% - 64px);
+  }
 }
 
 /* ── RESUMEN BAR ── */
