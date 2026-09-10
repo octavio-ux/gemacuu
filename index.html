@@ -373,6 +373,7 @@ tr:hover td{background:#f8faff}
     <button class="ntab" style="--c:#334155;--c-bg:#e4e6e9" id="tab-control" onclick="goTab('control',this)"><span class="ntab-ico">⚙️</span>Control</button>
     <button class="ntab" style="--c:#92400e;--c-bg:#f1e6e0" id="tab-bajas" onclick="goTab('bajas',this)"><span class="ntab-ico">🚫</span>Bajas (30)</button>
     <button class="ntab" style="--c:#3730a3;--c-bg:#e5e4f3" id="tab-historial" onclick="goTab('historial',this)"><span class="ntab-ico">📜</span>Historial de cambios</button>
+    <button class="ntab" style="--c:#0B2545;--c-bg:#e9eef6" id="tab-resultados" onclick="goTab('resultados',this)"><span class="ntab-ico">📊</span>Resultados</button>
   </div>
 
   <!-- PANEL: BASE OPERATIVA -->
@@ -909,6 +910,390 @@ tr:hover td{background:#f8faff}
     </div>
     <div id="bajas-lista"></div>
   </div>
+
+<!-- PANEL: RESULTADOS -->
+<div id="panel-resultados" class="panel">
+<style>
+  #panel-resultados{
+    --navy:#0B2545;
+    --navy-deep:#081A33;
+    --paper:#FAFAF8;
+    --ink:#1B2733;
+    --muted:#5C6B7A;
+    --line:#E1DED4;
+    --pan:#0B4FA0;
+    --pan-bg:#E7EFFA;
+    --pri:#B5121B;
+    --pri-bg:#FAE7E8;
+    --mrn:#7A1B3D;
+    --mrn-bg:#F5E4EC;
+    --tie:#8A8478;
+    --tie-bg:#EFEDE6;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    padding: 20px;
+    border-radius: 8px;
+  }
+  #panel-resultados *{box-sizing:border-box;}
+
+  #panel-resultados .r-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:3px solid var(--navy);
+    padding-bottom:12px;
+    margin-bottom:18px;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  #panel-resultados .r-head h2{
+    font-size:22px;
+    margin:0;
+    color:var(--navy-deep);
+    font-weight:700;
+  }
+  #panel-resultados .r-head p{
+    margin:4px 0 0;
+    color:var(--muted);
+    font-size:12.5px;
+  }
+  #panel-resultados .r-scale{
+    text-align:right;
+    font-size:11.5px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  #panel-resultados .r-scale b{color:var(--navy-deep); font-size:20px; display:block;}
+
+  #panel-resultados .r-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:18px;
+  }
+  #panel-resultados .r-stat{
+    background:#fff;
+    border:1px solid var(--line);
+    border-left:4px solid var(--navy);
+    padding:10px 12px;
+    border-radius:4px;
+  }
+  #panel-resultados .r-stat .n{font-size:22px;font-weight:700;color:var(--navy-deep);}
+  #panel-resultados .r-stat .l{font-size:10.5px;color:var(--muted);margin-top:2px;}
+  #panel-resultados .r-stat.pan-stat{border-left-color:var(--pan);}
+  #panel-resultados .r-stat.pan-stat .n{color:var(--pan);}
+  #panel-resultados .r-stat.mrn-stat{border-left-color:var(--mrn);}
+  #panel-resultados .r-stat.mrn-stat .n{color:var(--mrn);}
+
+  #panel-resultados .r-controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  #panel-resultados .r-controls input[type=text]{
+    flex:1;
+    min-width:160px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-size:13px;
+    border-radius:4px;
+    font-family:inherit;
+  }
+  #panel-resultados .r-chip{
+    padding:6px 12px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--muted);
+    font-size:12.5px;
+    cursor:pointer;
+    user-select:none;
+    border-radius:4px;
+  }
+  #panel-resultados .r-chip.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+
+  #panel-resultados .r-table-wrap{overflow-x:auto;}
+  #panel-resultados table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+    min-width:760px;
+  }
+  #panel-resultados thead th{
+    text-align:left;
+    font-size:10.5px;
+    font-weight:600;
+    color:var(--muted);
+    padding:8px 8px;
+    border-bottom:2px solid var(--navy);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  #panel-resultados tbody td{
+    padding:7px 8px;
+    border-bottom:1px solid var(--line);
+    font-size:12.5px;
+    vertical-align:middle;
+    white-space:nowrap;
+  }
+  #panel-resultados tbody tr:hover{background:#F7F6F2;}
+  #panel-resultados .r-zona-row td{
+    background:var(--navy-deep);
+    color:#fff;
+    font-size:11px;
+    letter-spacing:0.3px;
+    padding:6px 8px;
+  }
+  #panel-resultados .r-num{text-align:right; font-variant-numeric:tabular-nums;}
+  #panel-resultados .win-pan{background:var(--pan-bg); color:var(--pan); font-weight:700;}
+  #panel-resultados .win-mrn{background:var(--mrn-bg); color:var(--mrn); font-weight:700;}
+  #panel-resultados .win-pri{background:var(--pri-bg); color:var(--pri); font-weight:700;}
+  #panel-resultados .win-tie{background:var(--tie-bg); color:var(--tie); font-weight:700;}
+  #panel-resultados .r-badge{
+    display:inline-block;
+    padding:2px 8px;
+    font-size:11px;
+    font-weight:700;
+    border-radius:3px;
+  }
+  #panel-resultados .r-foot{
+    margin-top:14px;
+    font-size:10.5px;
+    color:var(--muted);
+    border-top:1px solid var(--line);
+    padding-top:8px;
+  }
+</style>
+
+  <div class="r-head">
+    <div>
+      <h2>📊 Resultados por Casilla</h2>
+      <p>Corte de actividades — Febrero · Casillas Básicas y Contiguas · 3 equipos, 24 secciones</p>
+    </div>
+    <div class="r-scale">
+      <b id="rTotalVotos">—</b>
+      votos totales contados
+    </div>
+  </div>
+
+  <div class="r-stats">
+    <div class="r-stat pan-stat"><div class="n" id="rStatPan">—</div><div class="l">VOTOS PAN</div></div>
+    <div class="r-stat"><div class="n" id="rStatPri">—</div><div class="l">VOTOS PRI</div></div>
+    <div class="r-stat mrn-stat"><div class="n" id="rStatMrn">—</div><div class="l">VOTOS MORENA</div></div>
+    <div class="r-stat"><div class="n" id="rStatPart">—</div><div class="l">PARTICIPACIÓN PROMEDIO</div></div>
+  </div>
+
+  <div class="r-controls">
+    <input type="text" id="rSearch" placeholder="Buscar sección o encargado…">
+    <span class="r-chip active" data-filter="todos">Todos los equipos</span>
+    <span class="r-chip" data-filter="amezcua">Fernando Amezcua</span>
+    <span class="r-chip" data-filter="yanez">Martin Yáñez</span>
+    <span class="r-chip" data-filter="espinoza">Rene Espinoza</span>
+  </div>
+
+  <div class="r-table-wrap">
+  <table id="rTable">
+    <thead>
+      <tr>
+        <th data-key="seccion">Sección</th>
+        <th data-key="encargado">Encargado</th>
+        <th data-key="casilla">Casilla</th>
+        <th data-key="pan" class="r-num">PAN</th>
+        <th data-key="pri" class="r-num">PRI</th>
+        <th data-key="mrn" class="r-num">MORENA</th>
+        <th data-key="total" class="r-num">Votaron</th>
+        <th data-key="lnom" class="r-num">L. Nominal</th>
+        <th data-key="pct" class="r-num">Particip.</th>
+        <th data-key="ganador">Ganador</th>
+      </tr>
+    </thead>
+    <tbody id="rBody"></tbody>
+  </table>
+  </div>
+
+  <div class="r-foot">Fuente: reporte interno de resultados electorales (corte de febrero). "Ganador" compara PAN, PRI y MORENA por casilla. Actualizado 09/09/2026.</div>
+</div>
+
+<script>
+(function(){
+  const data = [
+    {zona:'amezcua', encargado:'Karen Judith Alarcon Avitia', seccion:'855', casilla:'Básica', pan:96, pri:16, mrn:99, total:307, lnom:611, pct:50.2},
+    {zona:'amezcua', encargado:'Karen Judith Alarcon Avitia', seccion:'855', casilla:'Contigua', pan:290, pri:67, mrn:305, total:897, lnom:1833, pct:48.9},
+    {zona:'amezcua', encargado:'Jorge Lom Juarez', seccion:'856', casilla:'Básica', pan:94, pri:15, mrn:48, total:194, lnom:327, pct:59.3},
+    {zona:'amezcua', encargado:'Ernesto Alonso Ruiz Mendoza', seccion:'908', casilla:'Básica', pan:123, pri:19, mrn:47, total:240, lnom:423, pct:56.7},
+    {zona:'amezcua', encargado:'Ruben Perez', seccion:'3227', casilla:'Básica', pan:159, pri:30, mrn:96, total:362, lnom:585, pct:61.9},
+    {zona:'amezcua', encargado:'Mayela Chavira Herrera', seccion:'3231', casilla:'Básica', pan:134, pri:17, mrn:108, total:334, lnom:626, pct:53.4},
+    {zona:'amezcua', encargado:'Sofia Mejia Duarte', seccion:'3232', casilla:'Básica', pan:169, pri:19, mrn:85, total:345, lnom:563, pct:61.3},
+    {zona:'amezcua', encargado:'Luis Raul Alberto Vargas Ortega', seccion:'3233', casilla:'Básica', pan:122, pri:19, mrn:76, total:262, lnom:574, pct:45.6},
+    {zona:'amezcua', encargado:'Luis Raul Alberto Vargas Ortega', seccion:'3233', casilla:'Contigua', pan:224, pri:31, mrn:211, total:563, lnom:1148, pct:49.0},
+
+    {zona:'yanez', encargado:'Saul Bustillos Martinez', seccion:'909', casilla:'Básica', pan:84, pri:16, mrn:64, total:200, lnom:424, pct:47.2},
+    {zona:'yanez', encargado:'Saul Bustillos Martinez', seccion:'909', casilla:'Contigua', pan:77, pri:23, mrn:53, total:181, lnom:423, pct:42.8},
+    {zona:'yanez', encargado:'Carlos Daniel Perez Cruz', seccion:'3244', casilla:'Básica', pan:119, pri:18, mrn:157, total:376, lnom:726, pct:51.8},
+    {zona:'yanez', encargado:'Sergio Adrian Carreon Ortiz', seccion:'3246', casilla:'Básica', pan:70, pri:10, mrn:123, total:276, lnom:670, pct:41.2},
+    {zona:'yanez', encargado:'Felix Vazquez Castillo', seccion:'3255', casilla:'Básica', pan:115, pri:16, mrn:123, total:301, lnom:674, pct:44.7},
+    {zona:'yanez', encargado:'Jose Luis Sanchez Flores', seccion:'3256', casilla:'Básica', pan:0, pri:0, mrn:0, total:0, lnom:578, pct:0.0},
+    {zona:'yanez', encargado:'Jesus Rogelio Borruel Licon', seccion:'3259', casilla:'Básica', pan:52, pri:20, mrn:97, total:216, lnom:570, pct:37.9},
+    {zona:'yanez', encargado:'Jesus Rogelio Borruel Licon', seccion:'3259', casilla:'Contigua', pan:50, pri:10, mrn:103, total:210, lnom:570, pct:36.8},
+    {zona:'yanez', encargado:'Yesenia Antonia Arostegui Lozoya', seccion:'3261', casilla:'Básica', pan:58, pri:21, mrn:125, total:275, lnom:703, pct:39.1},
+    {zona:'yanez', encargado:'Pedro Hernandez Vega', seccion:'3263', casilla:'Básica', pan:97, pri:13, mrn:122, total:297, lnom:686, pct:43.3},
+
+    {zona:'espinoza', encargado:'Lluvia Atenea Aceves Jaquez', seccion:'3228', casilla:'Básica', pan:61, pri:10, mrn:69, total:182, lnom:409, pct:44.5},
+    {zona:'espinoza', encargado:'Lluvia Atenea Aceves Jaquez', seccion:'3228', casilla:'Contigua', pan:46, pri:6, mrn:79, total:178, lnom:408, pct:43.6},
+    {zona:'espinoza', encargado:'Alberto Yahir Favela Enriquez', seccion:'3234', casilla:'Básica', pan:61, pri:10, mrn:129, total:249, lnom:546, pct:45.6},
+    {zona:'espinoza', encargado:'Alberto Yahir Favela Enriquez', seccion:'3234', casilla:'Contigua', pan:135, pri:24, mrn:171, total:447, lnom:1092, pct:40.9},
+    {zona:'espinoza', encargado:'Alexis Perez Ochoa', seccion:'3235', casilla:'Básica', pan:115, pri:18, mrn:129, total:330, lnom:713, pct:46.3},
+    {zona:'espinoza', encargado:'Noe Morales Bencomo', seccion:'3236', casilla:'Básica', pan:52, pri:13, mrn:66, total:156, lnom:394, pct:39.6},
+    {zona:'espinoza', encargado:'Noe Morales Bencomo', seccion:'3236', casilla:'Contigua', pan:56, pri:15, mrn:80, total:190, lnom:394, pct:48.2},
+    {zona:'espinoza', encargado:'Victor Saul Trejo Gonzalez', seccion:'3237', casilla:'Básica', pan:41, pri:19, mrn:97, total:191, lnom:399, pct:47.9},
+    {zona:'espinoza', encargado:'Victor Saul Trejo Gonzalez', seccion:'3237', casilla:'Contigua', pan:45, pri:11, mrn:99, total:203, lnom:399, pct:50.9},
+    {zona:'espinoza', encargado:'Ana Luisa Payan Castro', seccion:'3238', casilla:'Básica', pan:132, pri:28, mrn:154, total:393, lnom:735, pct:53.5},
+    {zona:'espinoza', encargado:'Jesus Evaristo Gonzalez Aguilar', seccion:'3245', casilla:'Básica', pan:85, pri:14, mrn:115, total:267, lnom:576, pct:46.4},
+    {zona:'espinoza', encargado:'Fabian Gonzalez Holguin', seccion:'3239', casilla:'Básica', pan:74, pri:19, mrn:103, total:256, lnom:618, pct:41.4},
+    {zona:'espinoza', encargado:'Fabian Gonzalez Holguin', seccion:'3239', casilla:'Contigua', pan:77, pri:13, mrn:101, total:251, lnom:618, pct:40.6},
+  ];
+
+  function winner(r){
+    if(r.pan===0 && r.pri===0 && r.mrn===0) return {code:'tie', label:'Sin datos'};
+    const top = Math.max(r.pan, r.pri, r.mrn);
+    const winners = [];
+    if(r.pan===top) winners.push('pan');
+    if(r.pri===top) winners.push('pri');
+    if(r.mrn===top) winners.push('mrn');
+    if(winners.length>1) return {code:'tie', label:'Empate'};
+    const code = winners[0];
+    const label = code==='pan' ? 'PAN' : code==='pri' ? 'PRI' : 'MORENA';
+    return {code, label};
+  }
+  data.forEach(r=>{ const w = winner(r); r._win = w.code; r._winLabel = w.label; });
+
+  const root = document.getElementById('panel-resultados');
+  let sortKey = null, sortDir = 1, zonaFilter='todos', searchTerm='';
+
+  const zonaNames = {
+    'amezcua':'FERNANDO AMEZCUA · 7 secciones',
+    'yanez':'MARTIN YÁÑEZ · 48 personas · 8 secciones · Apoyo: Karen',
+    'espinoza':'RENE ESPINOZA · 56 personas · 8 secciones (de la encuesta) · Apoyo: Lluvia',
+  };
+
+  // Mismo filtro (zona + búsqueda) y orden que ve el usuario en pantalla — usado tanto
+  // para pintar la tabla como para exportar exactamente lo que está viendo, con los
+  // filtros/búsqueda activos en ese momento (nunca la lista completa sin filtrar).
+  function filasVisibles(){
+    let rows = data.filter(r=>{
+      if(zonaFilter!=='todos' && r.zona!==zonaFilter) return false;
+      if(searchTerm){
+        const s = (r.seccion+' '+r.encargado).toLowerCase();
+        if(!s.includes(searchTerm.toLowerCase())) return false;
+      }
+      return true;
+    });
+
+    if(sortKey){
+      rows = rows.slice().sort((a,b)=>{
+        let av=a[sortKey], bv=b[sortKey];
+        if(typeof av==='string'){ av=av.toLowerCase(); bv=bv.toLowerCase(); }
+        if(av<bv) return -1*sortDir;
+        if(av>bv) return 1*sortDir;
+        return 0;
+      });
+    }
+    return rows;
+  }
+
+  function render(){
+    const rows = filasVisibles();
+    const tbody = root.querySelector('#rBody');
+    tbody.innerHTML='';
+
+    let lastZona = null;
+    rows.forEach(r=>{
+      if(!sortKey && r.zona!==lastZona){
+        lastZona = r.zona;
+        const tr = document.createElement('tr');
+        tr.className='r-zona-row';
+        const td = document.createElement('td');
+        td.colSpan=10;
+        td.textContent = zonaNames[r.zona];
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
+      const tr = document.createElement('tr');
+      const winClass = 'win-'+r._win;
+      tr.innerHTML = `
+        <td><b>${r.seccion}</b></td>
+        <td>${r.encargado}</td>
+        <td>${r.casilla}</td>
+        <td class="r-num ${r._win==='pan'?winClass:''}">${r.pan}</td>
+        <td class="r-num ${r._win==='pri'?winClass:''}">${r.pri}</td>
+        <td class="r-num ${r._win==='mrn'?winClass:''}">${r.mrn}</td>
+        <td class="r-num">${r.total}</td>
+        <td class="r-num">${r.lnom}</td>
+        <td class="r-num">${r.pct.toFixed(1)}%</td>
+        <td><span class="r-badge ${winClass}">${r._winLabel}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const sumPan = rows.reduce((s,r)=>s+r.pan,0);
+    const sumPri = rows.reduce((s,r)=>s+r.pri,0);
+    const sumMrn = rows.reduce((s,r)=>s+r.mrn,0);
+    const sumTotal = rows.reduce((s,r)=>s+r.total,0);
+    const avgPct = rows.length ? (rows.reduce((s,r)=>s+r.pct,0)/rows.length) : 0;
+    root.querySelector('#rStatPan').textContent = sumPan.toLocaleString('es-MX');
+    root.querySelector('#rStatPri').textContent = sumPri.toLocaleString('es-MX');
+    root.querySelector('#rStatMrn').textContent = sumMrn.toLocaleString('es-MX');
+    root.querySelector('#rStatPart').textContent = avgPct.toFixed(1)+'%';
+    root.querySelector('#rTotalVotos').textContent = sumTotal.toLocaleString('es-MX');
+  }
+
+  root.querySelectorAll('.r-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      root.querySelectorAll('.r-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      zonaFilter = chip.dataset.filter;
+      render();
+    });
+  });
+
+  root.querySelector('#rSearch').addEventListener('input', e=>{
+    searchTerm = e.target.value;
+    render();
+  });
+
+  root.querySelectorAll('thead th').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(sortKey===key) sortDir*=-1; else { sortKey=key; sortDir=1; }
+      render();
+    });
+  });
+
+  // Expuesta en window para que el botón global "↓ Excel" del header (exportarContextual,
+  // más abajo en este archivo) pueda llamarla cuando la pestaña activa sea Resultados —
+  // exporta exactamente las filas visibles en ese momento (con el filtro de equipo y la
+  // búsqueda ya aplicados), no la lista completa sin filtrar.
+  window.exportarResultados = function(){
+    showToast('⏳ Preparando Excel...');
+    const rows = filasVisibles();
+    let csv='\uFEFF'+'SECCIÓN,ENCARGADO,CASILLA,PAN,PRI,MORENA,VOTARON,L. NOMINAL,PARTICIP.,GANADOR\n';
+    rows.forEach(r=>{
+      csv+=`"${r.seccion}","${(r.encargado||'').replace(/"/g,"'")}","${r.casilla}",${r.pan},${r.pri},${r.mrn},${r.total},${r.lnom},"${r.pct.toFixed(1)}%","${r._winLabel}"\n`;
+    });
+    const a=document.createElement('a');
+    a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+    a.download=`GEMACUU_resultados_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    showToast('✓ Excel de resultados descargado');
+  };
+
+  render();
+})();
+</script>
+
 
 </div><!-- /app -->
 
@@ -3739,6 +4124,7 @@ function exportarContextual(){
   if(id==='panel-nuevos') exportarNuevos();
   else if(id==='panel-incidencias') exportarIncidencias();
   else if(id==='panel-eventos') exportarEventos();
+  else if(id==='panel-resultados') exportarResultados();
   else exportarExcel();
 }
 
