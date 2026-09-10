@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GEMACUU · Alumbrado</title>
+<title>GEMACUU · Panel B</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -196,11 +196,11 @@ tr:hover td{background:#f8faff}
     <div class="lhead">
       <div class="llogo">G</div>
       <div class="ltitle">GEMACUU</div>
-      <div class="lsub">💡 Alumbrado · Sistema Operativo 2026</div>
+      <div class="lsub">💡 Panel B · Sistema Operativo 2026</div>
     </div>
     <div class="fg">
       <label>Usuario</label>
-      <input type="text" id="lg-usuario" placeholder="ej. diana" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lg-pass').focus()">
+      <input type="text" id="lg-usuario" placeholder="ej. usuario" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lg-pass').focus()">
     </div>
     <div class="fg">
       <label>Contraseña</label>
@@ -216,7 +216,7 @@ tr:hover td{background:#f8faff}
   <div class="topbar">
     <div class="tl">
       <span class="tlogo">GEMACUU</span>
-      <span class="tbadge">💡 Alumbrado</span>
+      <span class="tbadge">💡 Panel B</span>
       <div class="tdot"></div>
       <span class="tuser">Sesión: <b id="tname">—</b></span>
     </div>
@@ -301,7 +301,7 @@ tr:hover td{background:#f8faff}
   <div id="panel-organigrama" class="panel">
     <div class="card">
       <div class="org-tree">
-        <div class="org-root">💡 GEMACUU · Alumbrado</div>
+        <div class="org-root">💡 GEMACUU · Panel B</div>
         <div class="org-line"></div>
         <div style="background:var(--pan-light);border:1px solid var(--border);border-radius:10px;padding:10px 20px;text-align:center;font-weight:700;font-size:14px;color:var(--pan)">👑 Administración: <span id="org-admins">cargando…</span></div>
         <div class="org-line"></div>
@@ -604,7 +604,7 @@ tr:hover td{background:#f8faff}
         <label>Sección</label>
         <input id="ep-sec" type="text" placeholder="ej. 3240, ADMIN, COM">
       </div>
-      <div class="fg"><label>Usuario</label><input id="ep-usuario" type="text" placeholder="ej: diana"></div>
+      <div class="fg"><label>Usuario</label><input id="ep-usuario" type="text" placeholder="ej: usuario"></div>
       <div class="fg"><label>Contraseña</label><input id="ep-pass" type="text" placeholder="dejar vacío si no tiene aún"></div>
     </div>
     <label class="persona-lider">
@@ -700,8 +700,9 @@ tr:hover td{background:#f8faff}
 // ══════════════════════════════════════════════════════════════
 // GEMACUU · ALUMBRADO — micrositio independiente, tablas propias
 // (prefijo alumbrado_ en todo). NO comparte datos con Áreas Verdes D17.
-// Ruta de prueba: todavía no está conectado al login principal de
-// gemacuu.org — se abre directo como alumbrado.html.
+// Conectado al login principal de gemacuu.org (index.html) como
+// "panel-b.html" — nombre de archivo neutro a propósito, para no
+// delatar la dependencia en una URL/captura de pantalla.
 // ══════════════════════════════════════════════════════════════
 
 const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
@@ -1163,7 +1164,7 @@ function renderResumenEventosTbody(){
       <td>${r.encuestas}</td>
       <td>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <a href="alumbrado-evidencia-evento.html?evento=${r.evento.id}" target="_blank" class="btn btn-secondary btn-xs">🔗 Ver</a>
+          <a href="panel-b-evidencia.html?evento=${r.evento.id}" target="_blank" class="btn btn-secondary btn-xs">🔗 Ver</a>
           <button class="btn btn-secondary btn-xs" onclick="exportarEventos('${r.evento.id}')">↓ Excel</button>
           ${ALUM_isAdmin?`<button class="btn btn-xs ${activa?'btn-danger':'btn-secondary'}" onclick="toggleEvidenciaPublica('${r.evento.id}')">${activa?'🔒 Desactivar':'🔓 Activar'}</button>`:''}
           ${ALUM_isAdmin?`<button class="btn btn-danger btn-xs" onclick="abrirConfirmEliminarEvento('${r.evento.id}')">🗑️ Eliminar</button>`:''}
@@ -1452,7 +1453,7 @@ async function cargarEventosParaEnlace(){
   if(actual) sel.value=actual;
 }
 function urlEnlaceSeccion(token){
-  return `${location.origin}${location.pathname.replace(/alumbrado\.html$/,'')}alumbrado-asistencia-seccion.html?token=${token}`;
+  return `${location.origin}${location.pathname.replace(/panel-b\.html$/,'')}panel-b-seccion.html?token=${token}`;
 }
 function copiarEnlaceGenerado(url){
   navigator.clipboard.writeText(url).then(()=>showToast('📋 enlace copiado')).catch(()=>showToast('⚠️ no se pudo copiar'));
