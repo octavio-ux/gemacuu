@@ -52,6 +52,43 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .tbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
 .tbtn:hover{background:rgba(255,255,255,.25)}
 
+/* ── APP LAYOUT (sidebar + contenido) ── */
+.main-wrap{flex:1;min-width:0;display:flex;flex-direction:column}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:240px;min-width:240px;background:#0B2545;color:#fff;
+  display:flex;flex-direction:column;padding:14px 10px;
+  transition:width .25s ease,min-width .25s ease;
+  height:100vh;position:sticky;top:0;overflow-y:auto;z-index:250;
+}
+.sidebar.collapsed{width:64px;min-width:64px;padding:14px 6px}
+.side-head{display:flex;align-items:center;justify-content:space-between;padding:0 6px 14px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.12)}
+.side-brand{display:flex;align-items:center;gap:9px;overflow:hidden}
+.side-logo{width:26px;height:26px;min-width:26px;border-radius:7px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}
+.side-title{font-size:14px;font-weight:800;letter-spacing:.05em;white-space:nowrap;transition:opacity .15s}
+.sidebar.collapsed .side-title{opacity:0;width:0}
+.side-toggle{background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:16px;padding:4px;line-height:1}
+.side-toggle:hover{color:#fff}
+.side-item{
+  display:flex;align-items:center;gap:11px;padding:10px 10px;margin-bottom:2px;
+  border-radius:9px;background:none;border:none;color:rgba(255,255,255,.65);
+  font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;
+  transition:background .15s,color .15s;font-family:inherit;width:100%;text-align:left;
+}
+.side-item .side-ico{font-size:15px;min-width:18px;text-align:center;filter:grayscale(40%) opacity(.8)}
+.side-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.side-item.on{background:#fff;color:#0B2545}
+.side-item.on .side-ico{filter:none}
+.side-label{transition:opacity .15s .05s}
+.sidebar.collapsed .side-item{justify-content:center;padding:10px 0}
+.sidebar.collapsed .side-label{opacity:0;width:0;pointer-events:none}
+@media(max-width:900px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0}
+  .sidebar:not(.collapsed){box-shadow:4px 0 18px rgba(0,0,0,.25)}
+  .main-wrap{margin-left:64px}
+}
+
 /* ── RESUMEN BAR ── */
 .rbar{background:#001a66;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
 .rblock{padding:6px 20px;border-right:1px solid rgba(255,255,255,.12);flex-shrink:0}
@@ -59,20 +96,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .rnum{font-size:18px;font-weight:800;color:#fff;line-height:1}
 .rlbl{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 .rtag{font-size:11px;color:#7aabf7;font-weight:600}
-
-/* ── NAV TABS ── */
-.nav{background:#fff;border-bottom:2px solid var(--border);display:flex;flex-wrap:wrap;padding:6px 1rem;gap:2px}
-.ntab{
-  --c:var(--pan);--c-bg:var(--pan-light);
-  display:inline-flex;align-items:center;gap:7px;
-  padding:10px 14px;color:var(--muted);font-size:13px;font-weight:700;
-  border:none;border-radius:9px;background:none;cursor:pointer;
-  transition:background .15s,color .15s;white-space:nowrap;font-family:inherit;
-}
-.ntab .ntab-ico{font-size:15px;filter:grayscale(45%) opacity(.75);transition:filter .15s}
-.ntab:hover{background:var(--bg)}
-.ntab.on{color:var(--c);background:var(--c-bg)}
-.ntab.on .ntab-ico{filter:none}
 
 /* ── PANELS ── */
 .panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
@@ -269,11 +292,6 @@ tr:hover td{background:#f8faff}
   .rbar{gap:0}
   .rblock{padding:6px 12px}
   .persona-form-grid{grid-template-columns:1fr}
-  .nav{display:grid;grid-template-columns:repeat(2,1fr);padding:8px}
-  .ntab{padding:10px;font-size:12px;white-space:normal}
-}
-@media(min-width:421px) and (max-width:640px){
-  .nav{grid-template-columns:repeat(3,1fr)}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -328,6 +346,33 @@ tr:hover td{background:#f8faff}
 
 <!-- APP -->
 <div id="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="side-head">
+      <div class="side-brand">
+        <div class="side-logo">G</div>
+        <span class="side-title">GEMACUU</span>
+      </div>
+      <button class="side-toggle" id="side-toggle" aria-label="Colapsar menú">☰</button>
+    </div>
+    <button class="side-item on" onclick="goTab('operativa',this)"><span class="side-ico">👥</span><span class="side-label">Base Operativa</span></button>
+    <button class="side-item" onclick="goTab('organigrama',this)"><span class="side-ico">🏛</span><span class="side-label">Organigrama</span></button>
+    <button class="side-item" onclick="goTab('secciones',this)"><span class="side-ico">🗳</span><span class="side-label">Secciones</span></button>
+    <button class="side-item" onclick="goTab('ines',this)"><span class="side-ico">🪪</span><span class="side-label">INEs</span></button>
+    <button class="side-item" id="tab-red" onclick="goTab('red',this)"><span class="side-ico">🤝</span><span class="side-label">Red de Amigos</span></button>
+    <button class="side-item" id="tab-eventos" onclick="goTab('eventos',this)"><span class="side-ico">📅</span><span class="side-label">Eventos</span></button>
+    <button class="side-item" id="tab-mapasd17" onclick="goTab('mapasd17',this)"><span class="side-ico">📍</span><span class="side-label">MapasD17</span></button>
+    <button class="side-item" id="tab-faltas" onclick="goTab('faltas',this)"><span class="side-ico">📊</span><span class="side-label">Faltas</span></button>
+    <button class="side-item" id="tab-correccion" onclick="goTab('correccion',this)"><span class="side-ico">✏️</span><span class="side-label">Corregir asistencia</span></button>
+    <button class="side-item" id="tab-nuevos" onclick="goTab('nuevos',this)"><span class="side-ico">➕</span><span class="side-label">Nuevos Amigos</span></button>
+    <button class="side-item" id="tab-incidencias" onclick="goTab('incidencias',this)"><span class="side-ico">⚠️</span><span class="side-label">Incidencias</span></button>
+    <button class="side-item" id="tab-control" onclick="goTab('control',this)"><span class="side-ico">⚙️</span><span class="side-label">Control</span></button>
+    <button class="side-item" id="tab-bajas" onclick="goTab('bajas',this)"><span class="side-ico">🚫</span><span class="side-label">Bajas (30)</span></button>
+    <button class="side-item" id="tab-historial" onclick="goTab('historial',this)"><span class="side-ico">📜</span><span class="side-label">Historial de cambios</span></button>
+    <button class="side-item" id="tab-resultados" onclick="goTab('resultados',this)"><span class="side-ico">📊</span><span class="side-label">Resultados</span></button>
+  </nav>
+
+  <div class="main-wrap">
   <div class="topbar">
     <div class="tl">
       <span class="tlogo">GEMACUU</span>
@@ -355,25 +400,6 @@ tr:hover td{background:#f8faff}
       <div class="rtag">Rene Espinoza</div>
       <div class="rlbl" id="rb-r">cargando…</div>
     </div>
-  </div>
-
-  <!-- NAV -->
-  <div class="nav" id="nav-bar">
-    <button class="ntab on" style="--c:#1d4ed8;--c-bg:#e2e8fa" onclick="goTab('operativa',this)"><span class="ntab-ico">👥</span>Base Operativa</button>
-    <button class="ntab" style="--c:#6d28d9;--c-bg:#ece3fa" onclick="goTab('organigrama',this)"><span class="ntab-ico">🏛</span>Organigrama</button>
-    <button class="ntab" style="--c:#0e7490;--c-bg:#e0edf1" onclick="goTab('secciones',this)"><span class="ntab-ico">🗳</span>Secciones</button>
-    <button class="ntab" style="--c:#a21caf;--c-bg:#f3e1f5" onclick="goTab('ines',this)"><span class="ntab-ico">🪪</span>INEs</button>
-    <button class="ntab" style="--c:#be185d;--c-bg:#f7e1ea" id="tab-red" onclick="goTab('red',this)"><span class="ntab-ico">🤝</span>Red de Amigos</button>
-    <button class="ntab" style="--c:#15803d;--c-bg:#e1eee6" id="tab-eventos" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
-    <button class="ntab" style="--c:#003399;--c-bg:#dde6f6" id="tab-mapasd17" onclick="goTab('mapasd17',this)"><span class="ntab-ico">📍</span>MapasD17</button>
-    <button class="ntab" style="--c:#e11d48;--c-bg:#fce4ea" id="tab-faltas" onclick="goTab('faltas',this)"><span class="ntab-ico">📊</span>Faltas</button>
-    <button class="ntab" style="--c:#c2410c;--c-bg:#f7e6df" id="tab-correccion" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
-    <button class="ntab" style="--c:#4d7c0f;--c-bg:#e8eee0" id="tab-nuevos" onclick="goTab('nuevos',this)"><span class="ntab-ico">➕</span>Nuevos Amigos</button>
-    <button class="ntab" style="--c:#b91c1c;--c-bg:#f6e1e1" id="tab-incidencias" onclick="goTab('incidencias',this)"><span class="ntab-ico">⚠️</span>Incidencias</button>
-    <button class="ntab" style="--c:#334155;--c-bg:#e4e6e9" id="tab-control" onclick="goTab('control',this)"><span class="ntab-ico">⚙️</span>Control</button>
-    <button class="ntab" style="--c:#92400e;--c-bg:#f1e6e0" id="tab-bajas" onclick="goTab('bajas',this)"><span class="ntab-ico">🚫</span>Bajas (30)</button>
-    <button class="ntab" style="--c:#3730a3;--c-bg:#e5e4f3" id="tab-historial" onclick="goTab('historial',this)"><span class="ntab-ico">📜</span>Historial de cambios</button>
-    <button class="ntab" style="--c:#0B2545;--c-bg:#e9eef6" id="tab-resultados" onclick="goTab('resultados',this)"><span class="ntab-ico">📊</span>Resultados</button>
   </div>
 
   <!-- PANEL: BASE OPERATIVA -->
@@ -1294,7 +1320,16 @@ tr:hover td{background:#f8faff}
 })();
 </script>
 
+<script>
+(function(){
+  const sb=document.getElementById('sidebar');
+  const btn=document.getElementById('side-toggle');
+  if(btn) btn.addEventListener('click',()=>sb.classList.toggle('collapsed'));
+  if(window.innerWidth<=900 && sb) sb.classList.add('collapsed');
+})();
+</script>
 
+  </div><!-- /main-wrap -->
 </div><!-- /app -->
 
 <!-- MODAL EDITAR PERSONA -->
@@ -1812,7 +1847,7 @@ async function doLogin(){
   if(PASSWORDS[selectedUser.name]!==pwd){document.getElementById('lerr').textContent='Contraseña incorrecta.';return;}
   currentUser=selectedUser.name;
   document.getElementById('login').style.display='none';
-  document.getElementById('app').style.display='block';
+  document.getElementById('app').style.display='flex';
   document.getElementById('tname').textContent=currentUser;
   const isAdmin=currentUser==='Octavio';
   const isEditor=EDITORAS.includes(currentUser);
@@ -4146,7 +4181,7 @@ async function exportarIncidencias(){
 // ── NAV ──
 function goTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.side-item').forEach(b=>b.classList.remove('on'));
   document.getElementById('panel-'+name).classList.add('on');
   btn.classList.add('on');
   if(name==='eventos'){cargarEventos();}
