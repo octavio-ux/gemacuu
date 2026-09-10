@@ -1179,7 +1179,10 @@ tr:hover td{background:#f8faff}
     'espinoza':'RENE ESPINOZA · 56 personas · 8 secciones (de la encuesta) · Apoyo: Lluvia',
   };
 
-  function render(){
+  // Mismo filtro (zona + búsqueda) y orden que ve el usuario en pantalla — usado tanto
+  // para pintar la tabla como para exportar exactamente lo que está viendo, con los
+  // filtros/búsqueda activos en ese momento (nunca la lista completa sin filtrar).
+  function filasVisibles(){
     let rows = data.filter(r=>{
       if(zonaFilter!=='todos' && r.zona!==zonaFilter) return false;
       if(searchTerm){
@@ -1198,7 +1201,11 @@ tr:hover td{background:#f8faff}
         return 0;
       });
     }
+    return rows;
+  }
 
+  function render(){
+    const rows = filasVisibles();
     const tbody = root.querySelector('#rBody');
     tbody.innerHTML='';
 
@@ -1264,6 +1271,24 @@ tr:hover td{background:#f8faff}
       render();
     });
   });
+
+  // Expuesta en window para que el botón global "↓ Excel" del header (exportarContextual,
+  // más abajo en este archivo) pueda llamarla cuando la pestaña activa sea Resultados —
+  // exporta exactamente las filas visibles en ese momento (con el filtro de equipo y la
+  // búsqueda ya aplicados), no la lista completa sin filtrar.
+  window.exportarResultados = function(){
+    showToast('⏳ Preparando Excel...');
+    const rows = filasVisibles();
+    let csv='\uFEFF'+'SECCIÓN,ENCARGADO,CASILLA,PAN,PRI,MORENA,VOTARON,L. NOMINAL,PARTICIP.,GANADOR\n';
+    rows.forEach(r=>{
+      csv+=`"${r.seccion}","${(r.encargado||'').replace(/"/g,"'")}","${r.casilla}",${r.pan},${r.pri},${r.mrn},${r.total},${r.lnom},"${r.pct.toFixed(1)}%","${r._winLabel}"\n`;
+    });
+    const a=document.createElement('a');
+    a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+    a.download=`GEMACUU_resultados_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    showToast('✓ Excel de resultados descargado');
+  };
 
   render();
 })();
@@ -4099,6 +4124,7 @@ function exportarContextual(){
   if(id==='panel-nuevos') exportarNuevos();
   else if(id==='panel-incidencias') exportarIncidencias();
   else if(id==='panel-eventos') exportarEventos();
+  else if(id==='panel-resultados') exportarResultados();
   else exportarExcel();
 }
 
