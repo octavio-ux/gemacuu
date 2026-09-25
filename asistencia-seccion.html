@@ -51,6 +51,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .persona-prelista{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:4px;vertical-align:middle}
 .persona-prelista.CONFIRMADO{background:#eaf3de;color:#2d6a4f}
 .persona-prelista.NO_ASISTE{background:#fce8e8;color:#cc0000}
+/* ── Modo prelista (evento futuro) ── */
+.aviso-prelista{background:#ede9fe;border:2px solid #8b5cf6;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#4c1d95;line-height:1.5}
+.pl-contadores{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pl-cont{flex:1;min-width:90px;text-align:center;font-size:12px;padding:6px 4px;border-radius:8px;background:#f0f4ff;color:var(--muted)}
+.pl-cont b{font-size:16px}
+.pl-cont.CONFIRMADO b{color:#2d6a4f}.pl-cont.NO_ASISTE b{color:#cc0000}.pl-cont.PENDIENTE b{color:#854f0b}
+.pl-botones{display:flex;gap:4px;width:100%}
+.pl-btn{flex:1;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
+.pl-btn:disabled{opacity:.5;cursor:not-allowed}
+.pl-btn.on-CONFIRMADO{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
+.pl-btn.on-NO_ASISTE{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
+.pl-btn.on-PENDIENTE{background:#fef3c7;border-color:#fac775;color:#854f0b}
+.pl-btn.pl-motivo.sel{background:#e6eeff;border-color:var(--pan);color:var(--pan)}
+.pl-motivo-txt{font-size:11px;color:#cc0000;font-weight:600;margin-top:2px}
+.modal-motivo{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:700;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-motivo-card{background:#fff;border-radius:var(--radius);padding:1.1rem;width:100%;max-width:380px}
 .persona-origen{font-size:10px;color:var(--pan);background:#e6eeff;border-radius:20px;padding:1px 7px;font-weight:700;flex-shrink:0}
 .estado-select{width:132px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
 .estado-select:disabled{opacity:.5;cursor:not-allowed}
@@ -201,6 +217,30 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 <div id="toast"></div>
 
+<!-- Motivo de "No asistirá" (modo prelista) -->
+<div id="modal-motivo" class="modal-motivo hidden">
+  <div class="modal-motivo-card">
+    <div style="font-size:15px;font-weight:800;color:var(--red);margin-bottom:4px">❌ No asistirá</div>
+    <div id="plm-nombre" style="font-weight:700;margin-bottom:12px"></div>
+    <div class="fg">
+      <label>Motivo</label>
+      <div class="pl-botones">
+        <button type="button" class="pl-btn pl-motivo" data-motivo="VACACIONES" onclick="seleccionarMotivoPrelistaSeccion('VACACIONES')">🌴 Vacaciones</button>
+        <button type="button" class="pl-btn pl-motivo" data-motivo="INCAPACIDAD" onclick="seleccionarMotivoPrelistaSeccion('INCAPACIDAD')">🩺 Incapacidad</button>
+        <button type="button" class="pl-btn pl-motivo" data-motivo="OTRO" onclick="seleccionarMotivoPrelistaSeccion('OTRO')">📝 Otro</button>
+      </div>
+    </div>
+    <div class="fg hidden" id="plm-detalle-wrap">
+      <label>Detalle (opcional)</label>
+      <input type="text" id="plm-detalle" maxlength="200" placeholder="ej. cita médica, viaje...">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button type="button" class="btn btn-secondary w-full" onclick="cerrarMotivoPrelistaSeccion()">Cancelar</button>
+      <button type="button" class="btn btn-primary w-full" id="plm-guardar" onclick="confirmarMotivoPrelistaSeccion()" disabled>💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div id="visor-mapas" class="visor-mapas hidden">
   <div class="visor-mapas-hdr">
     <h3 id="visor-mapas-titulo">📍 Mapas</h3>
@@ -268,6 +308,7 @@ function showToast(msg){
 let token=null;
 let enlace=null;
 let expiraEn=null;
+let modoPrelista=false;   // true si el evento tiene fecha futura: el enlace captura prelista, no asistencia
 let eventoId=null;
 let eventoInfo=null; // {nombre,fecha} de la tabla "eventos"
 let seccionesValidas=[];   // universo de números de sección que trae el enlace
@@ -346,23 +387,6 @@ async function init(){
   enlace=Array.isArray(rows)?rows[0]:null;
   if(!enlace || enlace.revocado){ mostrarError('Este enlace no es válido o fue revocado.'); return; }
 
-  if(!enlace.primera_apertura){
-    await fetch(`${SB_URL}/rest/v1/enlaces_temporales?token=eq.${encodeURIComponent(token)}&primera_apertura=is.null`,{
-      method:'PATCH',
-      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({primera_apertura:new Date().toISOString()})
-    });
-    rows=await sbGet('enlaces_temporales',`?token=eq.${encodeURIComponent(token)}`);
-    enlace=Array.isArray(rows)?rows[0]:null;
-    if(!enlace){ mostrarError('Este enlace no es válido.'); return; }
-  }
-
-  expiraEn=new Date(new Date(enlace.primera_apertura).getTime()+(enlace.vigencia_horas||15)*60*60*1000);
-  if(new Date()>expiraEn){
-    mostrarError(`Este enlace caducó el ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}.`);
-    return;
-  }
-
   eventoId=enlace.evento_id;
   seccionesValidas=enlace.secciones||[];
   if(!eventoId||!seccionesValidas.length){ mostrarError('Este enlace no tiene una actividad o secciones configuradas.'); return; }
@@ -370,9 +394,41 @@ async function init(){
   const eventoRows=await sbGet('eventos',`?id=eq.${eventoId}`);
   eventoInfo=(Array.isArray(eventoRows)&&eventoRows[0])?eventoRows[0]:null;
 
-  document.getElementById('exp-badge').textContent=`⏳ Enlace temporal — caduca ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
-  actualizarCuentaRegresiva();
-  setInterval(actualizarCuentaRegresiva,60000);
+  // Evento con fecha futura (hora local): el enlace sirve para capturar la PRELISTA de la
+  // sección, no asistencia. La vigencia del enlace no empieza a correr (no se marca
+  // primera_apertura) para que el día del evento siga funcionando normal.
+  modoPrelista=!!(eventoInfo&&eventoInfo.fecha&&eventoInfo.fecha>fechaLocalHoy());
+  if(modoPrelista){
+    document.getElementById('exp-badge').textContent=`📋 Prelista · evento ${fechaCortaEvento(eventoInfo.fecha)}`;
+  } else {
+    // Vigencia desde la primera apertura. Si se abrió ANTES del día del evento (p.ej. para la
+    // prelista), el mismo día del evento vuelve a contar desde cero.
+    const esHoy=!!(eventoInfo&&eventoInfo.fecha===fechaLocalHoy());
+    const inicioDelDia=esHoy?inicioDiaLocal(eventoInfo.fecha):null;
+    const abiertoAntes=!!(enlace.primera_apertura&&inicioDelDia&&new Date(enlace.primera_apertura)<inicioDelDia);
+    if(!enlace.primera_apertura||abiertoAntes){
+      const filtro=abiertoAntes
+        ?`&or=${encodeURIComponent(`(primera_apertura.is.null,primera_apertura.lt.${inicioDelDia.toISOString()})`)}`
+        :'&primera_apertura=is.null';
+      await fetch(`${SB_URL}/rest/v1/enlaces_temporales?token=eq.${encodeURIComponent(token)}${filtro}`,{
+        method:'PATCH',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({primera_apertura:new Date().toISOString()})
+      });
+      rows=await sbGet('enlaces_temporales',`?token=eq.${encodeURIComponent(token)}`);
+      enlace=Array.isArray(rows)?rows[0]:null;
+      if(!enlace||!enlace.primera_apertura){ mostrarError('Este enlace no es válido.'); return; }
+    }
+
+    expiraEn=new Date(new Date(enlace.primera_apertura).getTime()+(enlace.vigencia_horas||15)*60*60*1000);
+    if(new Date()>expiraEn){
+      mostrarError(`Este enlace caducó el ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}.`);
+      return;
+    }
+    document.getElementById('exp-badge').textContent=`⏳ Enlace temporal — caduca ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+    actualizarCuentaRegresiva();
+    setInterval(actualizarCuentaRegresiva,60000);
+  }
   document.getElementById('loading').classList.add('hidden');
 
   registradoPor=(localStorage.getItem('gemacuu_asis_nombre')||'').toUpperCase();
@@ -430,6 +486,14 @@ async function confirmarAcceso(){
   seccionOrigenNum=numSeccion;
   seccionEsApoyo=false;
   seccionDestinoApoyo=null;
+
+  if(modoPrelista){
+    btn.disabled=false;
+    btn.textContent='Entrar →';
+    document.getElementById('acceso-gate').classList.add('hidden');
+    await entrarPrelista(numSeccion);
+    return;
+  }
   let esActiva=false;
   let seccionesActivasEvento=[];
   try{
@@ -908,6 +972,204 @@ async function marcarAsistenciaSinSobrescribir(filas,seccionNum){
     if(!rh.ok) console.error('Prelista aplicada, pero falló el historial',await rh.text());
   }
   return {marcadas};
+}
+
+// ── MODO PRELISTA (evento con fecha futura) ──
+// El líder marca a la gente de SU sección como Confirmado / No asistirá (con motivo) /
+// Pendiente. Se guarda al tocar en "prelista" + "prelista_historial" (lo mismo que ve
+// Eventos → Prelista en el portal). No se toca asistencia_eventos.
+const PRELISTA_ESTADOS=['CONFIRMADO','NO_ASISTE','PENDIENTE'];
+const PRELISTA_LABEL={CONFIRMADO:'Confirmado',NO_ASISTE:'No asistirá',PENDIENTE:'Pendiente'};
+const PRELISTA_ICON={CONFIRMADO:'✅',NO_ASISTE:'❌',PENDIENTE:'⏳'};
+const prelistaColas=new Map(); // personal_id -> Promise: guarda en orden los clics de una misma persona
+const prelistaUltimoCtx={};    // personal_id -> último cambio enviado, para reintentar
+
+function fechaLegible(fecha){
+  const [y,m,d]=fecha.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+}
+function fechaCortaEvento(fecha){
+  const [y,m,d]=fecha.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'});
+}
+function inicioDiaLocal(fecha){
+  const [y,m,d]=fecha.split('-').map(Number);
+  return new Date(y,m-1,d,0,0,0,0);
+}
+function prelistaDePersona(personalId){
+  return prelistaPersonas[personalId]||{estado:'PENDIENTE',motivo:null,motivo_detalle:null};
+}
+function capturadoPorPrelista(){
+  return `${registradoPor} · enlace Sec. ${seccionOrigenNum}`;
+}
+
+async function entrarPrelista(num){
+  const liderRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(num)}&es_lider_seccion=eq.true&status=eq.activo&select=nombre&order=nombre.asc&limit=1`);
+  const catalogo=SECCIONES.find(s=>s.num===num)||{num,padrino:''};
+  seccionActual={...catalogo,num,encargado:(Array.isArray(liderRows)&&liderRows[0]?.nombre)||'— sin líder activo —'};
+
+  document.getElementById('registrado-como').textContent=`Capturando prelista como: ${registradoPor}`;
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('seccion-cont').innerHTML='<div class="card"><div class="vacio">Cargando…</div></div>';
+
+  const personal=await sbGet('personal',`?status=eq.activo&seccion=eq.${encodeURIComponent(num)}&order=nombre.asc`);
+  if(!Array.isArray(personal)){
+    document.getElementById('seccion-cont').innerHTML='<div class="card"><div class="error-msg">No se pudo cargar tu sección. Recarga la página.</div></div>';
+    return;
+  }
+  personalSeccion=personal;
+  prelistaPersonas={};
+  if(personalSeccion.length){
+    const pre=await sbGet('prelista',`?evento_id=eq.${eventoId}&personal_id=in.(${personalSeccion.map(p=>p.id).join(',')})&select=personal_id,estado,motivo,motivo_detalle`);
+    if(!Array.isArray(pre)){
+      document.getElementById('seccion-cont').innerHTML='<div class="card"><div class="error-msg">No se pudo cargar la prelista. Recarga la página.</div></div>';
+      return;
+    }
+    pre.forEach(r=>{ prelistaPersonas[r.personal_id]={estado:r.estado,motivo:r.motivo,motivo_detalle:r.motivo_detalle}; });
+  }
+  renderPrelistaSeccion();
+}
+
+function renderPrelistaSeccion(){
+  const s=seccionActual;
+  document.getElementById('seccion-cont').innerHTML=`<div class="card">
+    <div class="seccion-hdr">
+      <div class="seccion-num">Sección ${s.num}</div>
+      ${s.encargado?`<div class="seccion-lider">Líder: ${escHtml(s.encargado)}</div>`:''}
+      <div class="seccion-evento">📅 ${escHtml(eventosNombreActual())}</div>
+    </div>
+    <div class="aviso-prelista">
+      📋 <b>Prelista</b> — el evento es el <b>${escHtml(fechaLegible(eventoInfo.fecha))}</b>.<br>
+      Marca quién va a ir. Se guarda solo al tocar cada botón.<br>
+      <span style="font-weight:600">El día del evento este mismo enlace sirve para tomar asistencia (su tiempo de uso empieza a contar ese día).</span>
+    </div>
+    <div id="pl-contadores" class="pl-contadores"></div>
+    <div class="personas-lista" id="pl-lista">
+      ${personalSeccion.length?personalSeccion.map(renderFilaPrelistaSeccion).join(''):'<div class="vacio">Sin personal activo registrado en esta sección.</div>'}
+    </div>
+  </div>`;
+  renderContadoresPrelistaSeccion();
+}
+
+function renderContadoresPrelistaSeccion(){
+  const el=document.getElementById('pl-contadores');
+  if(!el) return;
+  const c={CONFIRMADO:0,NO_ASISTE:0,PENDIENTE:0};
+  personalSeccion.forEach(p=>c[prelistaDePersona(p.id).estado]++);
+  el.innerHTML=PRELISTA_ESTADOS.map(e=>`<div class="pl-cont ${e}"><b>${c[e]}</b> ${PRELISTA_LABEL[e]}</div>`).join('');
+}
+
+function renderFilaPrelistaSeccion(p){
+  const pl=prelistaDePersona(p.id);
+  const motivo=pl.estado==='NO_ASISTE'
+    ?`<div class="pl-motivo-txt">${MOTIVO_PRELISTA_LABEL[pl.motivo]||''}${pl.motivo_detalle?' — '+escHtml(pl.motivo_detalle):''}</div>`:'';
+  return `<div class="persona-row" id="pl-row-${p.id}">
+    <div class="persona-nombre">${escHtml(p.nombre)}${motivo}</div>
+    <span class="persona-status" id="status-${p.id}" onclick="reintentarPrelistaSeccion('${p.id}')"></span>
+    <div class="pl-botones">${PRELISTA_ESTADOS.map(e=>`<button type="button" class="pl-btn ${pl.estado===e?'on-'+e:''}" onclick="clickPrelistaSeccion('${p.id}','${e}')">${PRELISTA_ICON[e]} ${PRELISTA_LABEL[e]}</button>`).join('')}</div>
+  </div>`;
+}
+
+function clickPrelistaSeccion(personalId,estado){
+  const p=personalSeccion.find(x=>String(x.id)===String(personalId));
+  if(!p) return;
+  if(estado==='NO_ASISTE'){ abrirMotivoPrelistaSeccion(p); return; }
+  if(prelistaDePersona(p.id).estado===estado) return;
+  aplicarCambioPrelistaSeccion(p,{estado,motivo:null,motivo_detalle:null});
+}
+
+function aplicarCambioPrelistaSeccion(p,nuevo){
+  const anterior=prelistaDePersona(p.id);
+  const ctx={personal_id:p.id,
+    estado_anterior:anterior.estado, motivo_anterior:anterior.motivo||null,
+    estado_nuevo:nuevo.estado, motivo_nuevo:nuevo.motivo||null, motivo_detalle:nuevo.motivo_detalle||null};
+  prelistaPersonas[p.id]={...nuevo};
+  const row=document.getElementById(`pl-row-${p.id}`);
+  if(row) row.outerHTML=renderFilaPrelistaSeccion(p);
+  renderContadoresPrelistaSeccion();
+  prelistaUltimoCtx[p.id]=ctx;
+  encolarPrelistaSeccion(ctx);
+}
+
+function encolarPrelistaSeccion(ctx){
+  const key=String(ctx.personal_id);
+  const previa=prelistaColas.get(key)||Promise.resolve();
+  const prom=previa.then(()=>guardarPrelistaSeccion(ctx));
+  prelistaColas.set(key,prom);
+  prom.finally(()=>{ if(prelistaColas.get(key)===prom) prelistaColas.delete(key); });
+}
+
+function reintentarPrelistaSeccion(personalId){
+  const el=document.getElementById(`status-${personalId}`);
+  if(!el||el.textContent!=='⚠️') return;
+  const ctx=prelistaUltimoCtx[personalId];
+  if(ctx) encolarPrelistaSeccion(ctx);
+}
+
+async function guardarPrelistaSeccion(ctx){
+  const headers={'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json'};
+  const quien=capturadoPorPrelista();
+  for(let intento=0;intento<3;intento++){
+    marcarEstadoFila(ctx.personal_id,'guardando');
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/prelista?on_conflict=evento_id,personal_id`,{
+        method:'POST',
+        headers:{...headers,'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify([{evento_id:eventoId, personal_id:ctx.personal_id, estado:ctx.estado_nuevo, motivo:ctx.motivo_nuevo, motivo_detalle:ctx.motivo_detalle, capturado_por:quien, fecha_captura:new Date().toISOString()}])
+      });
+      if(!r.ok) throw new Error(await r.text());
+      // No cuenta como guardado hasta que también quede en el historial (reintentar
+      // re-manda el upsert, que es idempotente).
+      const rh=await fetch(`${SB_URL}/rest/v1/prelista_historial`,{
+        method:'POST',
+        headers:{...headers,'Prefer':'return=minimal'},
+        body:JSON.stringify([{evento_id:eventoId, personal_id:ctx.personal_id, estado_anterior:ctx.estado_anterior, motivo_anterior:ctx.motivo_anterior, estado_nuevo:ctx.estado_nuevo, motivo_nuevo:ctx.motivo_nuevo, motivo_detalle:ctx.motivo_detalle, modificado_por:quien}])
+      });
+      if(!rh.ok) throw new Error(await rh.text());
+      marcarEstadoFila(ctx.personal_id,'ok');
+      return true;
+    }catch(e){
+      if(intento<2){ await new Promise(res=>setTimeout(res,800*(intento+1))); continue; }
+      console.error('Error guardando prelista',ctx,e);
+      marcarEstadoFila(ctx.personal_id,'error');
+      showToast('⚠️ No se guardó — toca ⚠️ para reintentar');
+      return false;
+    }
+  }
+}
+
+// ── Motivo de "No asistirá" ──
+let plMotivoPersona=null;
+let plMotivoSel=null;
+function abrirMotivoPrelistaSeccion(p){
+  plMotivoPersona=p;
+  const actual=prelistaDePersona(p.id);
+  plMotivoSel=actual.estado==='NO_ASISTE'?actual.motivo:null;
+  document.getElementById('plm-nombre').textContent=p.nombre||'';
+  document.getElementById('plm-detalle').value=actual.estado==='NO_ASISTE'?(actual.motivo_detalle||''):'';
+  pintarMotivoPrelistaSeccion();
+  document.getElementById('modal-motivo').classList.remove('hidden');
+}
+function seleccionarMotivoPrelistaSeccion(motivo){
+  plMotivoSel=motivo;
+  pintarMotivoPrelistaSeccion();
+}
+function pintarMotivoPrelistaSeccion(){
+  document.querySelectorAll('#modal-motivo .pl-motivo').forEach(b=>b.classList.toggle('sel',b.dataset.motivo===plMotivoSel));
+  document.getElementById('plm-detalle-wrap').classList.toggle('hidden',plMotivoSel!=='OTRO');
+  document.getElementById('plm-guardar').disabled=!plMotivoSel;
+}
+function cerrarMotivoPrelistaSeccion(){
+  document.getElementById('modal-motivo').classList.add('hidden');
+}
+function confirmarMotivoPrelistaSeccion(){
+  const p=plMotivoPersona;
+  if(!p||!plMotivoSel) return;
+  const detalle=plMotivoSel==='OTRO'?(document.getElementById('plm-detalle').value.trim()||null):null;
+  const actual=prelistaDePersona(p.id);
+  cerrarMotivoPrelistaSeccion();
+  if(actual.estado==='NO_ASISTE'&&actual.motivo===plMotivoSel&&(actual.motivo_detalle||null)===detalle) return;
+  aplicarCambioPrelistaSeccion(p,{estado:'NO_ASISTE',motivo:plMotivoSel,motivo_detalle:detalle});
 }
 
 function marcarEstadoFila(personalId,estado){
