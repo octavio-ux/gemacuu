@@ -3,6 +3,10 @@
 -- en el evento "PRELISTA 30 SEPTIEMBRE" (2026-09-30), que es un evento futuro.
 --
 -- Se corre en Supabase → SQL Editor, en 3 PASOS, cada uno en su propia consulta.
+--
+-- Los "apoyos no registrados" (+ Agregar apoyo) viven en OTRA tabla,
+-- apoyos_no_registrados, y este script NO los modifica ni los borra: solo los cuenta
+-- (antes y después) y los incluye en el respaldo.
 -- ════════════════════════════════════════════════════════════════════
 
 
@@ -26,12 +30,14 @@ select
   (select count(*) from public.asistencia_eventos a join ev on a.evento_id = ev.id where a.estado is null)         as sin_estado,
   (select count(*) from public.asistencia_eventos a join ev on a.evento_id = ev.id
      join public.prelista p on p.evento_id = a.evento_id and p.personal_id = a.personal_id
-     where a.estado is not null and p.estado <> 'PENDIENTE')                              as ya_tienen_prelista;
+     where a.estado is not null and p.estado <> 'PENDIENTE')                              as ya_tienen_prelista,
+  (select count(*) from public.apoyos_no_registrados ap join ev on ap.evento_id = ev.id) as apoyos_no_registrados;
 
 
 -- ────────────────────────────────────────────────────────────────────
--- PASO 2 · RESPALDO (copia las filas de asistencia de ese evento a una tabla aparte,
--- por si algo sale mal). No cambia nada más. Protegida: no se puede leer desde la app.
+-- PASO 2 · RESPALDO (copia la asistencia y los apoyos no registrados de ese evento a
+-- tablas aparte, por si algo sale mal). No cambia nada más. Protegidas: no se pueden
+-- leer desde la app.
 -- ────────────────────────────────────────────────────────────────────
 create table if not exists public.respaldo_asistencia_prelista_30sep as
   select a.*, now() as respaldado_en
@@ -39,7 +45,15 @@ create table if not exists public.respaldo_asistencia_prelista_30sep as
   join public.eventos e on e.id = a.evento_id
   where upper(trim(e.nombre)) = 'PRELISTA 30 SEPTIEMBRE' and e.fecha = '2026-09-30';
 alter table public.respaldo_asistencia_prelista_30sep enable row level security;
-select count(*) as filas_respaldadas from public.respaldo_asistencia_prelista_30sep;
+create table if not exists public.respaldo_apoyos_prelista_30sep as
+  select ap.*, now() as respaldado_en
+  from public.apoyos_no_registrados ap
+  join public.eventos e on e.id = ap.evento_id
+  where upper(trim(e.nombre)) = 'PRELISTA 30 SEPTIEMBRE' and e.fecha = '2026-09-30';
+alter table public.respaldo_apoyos_prelista_30sep enable row level security;
+select
+  (select count(*) from public.respaldo_asistencia_prelista_30sep) as filas_respaldadas,
+  (select count(*) from public.respaldo_apoyos_prelista_30sep)     as apoyos_respaldados;
 
 
 -- ────────────────────────────────────────────────────────────────────
@@ -51,7 +65,8 @@ select count(*) as filas_respaldadas from public.respaldo_asistencia_prelista_30
 -- Cada cambio queda en prelista_historial con modificado_por = 'Conversión enlace'.
 -- Si una persona YA tenía prelista capturada (Confirmado / No asistirá), se respeta esa.
 -- Al final borra TODAS las filas de asistencia_eventos de ese evento (el evento queda
--- sin asistencia real). Si no encuentra exactamente 1 evento, no hace nada.
+-- sin asistencia real). NO toca apoyos_no_registrados. Si no encuentra exactamente
+-- 1 evento, no hace nada.
 -- ────────────────────────────────────────────────────────────────────
 with ev as (
   select e.id from public.eventos e
@@ -107,11 +122,13 @@ select
   (select count(*) from insertadas)                                     as pasadas_a_prelista,
   (select count(*) from historial)                                      as registradas_en_historial,
   (select count(*) from origen) - (select count(*) from insertadas)     as respetadas_por_ya_tener_prelista,
-  (select count(*) from borradas)                                       as borradas_de_asistencia;
+  (select count(*) from borradas)                                       as borradas_de_asistencia,
+  (select count(*) from public.apoyos_no_registrados ap join ev on ap.evento_id = ev.id) as apoyos_conservados;
 
 
 -- ────────────────────────────────────────────────────────────────────
 -- (Opcional, días después, cuando ya confirmaste que todo quedó bien)
--- Borrar el respaldo:
+-- Borrar los respaldos:
 --   drop table public.respaldo_asistencia_prelista_30sep;
+--   drop table public.respaldo_apoyos_prelista_30sep;
 -- ────────────────────────────────────────────────────────────────────

@@ -1027,6 +1027,9 @@ async function entrarPrelista(num){
     }
     pre.forEach(r=>{ prelistaPersonas[r.personal_id]={estado:r.estado,motivo:r.motivo,motivo_detalle:r.motivo_detalle}; });
   }
+  // Apoyos no registrados de esta sección para este evento (misma tabla que el día del evento).
+  const apoyos=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
+  apoyosSeccion=Array.isArray(apoyos)?apoyos:[];
   renderPrelistaSeccion();
 }
 
@@ -1047,6 +1050,20 @@ function renderPrelistaSeccion(){
     <div class="personas-lista" id="pl-lista">
       ${personalSeccion.length?personalSeccion.map(renderFilaPrelistaSeccion).join(''):'<div class="vacio">Sin personal activo registrado en esta sección.</div>'}
     </div>
+
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 4px">🏷️ Apoyos que van (no están en la lista)</div>
+    <button type="button" class="btn-link" onclick="mostrarFormApoyo()">+ Agregar apoyo</button>
+    <div id="apoyo-form" class="apoyo-form hidden">
+      <input type="text" id="apoyo-nombre" placeholder="Nombre de quien va a apoyar">
+      <select id="apoyo-actividad">
+        ${ACTIVIDADES.map(a=>`<option value="${a}">${a}</option>`).join('')}
+      </select>
+      <div class="apoyo-form-btns">
+        <button type="button" class="btn btn-secondary" onclick="ocultarFormApoyo()">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="guardarApoyo()">Guardar apoyo</button>
+      </div>
+    </div>
+    <div id="apoyos-lista" class="apoyos-lista">${apoyosSeccion.map(renderApoyoChip).join('')}</div>
   </div>`;
   renderContadoresPrelistaSeccion();
 }
@@ -1318,7 +1335,7 @@ async function guardarApoyo(){
 }
 
 function renderApoyoChip(a){
-  return `<div class="apoyo-chip">🏷️ ${a.nombre} · ${a.actividad} <span class="apoyo-tag">apoyo no registrado</span></div>`;
+  return `<div class="apoyo-chip">🏷️ ${escHtml(a.nombre)} · ${escHtml(a.actividad)} <span class="apoyo-tag">apoyo no registrado</span></div>`;
 }
 
 async function handleFotos(input){
