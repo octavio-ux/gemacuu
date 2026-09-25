@@ -2606,9 +2606,19 @@ function renderListaEnlaces(){
   if(!el) return;
   if(!enlacesCache.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted)">Aún no se han generado enlaces.</div>'; return; }
   el.innerHTML=enlacesCache.map(en=>{
+    // Misma regla que asistencia-seccion.html: con el evento en el futuro la vigencia no corre
+    // (el enlace sirve para la prelista), y si se abrió antes del día del evento, ese día
+    // vuelve a contar desde cero al abrirlo.
+    const eventoEn=eventosParaEnlaceCache.find(ev=>ev.id===en.evento_id);
+    const faseEn=eventoEn?faseEvento(eventoEn):null;
+    const abiertoAntesDeHoy=faseEn==='hoy'&&en.primera_apertura&&new Date(en.primera_apertura)<new Date(`${eventoEn.fecha}T00:00:00`);
     let estadoHtml;
     if(en.revocado){
       estadoHtml=`<span class="badge badge-red">🚫 revocado</span>`;
+    } else if(faseEn==='programado'){
+      estadoHtml=`<span class="badge" style="background:#ede9fe;color:#5b21b6">📋 prelista — vigencia inicia el día del evento</span>`;
+    } else if(abiertoAntesDeHoy){
+      estadoHtml=`<span class="badge badge-gray">⏳ disponible — la vigencia empieza al abrirlo hoy</span>`;
     } else if(!en.primera_apertura){
       estadoHtml=`<span class="badge badge-gray">⏳ sin abrir — disponible</span>`;
     } else {
