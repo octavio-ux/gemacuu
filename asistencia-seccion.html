@@ -48,6 +48,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .persona-nombre{flex:1;font-size:13px;font-weight:600;min-width:110px}
 .persona-actividad{max-width:150px;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px}
 .persona-status{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.persona-prelista{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:4px;vertical-align:middle}
+.persona-prelista.CONFIRMADO{background:#eaf3de;color:#2d6a4f}
+.persona-prelista.NO_ASISTE{background:#fce8e8;color:#cc0000}
 .persona-origen{font-size:10px;color:var(--pan);background:#e6eeff;border-radius:20px;padding:1px 7px;font-weight:700;flex-shrink:0}
 .estado-select{width:132px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
 .estado-select:disabled{opacity:.5;cursor:not-allowed}
@@ -281,6 +284,7 @@ let seccionEEDestino=null;      // a qué sección cuenta el EE capturado: secci
 let personalSeccion=[];         // gente cuya sección real es esta (siempre visible, aunque no tenga estado capturado)
 let personalExterno=[];         // gente de OTRAS secciones que este líder agregó por búsqueda (persiste vía capturado_en_seccion)
 let asistenciaPersonas={};      // { personal_id: {estado, actividad} } — viene de asistencia_eventos
+let prelistaPersonas={};        // { personal_id: {estado, motivo, motivo_detalle} } — prelista capturada antes del evento
 let apoyosSeccion=[];
 let totalEncuestas=null;
 let bloquearTotalEncuestas=false; // toggle por evento (encuestas_seccion.bloquear_total_encuestas) de seccionEEDestino
@@ -587,6 +591,8 @@ async function cargarYRenderizar(){
     personalExterno=[];
   }
 
+  await precargarPrelista(num);
+
   const apoyos=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
   apoyosSeccion=Array.isArray(apoyos)?apoyos:[];
 
@@ -796,7 +802,7 @@ function renderPersonaRow(p,esExterna){
   const esAsistencia=marcado==='ASISTENCIA';
   const actividad=estado.actividad||ACTIVIDADES[0];
   return `<div class="persona-row">
-    <div class="persona-nombre">${p.nombre}${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}</div>
+    <div class="persona-nombre">${p.nombre}${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}${etiquetaPrelista(p.id)}</div>
     <select class="persona-actividad ${esAsistencia?'':'hidden'}" onchange="cambiarActividad('${p.id}',this.value)">
       ${ACTIVIDADES.map(a=>`<option value="${a}" ${a===actividad?'selected':''}>${a}</option>`).join('')}
     </select>
@@ -806,6 +812,102 @@ function renderPersonaRow(p,esExterna){
       ${ESTADOS.map(e=>`<option value="${e}" ${e===marcado?'selected':''}>${ESTADO_LABEL[e]}</option>`).join('')}
     </select>
   </div>`;
+}
+
+// ── PRELISTA ──
+const MOTIVO_PRELISTA_LABEL={VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad',OTRO:'Otro'};
+
+// Fecha de hoy en hora local (la constante "hoy" de arriba viene de toISOString(), que es UTC).
+function fechaLocalHoy(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function escHtml(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function etiquetaPrelista(personalId){
+  const pl=prelistaPersonas[personalId];
+  if(!pl) return '';
+  if(pl.estado==='CONFIRMADO') return '<span class="persona-prelista CONFIRMADO">✅ Confirmó</span>';
+  if(pl.estado==='NO_ASISTE'){
+    const txt=`No asistirá: ${MOTIVO_PRELISTA_LABEL[pl.motivo]||''}${pl.motivo_detalle?' — '+pl.motivo_detalle:''}`;
+    return `<span class="persona-prelista NO_ASISTE" title="${escHtml(txt)}">❌ ${escHtml(txt)}</span>`;
+  }
+  return '';
+}
+
+// Precarga la toma de asistencia con la prelista del evento:
+//  · Ordena la lista: confirmados primero, luego pendientes, al final quien avisó que no asiste.
+//  · Desde el día del evento, a quien avisó VACACIONES / INCAPACIDAD y todavía no tiene estado
+//    capturado se le guarda ese estado automáticamente (sin pisar nada ya capturado).
+// Si la prelista no se puede leer, la página sigue funcionando igual que antes.
+async function precargarPrelista(num){
+  prelistaPersonas={};
+  const ids=[...personalSeccion,...personalExterno].map(p=>p.id);
+  if(!ids.length) return;
+  const data=await sbGet('prelista',`?evento_id=eq.${eventoId}&personal_id=in.(${ids.join(',')})&select=personal_id,estado,motivo,motivo_detalle`);
+  if(!Array.isArray(data)){ console.error('No se pudo leer la prelista',data); return; }
+  data.forEach(r=>{ prelistaPersonas[r.personal_id]={estado:r.estado,motivo:r.motivo,motivo_detalle:r.motivo_detalle}; });
+
+  const rango=p=>{ const e=prelistaPersonas[p.id]?.estado; return e==='CONFIRMADO'?0:(e==='NO_ASISTE'?2:1); };
+  const ordenar=lista=>lista.sort((a,b)=>rango(a)-rango(b)||(a.nombre||'').localeCompare(b.nombre||'','es'));
+  ordenar(personalSeccion);
+  ordenar(personalExterno);
+
+  if(!eventoInfo?.fecha||eventoInfo.fecha>fechaLocalHoy()) return;
+  const filas=personalSeccion
+    .filter(p=>{
+      const pl=prelistaPersonas[p.id];
+      return pl&&pl.estado==='NO_ASISTE'&&(pl.motivo==='VACACIONES'||pl.motivo==='INCAPACIDAD')&&!asistenciaPersonas[p.id]?.estado;
+    })
+    .map(p=>({personal_id:p.id,estado:prelistaPersonas[p.id].motivo}));
+  if(!filas.length) return;
+  try{
+    const {marcadas}=await marcarAsistenciaSinSobrescribir(filas,num);
+    marcadas.forEach(m=>{ asistenciaPersonas[m.personal_id]={estado:m.estado,actividad:null}; });
+    if(marcadas.length) showToast(`📋 ${marcadas.length} marcada(s) desde la prelista (vacaciones/incapacidad)`);
+  }catch(e){
+    console.error('No se pudo aplicar la prelista',e);
+  }
+}
+
+// Inserta el estado solo si la persona NO tiene fila en asistencia_eventos (ignore-duplicates)
+// y, si la fila existe pero con estado vacío, la completa con un PATCH filtrado por estado=is.null.
+// Nunca pisa un estado ya capturado (misma lógica que "Aplicar prelista" en index.html).
+async function marcarAsistenciaSinSobrescribir(filas,seccionNum){
+  const headers={'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json'};
+  const ahora=new Date().toISOString();
+  const registrado='Prelista (auto)';
+  const r=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?on_conflict=evento_id,personal_id`,{
+    method:'POST',
+    headers:{...headers,'Prefer':'resolution=ignore-duplicates,return=representation'},
+    body:JSON.stringify(filas.map(f=>({evento_id:eventoId,personal_id:f.personal_id,estado:f.estado,capturado_en_seccion:seccionNum,registrado_por:registrado,updated_at:ahora})))
+  });
+  if(!r.ok) throw new Error(await r.text());
+  const marcadas=(await r.json()).map(x=>({personal_id:x.personal_id,estado:x.estado}));
+  const yaMarcadas=new Set(marcadas.map(x=>String(x.personal_id)));
+  for(const estado of ['VACACIONES','INCAPACIDAD']){
+    const ids=filas.filter(f=>f.estado===estado&&!yaMarcadas.has(String(f.personal_id))).map(f=>f.personal_id);
+    if(!ids.length) continue;
+    const rp=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?evento_id=eq.${eventoId}&personal_id=in.(${ids.join(',')})&estado=is.null`,{
+      method:'PATCH',
+      headers:{...headers,'Prefer':'return=representation'},
+      body:JSON.stringify({estado,registrado_por:registrado,updated_at:ahora})
+    });
+    if(!rp.ok) throw new Error(await rp.text());
+    (await rp.json()).forEach(x=>marcadas.push({personal_id:x.personal_id,estado:x.estado}));
+  }
+  if(marcadas.length){
+    const rh=await fetch(`${SB_URL}/rest/v1/asistencia_historial`,{
+      method:'POST',
+      headers:{...headers,'Prefer':'return=minimal'},
+      body:JSON.stringify(marcadas.map(m=>({evento_id:eventoId,personal_id:m.personal_id,estado_anterior:null,estado_nuevo:m.estado,modificado_por:registrado})))
+    });
+    if(!rh.ok) console.error('Prelista aplicada, pero falló el historial',await rh.text());
+  }
+  return {marcadas};
 }
 
 function marcarEstadoFila(personalId,estado){

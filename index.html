@@ -321,6 +321,34 @@ tr:hover td{background:#f8faff}
 .evento-chip.sel{background:#e6f1fb;border-color:#185fa5;color:#0c447c;font-weight:700}
 .evento-chip.sel-faltas{background:#fce4ea;border-color:#e11d48;color:#e11d48;font-weight:700}
 .btn:disabled{opacity:.5;cursor:not-allowed}
+.evento-chip .chip-fase{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:#ede9fe;color:#5b21b6}
+.evento-chip .chip-fase.hoy{background:#d1fae5;color:#065f46}
+.fase-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#ede9fe;color:#5b21b6}
+.fase-badge.hoy{background:#d1fae5;color:#065f46}
+.fase-badge.pasado{background:#f0f0f0;color:#555}
+/* ── PRELISTA ── */
+.pl-contadores{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.pl-cont{background:#f0f4ff;border-radius:8px;padding:10px;text-align:center}
+.pl-cont-n{font-size:20px;font-weight:800;color:#2d6a4f;line-height:1.1}
+.pl-cont-n small{font-size:12px;color:var(--muted);font-weight:600}
+.pl-cont-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
+.pl-lista{border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff}
+.pl-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
+.pl-row:last-child{border-bottom:none}
+.pl-row.ro{background:#fafbff}
+.pl-botones{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap}
+.pl-btn{padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
+.pl-btn:disabled{cursor:not-allowed;opacity:.55}
+.pl-btn.on-CONFIRMADO{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
+.pl-btn.on-NO_ASISTE{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
+.pl-btn.on-PENDIENTE{background:#fef3c7;border-color:#fac775;color:#854f0b}
+.pl-btn.pl-motivo.sel{background:var(--pan-light);border-color:var(--pan);color:var(--pan)}
+.pl-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.pl-badge.CONFIRMADO{background:#eaf3de;color:#2d6a4f}
+.pl-badge.NO_ASISTE{background:#fce8e8;color:#cc0000}
+.pl-badge.PENDIENTE{background:#fef3c7;color:#854f0b}
+.pl-motivo-txt{font-size:11px;color:#cc0000;font-weight:600}
+@media(max-width:640px){.pl-botones{width:100%;flex-wrap:nowrap}.pl-botones .pl-btn{flex:1;padding:6px 4px;font-size:11px}}
 .corr-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
 .corr-row:last-child{border-bottom:none}
 .estado-select{width:126px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
@@ -625,7 +653,7 @@ tr:hover td{background:#f8faff}
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
           <div class="card-title">📅 Eventos</div>
-          <div style="font-size:12px;color:var(--muted)">Selecciona un evento para tomar asistencia.</div>
+          <div style="font-size:12px;color:var(--muted)">Selecciona un evento para ver su asistencia. Los eventos 🗓 Programados (fecha futura) muestran su prelista.</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <a href="https://cartografia.ine.mx/sige8/productosCartograficos/planos-mapas" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🗺️ Descargar mapas del INE</a>
@@ -651,7 +679,7 @@ tr:hover td{background:#f8faff}
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th><th>Totales de la app de encuestas</th><th>Evidencia</th></tr></thead>
+          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th><th title="Personas marcadas como Confirmado en la prelista">Confirmados</th><th title="Confirmados que asistieron ÷ confirmados">% cumplimiento</th><th title="Marcados como Asistencia sin estar confirmados en la prelista">Asistieron sin confirmar</th><th>Totales de la app de encuestas</th><th>Evidencia</th></tr></thead>
           <tbody id="resumen-eventos-tbody"></tbody>
         </table>
       </div>
@@ -664,14 +692,15 @@ tr:hover td{background:#f8faff}
           <div>
             <div id="ev-nombre-display" style="font-size:15px;font-weight:800;color:var(--pan)"></div>
             <div id="ev-meta-display" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+            <div id="ev-fase-display" style="margin-top:6px"></div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <button id="btn-editar-evento" class="btn btn-secondary btn-sm" onclick="editarEvento()" style="display:none">✏️</button>
             <button id="btn-eliminar-evento" class="btn btn-danger btn-sm" onclick="eliminarEvento()" style="display:none">🗑</button>
           </div>
         </div>
-        <!-- Métricas -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px">
+        <!-- Métricas (se ocultan en eventos Programados: todavía no hay asistencia) -->
+        <div id="ev-metricas-asistencia" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px">
           <div style="background:var(--bg2);border-radius:8px;padding:10px;text-align:center">
             <div id="ev-total" style="font-size:22px;font-weight:800;color:var(--pan)">0</div>
             <div style="font-size:10px;color:var(--muted)">Total</div>
@@ -700,7 +729,7 @@ tr:hover td{background:#f8faff}
       </div>
 
       <!-- Resumen por padrino y sección (uso interno, mismos datos que evidencia-evento.html) -->
-      <div class="card" style="margin-bottom:1rem">
+      <div class="card" id="card-resumen-padrino-seccion" style="margin-bottom:1rem">
         <div class="card-title">🗂 Resumen por padrino y sección</div>
         <div class="tbl-wrap">
           <table>
@@ -709,6 +738,55 @@ tr:hover td{background:#f8faff}
           </table>
         </div>
       </div>
+    </div>
+
+    <!-- PRELISTA DE ASISTENCIA del evento seleccionado.
+         Editable mientras fecha >= hoy (hora local); después, solo lectura. -->
+    <div id="panel-prelista" class="card" style="margin-bottom:1rem;display:none">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+        <div>
+          <div class="card-title" style="margin-bottom:2px">📋 Prelista de asistencia</div>
+          <div id="pl-modo" style="font-size:12px;color:var(--muted)"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="exportarPrelistaExcel()">↓ Excel</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportarPrelistaPDF()">🖨 PDF / imprimir</button>
+          <button class="btn btn-primary btn-sm" id="btn-aplicar-prelista" onclick="aplicarPrelista()" style="display:none" title="Marca Vacaciones/Incapacidad en asistencia a quien lo reportó en la prelista y aún no tiene estado capturado">⚡ Aplicar prelista</button>
+        </div>
+      </div>
+      <div id="pl-contadores" class="pl-contadores"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:12px 0 10px">
+        <div class="fg" style="flex:1;min-width:180px;margin-bottom:0">
+          <label>Buscar</label>
+          <input type="text" id="pl-buscar" placeholder="nombre o área..." oninput="renderPrelista()">
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Padrino</label>
+          <select id="pl-padrino" onchange="renderPrelista()">
+            <option value="">todos</option>
+            <option value="Fernando Amezcua">Fernando Amezcua</option>
+            <option value="Martin Yáñez">Martin Yáñez</option>
+            <option value="Rene Espinoza">Rene Espinoza</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Sección</label>
+          <select id="pl-sec" onchange="renderPrelista()">
+            <option value="">todas</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Estado</label>
+          <select id="pl-estado" onchange="renderPrelista()">
+            <option value="">todos</option>
+            <option value="CONFIRMADO">Confirmado</option>
+            <option value="NO_ASISTE">No asistirá</option>
+            <option value="PENDIENTE">Pendiente</option>
+          </select>
+        </div>
+      </div>
+      <div id="pl-lista" class="pl-lista"></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px" id="pl-count"></div>
     </div>
 
     <!-- ENLACES TEMPORALES DE ASISTENCIA POR SECCIÓN (solo Octavio) -->
@@ -837,9 +915,17 @@ tr:hover td{background:#f8faff}
   <div id="panel-historial" class="panel">
     <div class="card" style="margin-bottom:1rem">
       <div class="card-title">📜 Historial de cambios de asistencia</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Últimos 200 cambios hechos desde "Corregir asistencia", más reciente primero.</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Últimos 200 cambios hechos desde "Corregir asistencia" y últimos 200 de la prelista, más reciente primero.</div>
       <input type="text" id="hist-buscar" placeholder="Buscar por nombre de la persona o de quién hizo el cambio..." oninput="renderHistorial()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;margin-bottom:10px">
       <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="fg" style="flex:1;min-width:160px;margin-bottom:0">
+          <label>Tipo</label>
+          <select id="hist-filtro-tipo" onchange="renderHistorial()">
+            <option value="">asistencia y prelista</option>
+            <option value="asistencia">solo asistencia</option>
+            <option value="prelista">solo prelista</option>
+          </select>
+        </div>
         <div class="fg" style="flex:1;min-width:160px;margin-bottom:0">
           <label>Sección</label>
           <select id="hist-filtro-seccion" onchange="renderHistorial()">
@@ -857,7 +943,7 @@ tr:hover td{background:#f8faff}
     <div class="card">
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Fecha/hora</th><th>Evento</th><th>Persona</th><th>Sección</th><th>Antes</th><th>Después</th><th>Modificado por</th></tr></thead>
+          <thead><tr><th>Fecha/hora</th><th>Tipo</th><th>Evento</th><th>Persona</th><th>Sección</th><th>Antes</th><th>Después</th><th>Modificado por</th></tr></thead>
           <tbody id="hist-tbody"></tbody>
         </table>
       </div>
@@ -1610,6 +1696,33 @@ tr:hover td{background:#f8faff}
   </div>
 </div>
 
+<!-- MODAL MOTIVO "NO ASISTIRÁ" (prelista) -->
+<div id="modal-prelista-motivo" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-hdr">
+      <h3>❌ No asistirá</h3>
+      <button class="close-btn" onclick="closeModal('modal-prelista-motivo')">✕</button>
+    </div>
+    <div id="plm-nombre" style="font-weight:800;color:var(--pan);font-size:15px;margin-bottom:12px"></div>
+    <div class="fg">
+      <label>Motivo *</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="pl-btn pl-motivo" data-motivo="VACACIONES" onclick="seleccionarMotivoPrelista('VACACIONES')">🌴 Vacaciones</button>
+        <button type="button" class="pl-btn pl-motivo" data-motivo="INCAPACIDAD" onclick="seleccionarMotivoPrelista('INCAPACIDAD')">🩺 Incapacidad</button>
+        <button type="button" class="pl-btn pl-motivo" data-motivo="OTRO" onclick="seleccionarMotivoPrelista('OTRO')">📝 Otro</button>
+      </div>
+    </div>
+    <div class="fg" id="plm-detalle-wrap" style="display:none">
+      <label>Detalle (opcional)</label>
+      <input type="text" id="plm-detalle" maxlength="200" placeholder="ej. cita médica, viaje...">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-secondary w-full" onclick="closeModal('modal-prelista-motivo')">Cancelar</button>
+      <button class="btn btn-primary w-full" id="plm-guardar" onclick="confirmarMotivoPrelista()" disabled>💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMAR ELIMINAR EVENTO -->
 <div id="modal-confirmar-eliminar-evento" class="modal-bg" style="display:none">
   <div class="modal" style="max-width:440px">
@@ -1623,7 +1736,7 @@ tr:hover td{background:#f8faff}
       <div id="cee-fecha" style="font-size:12px;color:var(--muted)"></div>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
-      Esto borra también toda su asistencia, historial de cambios y enlaces temporales asociados a este evento.
+      Esto borra también toda su asistencia, su prelista, historial de cambios y enlaces temporales asociados a este evento.
       <b>No se puede deshacer y no hay respaldo.</b>
     </div>
     <div class="fg">
@@ -2922,6 +3035,39 @@ const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
 const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
 const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vacaciones',INCAPACIDAD:'e-incapacidad'};
 
+// ── FASE DEL EVENTO (hora local) ──
+// Fecha de hoy en la zona del navegador, NO toISOString(): en Chihuahua (UTC-6) eso ya
+// marca el día siguiente a partir de las 6 pm y un evento de hoy parecería "pasado".
+function fechaLocalHoy(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+// 'programado' = fecha futura (solo prelista) · 'hoy' = asistencia + prelista editable ·
+// 'pasado' = asistencia + prelista en solo lectura.
+function faseEvento(ev){
+  if(!ev||!ev.fecha) return 'pasado';
+  const hoy=fechaLocalHoy();
+  if(ev.fecha>hoy) return 'programado';
+  return ev.fecha===hoy?'hoy':'pasado';
+}
+
+function escHtml(s){
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Igual que sbGet, pero trae TODAS las filas en páginas de 1000 (el máximo que regresa
+// Supabase por request). params debe incluir un order estable para que las páginas no se traslapen.
+async function sbGetTodos(table,params){
+  const pag=1000;
+  let todas=[];
+  for(let offset=0;;offset+=pag){
+    const data=await sbGet(table,`${params}&limit=${pag}&offset=${offset}`);
+    if(!Array.isArray(data)) return offset===0?data:todas;
+    todas=todas.concat(data);
+    if(data.length<pag) return todas;
+  }
+}
+
 async function cargarEventos(){
   const data=await sbGet('eventos','?order=fecha.desc');
   eventosCache=Array.isArray(data)?data:[];
@@ -2945,23 +3091,38 @@ async function cargarEventos(){
   await cargarResumenEventos();
 }
 
-let resumenEventosCache=[]; // [{evento, asistencia, falta, vacaciones, incapacidad, sinCapturar, total}]
+let resumenEventosCache=[]; // [{evento, asistencia, falta, vacaciones, incapacidad, sinCapturar, total, confirmados, confirmadosAsistieron, asistieronSinConfirmar, encuestas}]
 
 async function cargarResumenEventos(){
   const tbody=document.getElementById('resumen-eventos-tbody');
   if(!eventosCache.length){
     resumenEventosCache=[];
-    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
     return;
   }
-  const [estData,encData]=await Promise.all([
-    sbGet('asistencia_eventos','?estado=not.is.null&select=evento_id,estado'),
-    sbGet('encuestas_seccion','?select=evento_id,total_encuestas')
+  // Paginado (sbGetTodos): con varios eventos la asistencia de todos ya pasa de las 1000
+  // filas que Supabase regresa por request, y los conteos se quedarían cortos sin avisar.
+  const [estData,encData,preData]=await Promise.all([
+    sbGetTodos('asistencia_eventos','?estado=not.is.null&select=evento_id,personal_id,estado&order=evento_id.asc,personal_id.asc'),
+    sbGet('encuestas_seccion','?select=evento_id,total_encuestas'),
+    sbGetTodos('prelista','?estado=eq.CONFIRMADO&select=evento_id,personal_id&order=evento_id.asc,personal_id.asc')
   ]);
+  const confirmadosPorEvento={}; // evento_id -> Set(personal_id)
+  (Array.isArray(preData)?preData:[]).forEach(r=>{
+    if(!confirmadosPorEvento[r.evento_id]) confirmadosPorEvento[r.evento_id]=new Set();
+    confirmadosPorEvento[r.evento_id].add(r.personal_id);
+  });
   const conteoPorEvento={};
+  const cruceConfirmados={}; // evento_id -> {si, no}: de quienes asistieron, cuántos estaban confirmados
   (Array.isArray(estData)?estData:[]).forEach(a=>{
     if(!conteoPorEvento[a.evento_id]) conteoPorEvento[a.evento_id]={ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
     if(conteoPorEvento[a.evento_id].hasOwnProperty(a.estado)) conteoPorEvento[a.evento_id][a.estado]++;
+    if(a.estado==='ASISTENCIA'){
+      if(!cruceConfirmados[a.evento_id]) cruceConfirmados[a.evento_id]={si:0,no:0};
+      const conf=confirmadosPorEvento[a.evento_id];
+      if(conf&&conf.has(a.personal_id)) cruceConfirmados[a.evento_id].si++;
+      else cruceConfirmados[a.evento_id].no++;
+    }
   });
   const encuestasPorEvento={};
   (Array.isArray(encData)?encData:[]).forEach(e=>{
@@ -2971,7 +3132,11 @@ async function cargarResumenEventos(){
   resumenEventosCache=eventosCache.map(ev=>{
     const c=conteoPorEvento[ev.id]||{ASISTENCIA:0,FALTA:0,VACACIONES:0,INCAPACIDAD:0};
     const capturados=c.ASISTENCIA+c.FALTA+c.VACACIONES+c.INCAPACIDAD;
-    return {evento:ev, asistencia:c.ASISTENCIA, falta:c.FALTA, vacaciones:c.VACACIONES, incapacidad:c.INCAPACIDAD, sinCapturar:total-capturados, total, encuestas:encuestasPorEvento[ev.id]||0};
+    const cruce=cruceConfirmados[ev.id]||{si:0,no:0};
+    return {evento:ev, asistencia:c.ASISTENCIA, falta:c.FALTA, vacaciones:c.VACACIONES, incapacidad:c.INCAPACIDAD, sinCapturar:total-capturados, total,
+      confirmados:confirmadosPorEvento[ev.id]?confirmadosPorEvento[ev.id].size:0,
+      confirmadosAsistieron:cruce.si, asistieronSinConfirmar:cruce.no,
+      encuestas:encuestasPorEvento[ev.id]||0};
   });
   renderResumenEventosTbody();
 }
@@ -2982,13 +3147,16 @@ function renderResumenEventosTbody(){
   tbody.innerHTML=resumenEventosCache.map(r=>{
     const activa=r.evento.evidencia_publica!==false;
     return `<tr>
-      <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}</td>
+      <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}${faseEvento(r.evento)==='programado'?' <span class="fase-badge" style="font-size:10px;padding:1px 7px">🗓 Programado</span>':''}</td>
       <td style="color:#2d6a4f;font-weight:700">${r.asistencia}</td>
       <td style="color:#cc0000;font-weight:700">${r.falta}</td>
       <td style="color:#003399;font-weight:700">${r.vacaciones}</td>
       <td style="color:#854f0b;font-weight:700">${r.incapacidad}</td>
       <td style="color:var(--muted)">${r.sinCapturar}</td>
       <td>${r.total}</td>
+      <td style="color:#2d6a4f;font-weight:700">${r.confirmados}</td>
+      <td style="font-weight:700">${textoCumplimiento(r)}</td>
+      <td>${faseEvento(r.evento)==='programado'?'—':r.asistieronSinConfirmar}</td>
       <td>${r.encuestas}</td>
       <td>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -3000,6 +3168,19 @@ function renderResumenEventosTbody(){
       </td>
     </tr>`;
   }).join('');
+}
+
+// % cumplimiento = confirmados que asistieron ÷ confirmados. "—" si no hay confirmados o si
+// el evento todavía es Programado (sin asistencia aún, un 0% sería engañoso).
+function porcentajeCumplimiento(r){
+  if(!r.confirmados||faseEvento(r.evento)==='programado') return null;
+  return Math.round(r.confirmadosAsistieron/r.confirmados*100);
+}
+function textoCumplimiento(r){
+  const pct=porcentajeCumplimiento(r);
+  if(pct===null) return '<span style="color:var(--muted)">—</span>';
+  const color=pct>=90?'#2d6a4f':(pct>=70?'#854f0b':'#cc0000');
+  return `<span style="color:${color}" title="${r.confirmadosAsistieron} de ${r.confirmados} confirmados asistieron">${pct}%</span>`;
 }
 
 async function toggleEvidenciaPublica(eventoId){
@@ -3154,9 +3335,11 @@ function exportarFaltasAcumuladas(){
 
 function exportarResumenEventos(){
   if(!resumenEventosCache.length){ showToast('⚠️ No hay eventos registrados'); return; }
-  let csv='\uFEFF'+'EVENTO,FECHA,ASISTENCIA,FALTA,VACACIONES,INCAPACIDAD,SIN CAPTURAR,TOTAL,TOTALES DE LA APP DE ENCUESTAS\n';
+  let csv='\uFEFF'+'EVENTO,FECHA,ASISTENCIA,FALTA,VACACIONES,INCAPACIDAD,SIN CAPTURAR,TOTAL,CONFIRMADOS,CONFIRMADOS QUE ASISTIERON,% CUMPLIMIENTO,ASISTIERON SIN CONFIRMAR,TOTALES DE LA APP DE ENCUESTAS\n';
   resumenEventosCache.forEach(r=>{
-    csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.asistencia}","${r.falta}","${r.vacaciones}","${r.incapacidad}","${r.sinCapturar}","${r.total}","${r.encuestas}"\n`;
+    const pct=porcentajeCumplimiento(r);
+    const programado=faseEvento(r.evento)==='programado';
+    csv+=`"${r.evento.nombre||''}","${r.evento.fecha||''}","${r.asistencia}","${r.falta}","${r.vacaciones}","${r.incapacidad}","${r.sinCapturar}","${r.total}","${r.confirmados}","${programado?'':r.confirmadosAsistieron}","${pct===null?'':pct+'%'}","${programado?'':r.asistieronSinConfirmar}","${r.encuestas}"\n`;
   });
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
@@ -3171,10 +3354,14 @@ function renderEventoChips(){
     chips.innerHTML='<div style="font-size:13px;color:var(--muted)">Sin eventos registrados aún.</div>';
     return;
   }
-  chips.innerHTML=eventosCache.map(ev=>`
+  chips.innerHTML=eventosCache.map(ev=>{
+    const fase=faseEvento(ev);
+    const etiqueta=fase==='programado'?'<span class="chip-fase">🗓 Programado</span>':(fase==='hoy'?'<span class="chip-fase hoy">Hoy</span>':'');
+    return `
     <button class="evento-chip ${ev.id===eventoActualId?'sel':''}" onclick="seleccionarEvento('${ev.id}')">
-      📅 ${ev.nombre} ${ev.fecha?'· '+ev.fecha:''}
-    </button>`).join('');
+      📅 ${ev.nombre} ${ev.fecha?'· '+ev.fecha:''} ${etiqueta}
+    </button>`;
+  }).join('');
 }
 
 async function seleccionarEvento(id){
@@ -3197,8 +3384,21 @@ async function seleccionarEvento(id){
   document.getElementById('btn-editar-evento').style.display=isAdmin?'inline-flex':'none';
   document.getElementById('btn-eliminar-evento').style.display=isAdmin?'inline-flex':'none';
 
-  // Cargar asistencia ya registrada
+  // Programado (fecha futura): todavía no hay asistencia que mostrar, solo la prelista.
+  // Hoy / pasado: asistencia como siempre + prelista (editable hoy, solo lectura después).
+  const fase=faseEvento(ev);
+  const esProgramado=fase==='programado';
+  document.getElementById('ev-fase-display').innerHTML=
+    esProgramado?'<span class="fase-badge">🗓 Programado — captura aquí la prelista</span>'
+    :fase==='hoy'?'<span class="fase-badge hoy">🟢 Hoy — asistencia en curso · prelista aún editable</span>'
+    :'<span class="fase-badge pasado">Evento concluido · prelista en solo lectura</span>';
+  document.getElementById('ev-metricas-asistencia').style.display=esProgramado?'none':'grid';
+  document.getElementById('card-resumen-padrino-seccion').style.display=esProgramado?'none':'';
   document.getElementById('panel-asistencia').style.display='block';
+  cargarPrelista(id,miToken);
+  if(esProgramado) return;
+
+  // Cargar asistencia ya registrada
   const asisData=await sbGet('asistencia_eventos',`?evento_id=eq.${id}`);
   if(miToken!==eventoLoadToken) return; // el usuario ya cambió de evento; se descarta esta respuesta obsoleta
   const asisRegistrada=Array.isArray(asisData)?asisData:[];
@@ -3275,6 +3475,414 @@ async function renderResumenPadrinoSeccion(eventoId,miToken){
       <td>${encuestasPorSeccion[s.num]||0}</td>
       <td>${fotosPorSeccion[s.num]||0}</td>
     </tr>`).join('');
+}
+
+// ── PRELISTA DE ASISTENCIA ──
+// Una fila por persona y evento en "prelista" (sin fila = PENDIENTE). Editable mientras
+// fecha del evento >= hoy (hora local); después queda en solo lectura. Octavio y editoras
+// editan a todos; cada padrino solo a su propia gente. Cada cambio deja rastro en
+// prelista_historial (se ve en "Historial de cambios").
+const PRELISTA_ESTADOS=['CONFIRMADO','NO_ASISTE','PENDIENTE'];
+const PRELISTA_LABEL={CONFIRMADO:'Confirmado',NO_ASISTE:'No asistirá',PENDIENTE:'Pendiente'};
+const PRELISTA_ICON={CONFIRMADO:'✅',NO_ASISTE:'❌',PENDIENTE:'⏳'};
+const MOTIVO_LABEL={VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad',OTRO:'Otro'};
+let prelistaEventoId=null;
+let prelistaLocal={};       // personal_id -> {estado, motivo, motivo_detalle, capturado_por, fecha_captura}
+let prelistaCargada=false;
+let prelistaFiltroPadrinoInicial=false; // a un padrino se le pre-filtra su gente la primera vez
+const prelistaColas=new Map(); // personal_id -> Promise: serializa los guardados de una misma persona (el último clic es el que queda)
+const prelistaUltimoCtx={};    // personal_id -> último cambio enviado, para reintentar
+
+function prelistaDe(personalId){
+  return prelistaLocal[String(personalId)]||{estado:'PENDIENTE',motivo:null,motivo_detalle:null};
+}
+function personaPorId(personalId){
+  return personalCache.find(p=>String(p.id)===String(personalId));
+}
+function puedeEditarPrelista(p){
+  const ev=eventosCache.find(e=>e.id===prelistaEventoId);
+  if(!ev||faseEvento(ev)==='pasado') return false;
+  if(currentUser==='Octavio'||EDITORAS.includes(currentUser)) return true;
+  if(PADRINOS.includes(currentUser)) return p.padrino===currentUser;
+  return false;
+}
+
+async function cargarPrelista(eventoId,miToken){
+  prelistaEventoId=eventoId;
+  prelistaLocal={};
+  prelistaCargada=false;
+  const ev=eventosCache.find(e=>e.id===eventoId);
+  const fase=faseEvento(ev);
+  document.getElementById('panel-prelista').style.display='block';
+
+  const selSec=document.getElementById('pl-sec');
+  const secPrevia=selSec.value;
+  const secs=[...new Set(personalCache.filter(p=>p.seccion).map(p=>p.seccion))].sort();
+  selSec.innerHTML='<option value="">todas</option><option value="sin">sin sección</option>'+secs.map(s=>`<option value="${s}">Sec. ${s}</option>`).join('');
+  if(secPrevia==='sin'||secs.includes(secPrevia)) selSec.value=secPrevia;
+  if(!prelistaFiltroPadrinoInicial&&PADRINOS.includes(currentUser)){
+    document.getElementById('pl-padrino').value=currentUser;
+    prelistaFiltroPadrinoInicial=true;
+  }
+
+  const esPadrino=PADRINOS.includes(currentUser);
+  document.getElementById('pl-modo').textContent=
+    fase==='pasado'?'Evento concluido: la prelista queda en solo lectura.'
+    :(fase==='hoy'?'Hoy es el evento: la prelista todavía se puede editar. Se guarda al hacer clic.'
+      :'Marca quién confirmó asistencia. Se guarda al hacer clic.')
+    +(fase!=='pasado'&&esPadrino?' Puedes editar solo a tu gente; el resto se ve en solo lectura.':'');
+  document.getElementById('btn-aplicar-prelista').style.display=(currentUser==='Octavio'&&fase!=='programado')?'inline-flex':'none';
+  document.getElementById('pl-contadores').innerHTML='';
+  document.getElementById('pl-count').textContent='';
+  document.getElementById('pl-lista').innerHTML='<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Cargando prelista…</div>';
+
+  const data=await sbGet('prelista',`?evento_id=eq.${eventoId}`);
+  if(miToken!==eventoLoadToken) return; // el usuario ya cambió de evento
+  if(!Array.isArray(data)){
+    console.error('Error cargando prelista',data);
+    document.getElementById('pl-lista').innerHTML='<div style="text-align:center;color:var(--red);padding:1.5rem;font-size:13px">⚠️ No se pudo cargar la prelista. Recarga la página; si sigue, revisa que la tabla "prelista" exista en Supabase.</div>';
+    return;
+  }
+  data.forEach(r=>{
+    prelistaLocal[String(r.personal_id)]={estado:r.estado,motivo:r.motivo,motivo_detalle:r.motivo_detalle,capturado_por:r.capturado_por,fecha_captura:r.fecha_captura};
+  });
+  prelistaCargada=true;
+  renderPrelista();
+}
+
+// Mismos filtros que Base Operativa (buscar / padrino / sección) + estado de la prelista.
+function prelistaFiltrada(){
+  const q=(document.getElementById('pl-buscar').value||'').toLowerCase();
+  const pad=document.getElementById('pl-padrino').value;
+  const sec=document.getElementById('pl-sec').value;
+  const est=document.getElementById('pl-estado').value;
+  let lista=personalCache;
+  if(q) lista=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q)||(p.area||'').toLowerCase().includes(q));
+  if(pad) lista=lista.filter(p=>(p.padrino||'').includes(pad));
+  if(sec==='sin') lista=lista.filter(p=>!p.seccion);
+  else if(sec) lista=lista.filter(p=>p.seccion===sec);
+  if(est) lista=lista.filter(p=>prelistaDe(p.id).estado===est);
+  return lista;
+}
+
+function renderPrelista(){
+  if(!prelistaCargada) return;
+  renderContadoresPrelista();
+  const lista=prelistaFiltrada();
+  document.getElementById('pl-count').textContent=`${lista.length} personas`;
+  document.getElementById('pl-lista').innerHTML=lista.length
+    ?lista.map(renderFilaPrelista).join('')
+    :'<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Sin resultados.</div>';
+}
+
+function renderContadoresPrelista(){
+  const conf=p=>prelistaDe(p.id).estado==='CONFIRMADO';
+  const tarjeta=(n,de,label,color)=>`<div class="pl-cont"><div class="pl-cont-n" style="color:${color}">${n}${de!==null?`<small> / ${de}</small>`:''}</div><div class="pl-cont-l">${label}</div></div>`;
+  const pads=[['Fernando Amezcua','Fernando'],['Martin Yáñez','Martín'],['Rene Espinoza','René']];
+  let html=pads.map(([clave,corto])=>{
+    const gente=personalCache.filter(p=>p.padrino===clave);
+    return tarjeta(gente.filter(conf).length,gente.length,`Confirmados · ${corto}`,'#2d6a4f');
+  }).join('');
+  const noAsiste=personalCache.filter(p=>prelistaDe(p.id).estado==='NO_ASISTE').length;
+  const pendientes=personalCache.filter(p=>prelistaDe(p.id).estado==='PENDIENTE').length;
+  html+=tarjeta(personalCache.filter(conf).length,personalCache.length,'Confirmados · Total','var(--pan)');
+  html+=tarjeta(noAsiste,null,'No asistirán','#cc0000');
+  html+=tarjeta(pendientes,null,'Pendientes','#854f0b');
+  document.getElementById('pl-contadores').innerHTML=html;
+}
+
+function renderFilaPrelista(p){
+  const pl=prelistaDe(p.id);
+  const editable=puedeEditarPrelista(p);
+  const motivoTxt=pl.estado==='NO_ASISTE'
+    ?`<div class="pl-motivo-txt">${MOTIVO_LABEL[pl.motivo]||''}${pl.motivo_detalle?' — '+escHtml(pl.motivo_detalle):''}</div>`:'';
+  const derecha=editable
+    ?`<div class="pl-botones">${PRELISTA_ESTADOS.map(e=>`<button type="button" class="pl-btn ${pl.estado===e?'on-'+e:''}" onclick="clickPrelista('${p.id}','${e}')">${PRELISTA_ICON[e]} ${PRELISTA_LABEL[e]}</button>`).join('')}</div>`
+    :`<span class="pl-badge ${pl.estado}">${PRELISTA_ICON[pl.estado]} ${PRELISTA_LABEL[pl.estado]}</span>`;
+  return `<div class="pl-row ${editable?'':'ro'}" id="pl-row-${p.id}">
+    <div style="flex:1;min-width:160px">
+      <div style="font-weight:700">${escHtml(p.nombre||'—')}</div>
+      <div style="font-size:11px;color:var(--muted)">${escHtml(p.padrino||'sin padrino')}${p.seccion?' · Sec. '+escHtml(p.seccion):''}</div>
+      ${motivoTxt}
+    </div>
+    <span id="pl-status-${p.id}" style="font-size:13px;width:16px;text-align:center;flex-shrink:0" onclick="reintentarPrelista('${p.id}')"></span>
+    ${derecha}
+  </div>`;
+}
+
+function refrescarFilaPrelista(personalId){
+  const row=document.getElementById(`pl-row-${personalId}`);
+  const p=personaPorId(personalId);
+  if(row&&p) row.outerHTML=renderFilaPrelista(p);
+}
+
+function clickPrelista(personalId,estado){
+  const p=personaPorId(personalId);
+  if(!p) return;
+  if(!puedeEditarPrelista(p)){ showToast('⚠️ Solo puedes editar la prelista de tu gente'); return; }
+  if(estado==='NO_ASISTE'){ abrirMotivoPrelista(p); return; }
+  if(prelistaDe(p.id).estado===estado) return;
+  aplicarCambioPrelista(p,{estado,motivo:null,motivo_detalle:null});
+}
+
+function aplicarCambioPrelista(p,nuevo){
+  const anterior=prelistaDe(p.id);
+  const ctx={evento_id:prelistaEventoId, personal_id:p.id,
+    estado_anterior:anterior.estado, motivo_anterior:anterior.motivo||null,
+    estado_nuevo:nuevo.estado, motivo_nuevo:nuevo.motivo||null, motivo_detalle:nuevo.motivo_detalle||null};
+  prelistaLocal[String(p.id)]={...nuevo,capturado_por:currentUser,fecha_captura:new Date().toISOString()};
+  refrescarFilaPrelista(p.id);
+  renderContadoresPrelista();
+  prelistaUltimoCtx[String(p.id)]=ctx;
+  encolarGuardadoPrelista(ctx);
+}
+
+function encolarGuardadoPrelista(ctx){
+  const key=String(ctx.personal_id);
+  const previa=prelistaColas.get(key)||Promise.resolve();
+  const prom=previa.then(()=>guardarPrelista(ctx));
+  prelistaColas.set(key,prom);
+  prom.finally(()=>{ if(prelistaColas.get(key)===prom) prelistaColas.delete(key); });
+}
+
+function reintentarPrelista(personalId){
+  const key=String(personalId);
+  const el=document.getElementById(`pl-status-${personalId}`);
+  if(!el||el.textContent!=='⚠️') return;
+  const ctx=prelistaUltimoCtx[key];
+  if(ctx) encolarGuardadoPrelista(ctx);
+}
+
+function marcarEstadoPrelista(ctx,estado){
+  if(ctx.evento_id!==prelistaEventoId) return; // ya se está viendo otro evento
+  const el=document.getElementById(`pl-status-${ctx.personal_id}`);
+  if(!el) return;
+  if(estado==='guardando'){ el.textContent='⏳'; el.style.cursor='default'; el.title='Guardando…'; }
+  else if(estado==='ok'){
+    el.textContent='✓'; el.style.cursor='default'; el.title='Guardado';
+    setTimeout(()=>{ if(el.textContent==='✓') el.textContent=''; },1200);
+  } else if(estado==='error'){
+    el.textContent='⚠️'; el.style.cursor='pointer'; el.title='Error al guardar — clic para reintentar';
+  }
+}
+
+async function guardarPrelista(ctx){
+  for(let intento=0;intento<3;intento++){
+    marcarEstadoPrelista(ctx,'guardando');
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/prelista?on_conflict=evento_id,personal_id`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify([{evento_id:ctx.evento_id, personal_id:ctx.personal_id, estado:ctx.estado_nuevo, motivo:ctx.motivo_nuevo, motivo_detalle:ctx.motivo_detalle, capturado_por:currentUser, fecha_captura:new Date().toISOString()}])
+      });
+      if(!r.ok) throw new Error(await r.text());
+      // Igual que en Corregir asistencia: no cuenta como guardado hasta que quede en el historial
+      // (reintentar re-manda el upsert, que es idempotente).
+      const rHist=await fetch(`${SB_URL}/rest/v1/prelista_historial`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify([{evento_id:ctx.evento_id, personal_id:ctx.personal_id, estado_anterior:ctx.estado_anterior, motivo_anterior:ctx.motivo_anterior, estado_nuevo:ctx.estado_nuevo, motivo_nuevo:ctx.motivo_nuevo, motivo_detalle:ctx.motivo_detalle, modificado_por:currentUser}])
+      });
+      if(!rHist.ok) throw new Error(await rHist.text());
+      marcarEstadoPrelista(ctx,'ok');
+      return true;
+    }catch(e){
+      if(intento<2){ await new Promise(res=>setTimeout(res,800*(intento+1))); continue; }
+      console.error('Error guardando prelista',ctx,e);
+      marcarEstadoPrelista(ctx,'error');
+      return false;
+    }
+  }
+}
+
+// ── Motivo de "No asistirá" ──
+let plMotivoPersona=null;
+let plMotivoSel=null;
+function abrirMotivoPrelista(p){
+  plMotivoPersona=p;
+  const actual=prelistaDe(p.id);
+  plMotivoSel=actual.estado==='NO_ASISTE'?actual.motivo:null;
+  document.getElementById('plm-nombre').textContent=p.nombre||'';
+  document.getElementById('plm-detalle').value=actual.estado==='NO_ASISTE'?(actual.motivo_detalle||''):'';
+  pintarMotivoPrelista();
+  document.getElementById('modal-prelista-motivo').style.display='flex';
+}
+function seleccionarMotivoPrelista(motivo){
+  plMotivoSel=motivo;
+  pintarMotivoPrelista();
+  if(motivo==='OTRO') document.getElementById('plm-detalle').focus();
+}
+function pintarMotivoPrelista(){
+  document.querySelectorAll('#modal-prelista-motivo .pl-motivo').forEach(b=>b.classList.toggle('sel',b.dataset.motivo===plMotivoSel));
+  document.getElementById('plm-detalle-wrap').style.display=plMotivoSel==='OTRO'?'':'none';
+  document.getElementById('plm-guardar').disabled=!plMotivoSel;
+}
+function confirmarMotivoPrelista(){
+  const p=plMotivoPersona;
+  if(!p||!plMotivoSel) return;
+  const detalle=plMotivoSel==='OTRO'?(document.getElementById('plm-detalle').value.trim()||null):null;
+  const actual=prelistaDe(p.id);
+  closeModal('modal-prelista-motivo');
+  if(actual.estado==='NO_ASISTE'&&actual.motivo===plMotivoSel&&(actual.motivo_detalle||null)===detalle) return;
+  aplicarCambioPrelista(p,{estado:'NO_ASISTE',motivo:plMotivoSel,motivo_detalle:detalle});
+}
+
+// ── Exportar prelista (respeta los filtros activos) ──
+function textoPrelista(pl){
+  if(pl.estado!=='NO_ASISTE') return PRELISTA_LABEL[pl.estado];
+  return `No asistirá (${MOTIVO_LABEL[pl.motivo]||''}${pl.motivo_detalle?': '+pl.motivo_detalle:''})`;
+}
+function nombreArchivoPrelista(ev,ext){
+  return `GEMACUU_prelista_${(ev?.nombre||'evento').replace(/[^\wÁÉÍÓÚÑáéíóúñ-]+/g,'_')}_${ev?.fecha||fechaLocalHoy()}.${ext}`;
+}
+function exportarPrelistaExcel(){
+  if(!prelistaCargada){ showToast('⚠️ La prelista aún no termina de cargar'); return; }
+  const lista=prelistaFiltrada();
+  if(!lista.length){ showToast('⚠️ No hay personas con los filtros actuales'); return; }
+  const ev=eventosCache.find(e=>e.id===prelistaEventoId);
+  const hdr=['#','Nombre','Área','Padrino','Sección','Núm. Empleado','Prelista','Motivo','Detalle','Capturado por','Fecha captura','Firma'];
+  const filas=lista.map((p,i)=>{
+    const pl=prelistaDe(p.id);
+    return [i+1,p.nombre||'',p.area||'',p.padrino||'',p.seccion||'',p.num_empleado||'',
+      PRELISTA_LABEL[pl.estado],pl.estado==='NO_ASISTE'?(MOTIVO_LABEL[pl.motivo]||''):'',pl.motivo_detalle||'',
+      pl.capturado_por||'',pl.fecha_captura?new Date(pl.fecha_captura).toLocaleString('es-MX'):'',''];
+  });
+  const titulo=[`Prelista de asistencia — ${ev?.nombre||''}${ev?.fecha?' · '+ev.fecha:''}${ev?.lugar?' · '+ev.lugar:''}`];
+  const ws=XLSX.utils.aoa_to_sheet([titulo,[],hdr,...filas]);
+  ws['!cols']=[{wch:4},{wch:34},{wch:20},{wch:18},{wch:9},{wch:13},{wch:12},{wch:12},{wch:24},{wch:16},{wch:18},{wch:28}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Prelista');
+  XLSX.writeFile(wb,nombreArchivoPrelista(ev,'xlsx'));
+  showToast('✓ Prelista descargada');
+}
+
+// PDF: se abre una hoja imprimible y el navegador ofrece "Guardar como PDF".
+function exportarPrelistaPDF(){
+  if(!prelistaCargada){ showToast('⚠️ La prelista aún no termina de cargar'); return; }
+  const lista=prelistaFiltrada();
+  if(!lista.length){ showToast('⚠️ No hay personas con los filtros actuales'); return; }
+  const ev=eventosCache.find(e=>e.id===prelistaEventoId);
+  const w=window.open('','_blank');
+  if(!w){ showToast('⚠️ Permite ventanas emergentes para imprimir la prelista'); return; }
+
+  const orden=[...PADRINOS,''];
+  const grupos={};
+  lista.forEach(p=>{ const k=PADRINOS.includes(p.padrino)?p.padrino:''; (grupos[k]=grupos[k]||[]).push(p); });
+  const numSec=s=>{ const n=parseInt(s,10); return isNaN(n)?Infinity:n; };
+  let n=0;
+  const cuerpo=orden.filter(k=>grupos[k]).map(k=>{
+    const gente=grupos[k].slice().sort((a,b)=>numSec(a.seccion)-numSec(b.seccion)||(a.nombre||'').localeCompare(b.nombre||'','es'));
+    const conf=gente.filter(p=>prelistaDe(p.id).estado==='CONFIRMADO').length;
+    return `<tr class="grupo"><td colspan="5">${escHtml(k||'Sin padrino')} — ${conf} confirmados de ${gente.length}</td></tr>`+
+      gente.map(p=>`<tr><td class="c">${++n}</td><td>${escHtml(p.nombre||'')}</td><td class="c">${escHtml(p.seccion||'—')}</td><td>${escHtml(textoPrelista(prelistaDe(p.id)))}</td><td></td></tr>`).join('');
+  }).join('');
+  const conf=lista.filter(p=>prelistaDe(p.id).estado==='CONFIRMADO').length;
+  const filtros=[
+    document.getElementById('pl-padrino').value&&`Padrino: ${document.getElementById('pl-padrino').value}`,
+    document.getElementById('pl-sec').value&&`Sección: ${document.getElementById('pl-sec').value==='sin'?'sin sección':document.getElementById('pl-sec').value}`,
+    document.getElementById('pl-estado').value&&`Estado: ${PRELISTA_LABEL[document.getElementById('pl-estado').value]}`,
+    document.getElementById('pl-buscar').value.trim()&&`Búsqueda: "${document.getElementById('pl-buscar').value.trim()}"`
+  ].filter(Boolean).join(' · ');
+
+  w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>${escHtml(nombreArchivoPrelista(ev,'pdf').replace(/\.pdf$/,''))}</title>
+<style>
+@page{size:letter;margin:12mm}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:#1a1a2e;font-size:11px;margin:0}
+h1{font-size:16px;margin:0 0 2px;color:#003399}
+.meta{font-size:11px;color:#444;margin-bottom:2px}
+.res{font-size:11px;margin:6px 0 10px;font-weight:700}
+table{width:100%;border-collapse:collapse}
+thead{display:table-header-group}
+th,td{border:1px solid #999;padding:5px 6px;text-align:left;vertical-align:middle}
+th{background:#e6eeff;font-size:10px;text-transform:uppercase}
+tr{page-break-inside:avoid}
+td.c{text-align:center}
+tr.grupo td{background:#f0f0f0;font-weight:800}
+td:last-child{height:26px}
+.nota{font-size:9px;color:#666;margin-top:8px}
+@media screen{body{padding:16px}}
+</style></head><body>
+<h1>GEMACUU · Prelista de asistencia</h1>
+<div class="meta"><b>${escHtml(ev?.nombre||'')}</b>${ev?.fecha?' · 📅 '+escHtml(ev.fecha):''}${ev?.lugar?' · 📍 '+escHtml(ev.lugar):''}</div>
+${filtros?`<div class="meta">Filtros: ${escHtml(filtros)}</div>`:''}
+<div class="res">Confirmados: ${conf} de ${lista.length}</div>
+<table>
+<thead><tr><th style="width:5%">#</th><th style="width:34%">Nombre</th><th style="width:9%">Sección</th><th style="width:20%">Prelista</th><th style="width:32%">Firma</th></tr></thead>
+<tbody>${cuerpo}</tbody>
+</table>
+<div class="nota">Generado por ${escHtml(currentUser||'')} el ${escHtml(new Date().toLocaleString('es-MX'))}</div>
+<script>window.onload=function(){window.print();};<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+// ── Aplicar prelista a la asistencia (solo Octavio, desde el día del evento) ──
+// Marca VACACIONES / INCAPACIDAD en asistencia_eventos a quien lo reportó en la prelista,
+// SIN sobrescribir nada ya capturado (ver marcarAsistenciaSinSobrescribir).
+async function aplicarPrelista(){
+  if(currentUser!=='Octavio'){ showToast('⚠️ Sin permiso'); return; }
+  const eventoId=prelistaEventoId;
+  const ev=eventosCache.find(e=>e.id===eventoId);
+  if(!ev||faseEvento(ev)==='programado'){ showToast('⚠️ Solo se puede aplicar desde el día del evento'); return; }
+  const btn=document.getElementById('btn-aplicar-prelista');
+  btn.disabled=true;
+  try{
+    // Se relee de la base (no de prelistaLocal) por si alguien más la cambió hace un momento.
+    const data=await sbGet('prelista',`?evento_id=eq.${eventoId}&estado=eq.NO_ASISTE&motivo=in.(VACACIONES,INCAPACIDAD)&select=personal_id,motivo`);
+    if(!Array.isArray(data)) throw new Error(JSON.stringify(data));
+    const filas=data.filter(r=>personaPorId(r.personal_id)).map(r=>({personal_id:r.personal_id,estado:r.motivo}));
+    if(!filas.length){ showToast('ℹ️ Nadie en la prelista reportó vacaciones o incapacidad'); return; }
+    if(!confirm(`Se marcará Vacaciones / Incapacidad en la asistencia de "${ev.nombre}" a ${filas.length} persona(s) que lo reportaron en la prelista.\n\nA quien ya tenga un estado capturado NO se le cambia nada.\n\n¿Continuar?`)) return;
+    const res=await marcarAsistenciaSinSobrescribir(eventoId,filas,`Prelista (${currentUser})`);
+    showToast(`✓ ${res.marcadas.length} marcada(s)${res.omitidas?` · ${res.omitidas} ya tenían estado`:''}`);
+    if(eventoActualId===eventoId) await seleccionarEvento(eventoId);
+    await cargarResumenEventos();
+  }catch(e){
+    console.error('Error aplicando prelista',e);
+    showToast('⚠️ Error al aplicar la prelista');
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+// Inserta el estado solo si la persona NO tiene fila en asistencia_eventos (ignore-duplicates)
+// y, si la fila existe pero con estado vacío, la completa con un PATCH filtrado por estado=is.null.
+// Nunca pisa un estado ya capturado, aunque un líder lo capture al mismo tiempo.
+// filas: [{personal_id, estado}]. Devuelve {marcadas:[{personal_id,estado}], omitidas}.
+async function marcarAsistenciaSinSobrescribir(eventoId,filas,registradoPor){
+  const headers={'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json'};
+  const ahora=new Date().toISOString();
+  const r=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?on_conflict=evento_id,personal_id`,{
+    method:'POST',
+    headers:{...headers,'Prefer':'resolution=ignore-duplicates,return=representation'},
+    body:JSON.stringify(filas.map(f=>({evento_id:eventoId,personal_id:f.personal_id,estado:f.estado,registrado_por:registradoPor,updated_at:ahora})))
+  });
+  if(!r.ok) throw new Error(await r.text());
+  const insertadas=await r.json();
+  const marcadas=insertadas.map(x=>({personal_id:x.personal_id,estado:x.estado}));
+  const yaMarcadas=new Set(marcadas.map(x=>String(x.personal_id)));
+  for(const estado of ['VACACIONES','INCAPACIDAD']){
+    const ids=filas.filter(f=>f.estado===estado&&!yaMarcadas.has(String(f.personal_id))).map(f=>f.personal_id);
+    if(!ids.length) continue;
+    const rp=await fetch(`${SB_URL}/rest/v1/asistencia_eventos?evento_id=eq.${eventoId}&personal_id=in.(${ids.join(',')})&estado=is.null`,{
+      method:'PATCH',
+      headers:{...headers,'Prefer':'return=representation'},
+      body:JSON.stringify({estado,registrado_por:registradoPor,updated_at:ahora})
+    });
+    if(!rp.ok) throw new Error(await rp.text());
+    (await rp.json()).forEach(x=>marcadas.push({personal_id:x.personal_id,estado:x.estado}));
+  }
+  if(marcadas.length){
+    const rh=await fetch(`${SB_URL}/rest/v1/asistencia_historial`,{
+      method:'POST',
+      headers:{...headers,'Prefer':'return=minimal'},
+      body:JSON.stringify(marcadas.map(m=>({evento_id:eventoId,personal_id:m.personal_id,estado_anterior:null,estado_nuevo:m.estado,modificado_por:registradoPor})))
+    });
+    if(!rh.ok) console.error('Prelista aplicada, pero falló el historial',await rh.text());
+  }
+  return {marcadas,omitidas:filas.length-marcadas.length};
 }
 
 function abrirFormEvento(){
@@ -3539,7 +4147,7 @@ function eliminarEvento(){
 
 // ── Eliminar evento (con confirmación explícita, solo Octavio) ──
 // Borra en este orden para no dejar datos huérfanos:
-// asistencia_historial -> asistencia_eventos -> enlaces_temporales -> eventos
+// asistencia_historial -> asistencia_eventos -> prelista_historial -> prelista -> enlaces_temporales -> eventos
 let eventoAEliminarId=null;
 function abrirConfirmEliminarEvento(eventoId){
   if(currentUser!=='Octavio'){showToast('⚠️ Sin permiso');return;}
@@ -3568,6 +4176,8 @@ async function confirmarEliminarEvento(){
   try{
     await sbDelete('asistencia_historial',`?evento_id=eq.${eventoId}`);
     await sbDelete('asistencia_eventos',`?evento_id=eq.${eventoId}`);
+    await sbDelete('prelista_historial',`?evento_id=eq.${eventoId}`);
+    await sbDelete('prelista',`?evento_id=eq.${eventoId}`);
     await sbDelete('enlaces_temporales',`?evento_id=eq.${eventoId}`);
     await sbDelete('eventos',`?id=eq.${eventoId}`);
   }catch(e){
@@ -3583,6 +4193,7 @@ async function confirmarEliminarEvento(){
   if(eventoActualId===eventoId){
     eventoActualId=null;
     document.getElementById('panel-asistencia').style.display='none';
+    document.getElementById('panel-prelista').style.display='none';
   }
   showToast('🗑️ Evento eliminado');
   await cargarEventos();
@@ -3739,8 +4350,9 @@ let historialCache=[];
 
 async function cargarHistorial(){
   const tbody=document.getElementById('hist-tbody');
-  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Cargando…</td></tr>';
+  tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted)">Cargando…</td></tr>';
   document.getElementById('hist-buscar').value='';
+  document.getElementById('hist-filtro-tipo').value='';
   const selSeccion=document.getElementById('hist-filtro-seccion');
   const selLider=document.getElementById('hist-filtro-lider');
   selSeccion.innerHTML='<option value="">todas las secciones</option>'+
@@ -3751,18 +4363,38 @@ async function cargarHistorial(){
     lideresActivos.map(nombre=>`<option value="${nombre}">${nombre}</option>`).join('');
   selSeccion.value='';
   selLider.value='';
-  const data=await sbGet('asistencia_historial','?order=modificado_en.desc&limit=200');
-  historialCache=Array.isArray(data)?data:[];
+  const [data,dataPre]=await Promise.all([
+    sbGet('asistencia_historial','?order=modificado_en.desc&limit=200'),
+    sbGet('prelista_historial','?order=modificado_en.desc&limit=200')
+  ]);
+  historialCache=[
+    ...(Array.isArray(data)?data:[]).map(h=>({...h,tipo:'asistencia'})),
+    ...(Array.isArray(dataPre)?dataPre:[]).map(h=>({...h,tipo:'prelista'}))
+  ].sort((a,b)=>new Date(b.modificado_en)-new Date(a.modificado_en));
   renderHistorial();
+}
+
+// Texto de "Antes"/"Después" según el tipo de cambio (cual: 'anterior' | 'nuevo').
+function textoEstadoHistorial(f,cual){
+  const est=f[`estado_${cual}`];
+  if(f.tipo==='prelista'){
+    if(!est) return 'Pendiente';
+    let t=PRELISTA_LABEL[est]||est;
+    const mot=f[`motivo_${cual}`];
+    if(est==='NO_ASISTE'&&mot) t+=` (${MOTIVO_LABEL[mot]||mot}${cual==='nuevo'&&f.motivo_detalle?': '+escHtml(f.motivo_detalle):''})`;
+    return t;
+  }
+  return est?(ESTADO_LABEL[est]||est):'sin capturar';
 }
 
 function renderHistorial(){
   const q=(document.getElementById('hist-buscar').value||'').toLowerCase();
+  const tipoFiltro=document.getElementById('hist-filtro-tipo').value;
   const seccionFiltro=document.getElementById('hist-filtro-seccion').value;
   const liderFiltro=document.getElementById('hist-filtro-lider').value;
   const tbody=document.getElementById('hist-tbody');
   if(!historialCache.length){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin cambios registrados todavía.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted)">Sin cambios registrados todavía.</td></tr>';
     return;
   }
   let filas=historialCache.map(h=>{
@@ -3775,20 +4407,22 @@ function renderHistorial(){
       liderPersona:persona?.seccion?liderDe(persona.seccion):''
     };
   });
+  if(tipoFiltro) filas=filas.filter(f=>f.tipo===tipoFiltro);
   if(q) filas=filas.filter(f=>f.nombrePersona.toLowerCase().includes(q)||(f.modificado_por||'').toLowerCase().includes(q));
   if(seccionFiltro) filas=filas.filter(f=>f.seccionPersona===seccionFiltro);
   if(liderFiltro) filas=filas.filter(f=>f.liderPersona===liderFiltro);
   if(!filas.length){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">Sin resultados.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted)">Sin resultados.</td></tr>';
     return;
   }
   tbody.innerHTML=filas.map(f=>`<tr>
       <td>${new Date(f.modificado_en).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${f.tipo==='prelista'?'<span class="badge badge-amber">📋 Prelista</span>':'<span class="badge badge-pan">Asistencia</span>'}</td>
       <td>${f.nombreEvento}</td>
       <td>${f.nombrePersona}</td>
       <td>${f.seccionPersona?`${f.seccionPersona}${f.liderPersona?' · '+f.liderPersona:''}`:'—'}</td>
-      <td>${f.estado_anterior?ESTADO_LABEL[f.estado_anterior]:'sin capturar'}</td>
-      <td><b>${ESTADO_LABEL[f.estado_nuevo]||f.estado_nuevo}</b></td>
+      <td>${textoEstadoHistorial(f,'anterior')}</td>
+      <td><b>${textoEstadoHistorial(f,'nuevo')}</b></td>
       <td>${f.modificado_por||''}</td>
     </tr>`).join('');
 }
