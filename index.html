@@ -787,6 +787,7 @@ tr:hover td{background:#f8faff}
       </div>
       <div id="pl-lista" class="pl-lista"></div>
       <div style="font-size:12px;color:var(--muted);margin-top:8px" id="pl-count"></div>
+      <div id="pl-apoyos"></div>
     </div>
 
     <!-- ENLACES TEMPORALES DE ASISTENCIA POR SECCIÓN (solo Octavio) -->
@@ -795,6 +796,7 @@ tr:hover td{background:#f8faff}
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
         Genera un enlace para que un líder de sección o una editora capture asistencia desde su celular, sin iniciar sesión.
         No caduca hasta que alguien lo abre por primera vez — a partir de ahí tiene la vigencia indicada abajo.
+        Si el evento todavía no llega, el enlace sirve para capturar la <b>prelista</b> de la sección y su vigencia empieza a contar hasta el día del evento.
       </div>
       <div class="fg">
         <label>Etiqueta (para identificarlo en la lista de abajo)</label>
@@ -3489,6 +3491,7 @@ const MOTIVO_LABEL={VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad',OTRO:'Otro
 let prelistaEventoId=null;
 let prelistaLocal={};       // personal_id -> {estado, motivo, motivo_detalle, capturado_por, fecha_captura}
 let prelistaCargada=false;
+let prelistaApoyos=[];      // apoyos_no_registrados del evento: gente fuera de "personal" que un líder anotó con "+ Agregar apoyo"
 let prelistaFiltroPadrinoInicial=false; // a un padrino se le pre-filtra su gente la primera vez
 const prelistaColas=new Map(); // personal_id -> Promise: serializa los guardados de una misma persona (el último clic es el que queda)
 const prelistaUltimoCtx={};    // personal_id -> último cambio enviado, para reintentar
@@ -3536,8 +3539,15 @@ async function cargarPrelista(eventoId,miToken){
   document.getElementById('pl-count').textContent='';
   document.getElementById('pl-lista').innerHTML='<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Cargando prelista…</div>';
 
-  const data=await sbGet('prelista',`?evento_id=eq.${eventoId}`);
+  prelistaApoyos=[];
+  const [data,apoyos]=await Promise.all([
+    sbGet('prelista',`?evento_id=eq.${eventoId}`),
+    sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&order=seccion.asc,nombre.asc`)
+  ]);
   if(miToken!==eventoLoadToken) return; // el usuario ya cambió de evento
+  // Si los apoyos no se pueden leer, la prelista se muestra igual (solo sin apoyos).
+  if(Array.isArray(apoyos)) prelistaApoyos=apoyos;
+  else console.error('Error cargando apoyos no registrados',apoyos);
   if(!Array.isArray(data)){
     console.error('Error cargando prelista',data);
     document.getElementById('pl-lista').innerHTML='<div style="text-align:center;color:var(--red);padding:1.5rem;font-size:13px">⚠️ No se pudo cargar la prelista. Recarga la página; si sigue, revisa que la tabla "prelista" exista en Supabase.</div>';
@@ -3565,14 +3575,55 @@ function prelistaFiltrada(){
   return lista;
 }
 
+// ── Apoyos no registrados en la prelista ──
+// Se guardan en apoyos_no_registrados (no en prelista): el líder los anotó porque van a
+// participar, así que cuentan como "van". Su padrino es el de la sección donde se anotaron.
+function padrinoDeSeccion(sec){
+  return (SECCIONES.find(s=>s.num===String(sec))||{}).padrino||'';
+}
+function apoyosFiltrados(){
+  const q=(document.getElementById('pl-buscar').value||'').toLowerCase();
+  const pad=document.getElementById('pl-padrino').value;
+  const sec=document.getElementById('pl-sec').value;
+  const est=document.getElementById('pl-estado').value;
+  if(est&&est!=='CONFIRMADO') return [];
+  if(sec==='sin') return [];
+  let lista=prelistaApoyos;
+  if(q) lista=lista.filter(a=>(a.nombre||'').toLowerCase().includes(q));
+  if(pad) lista=lista.filter(a=>padrinoDeSeccion(a.seccion).includes(pad));
+  if(sec) lista=lista.filter(a=>String(a.seccion)===sec);
+  return ordenarPorSeccionYNombre(lista);
+}
+function textoFechaApoyo(a){
+  const f=a.creado_en||a.fecha;
+  if(!f) return '';
+  const d=new Date(f);
+  return isNaN(d)?String(f):d.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+
 function renderPrelista(){
   if(!prelistaCargada) return;
   renderContadoresPrelista();
   const lista=prelistaFiltrada();
-  document.getElementById('pl-count').textContent=`${lista.length} personas`;
+  const apoyos=apoyosFiltrados();
+  document.getElementById('pl-count').textContent=`${lista.length} personas${prelistaApoyos.length?` · ${apoyos.length} apoyos no registrados`:''}`;
   document.getElementById('pl-lista').innerHTML=lista.length
     ?lista.map(renderFilaPrelista).join('')
     :'<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Sin resultados.</div>';
+  document.getElementById('pl-apoyos').innerHTML=!prelistaApoyos.length?'':`
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:16px 0 4px">🏷️ Apoyos no registrados (${apoyos.length})</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Personas que no están en la base y que un líder anotó con "+ Agregar apoyo". Cuentan como que sí van.</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Nombre</th><th>Sección</th><th>Padrino</th><th>Líder que lo agregó</th><th>Actividad</th><th>Capturado</th></tr></thead>
+      <tbody>${apoyos.length?apoyos.map(a=>`<tr>
+        <td style="font-weight:600">${escHtml(a.nombre||'—')}</td>
+        <td>${escHtml(a.seccion||'—')}</td>
+        <td>${escHtml(padrinoDeSeccion(a.seccion)||'—')}</td>
+        <td>${escHtml(a.registrado_por||'—')}</td>
+        <td>${escHtml(a.actividad||'—')}</td>
+        <td style="font-size:12px;color:var(--muted)">${escHtml(textoFechaApoyo(a))}</td>
+      </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin apoyos con los filtros actuales.</td></tr>'}</tbody>
+    </table></div>`;
 }
 
 function renderContadoresPrelista(){
@@ -3588,6 +3639,10 @@ function renderContadoresPrelista(){
   html+=tarjeta(personalCache.filter(conf).length,personalCache.length,'Confirmados · Total','var(--pan)');
   html+=tarjeta(noAsiste,null,'No asistirán','#cc0000');
   html+=tarjeta(pendientes,null,'Pendientes','#854f0b');
+  if(prelistaApoyos.length){
+    html+=tarjeta(prelistaApoyos.length,null,'Apoyos no registrados','#5b21b6');
+    html+=tarjeta(personalCache.filter(conf).length+prelistaApoyos.length,null,'Confirmados + apoyos','var(--pan)');
+  }
   document.getElementById('pl-contadores').innerHTML=html;
 }
 
@@ -3780,7 +3835,8 @@ function textoFiltrosPrelista(){
 async function exportarPrelistaExcel(){
   if(!prelistaCargada){ showToast('⚠️ La prelista aún no termina de cargar'); return; }
   const lista=prelistaFiltrada();
-  if(!lista.length){ showToast('⚠️ No hay personas con los filtros actuales'); return; }
+  const apoyos=apoyosFiltrados();
+  if(!lista.length&&!apoyos.length){ showToast('⚠️ No hay personas con los filtros actuales'); return; }
   const ev=eventosCache.find(e=>e.id===prelistaEventoId);
   showToast('⏳ Preparando Excel...');
   const XL=(await cargarXlsxConEstilos())||XLSX;
@@ -3823,8 +3879,9 @@ async function exportarPrelistaExcel(){
 
   const grupos=[...PADRINOS,''].map(pad=>({
     padrino:pad,
-    gente:ordenarPorSeccionYNombre(lista.filter(p=>pad?p.padrino===pad:!PADRINOS.includes(p.padrino)))
-  })).filter(g=>g.gente.length);
+    gente:ordenarPorSeccionYNombre(lista.filter(p=>pad?p.padrino===pad:!PADRINOS.includes(p.padrino))),
+    apoyos:apoyos.filter(a=>pad?padrinoDeSeccion(a.seccion)===pad:!PADRINOS.includes(padrinoDeSeccion(a.seccion)))
+  })).filter(g=>g.gente.length||g.apoyos.length);
 
   const cuenta=gente=>{
     const c={CONFIRMADO:0,NO_ASISTE:0,PENDIENTE:0};
@@ -3833,12 +3890,12 @@ async function exportarPrelistaExcel(){
   };
   const wb=XL.utils.book_new();
 
-  const filasResumen=grupos.map(g=>{ const c=cuenta(g.gente); return [g.padrino||'Sin padrino',c.CONFIRMADO,c.NO_ASISTE,c.PENDIENTE,g.gente.length]; });
+  const filasResumen=grupos.map(g=>{ const c=cuenta(g.gente); return [g.padrino||'Sin padrino',c.CONFIRMADO,c.NO_ASISTE,c.PENDIENTE,g.gente.length,g.apoyos.length,c.CONFIRMADO+g.apoyos.length]; });
   const ct=cuenta(lista);
-  filasResumen.push(['Total',ct.CONFIRMADO,ct.NO_ASISTE,ct.PENDIENTE,lista.length]);
-  XL.utils.book_append_sheet(wb,hoja(['Padrino','Confirmados','No asistirá','Pendientes','Total'],filasResumen,{filaTotal:true,anchosMin:[20,12,12,12,8]}),'Resumen');
+  filasResumen.push(['Total',ct.CONFIRMADO,ct.NO_ASISTE,ct.PENDIENTE,lista.length,apoyos.length,ct.CONFIRMADO+apoyos.length]);
+  XL.utils.book_append_sheet(wb,hoja(['Padrino','Confirmados','No asistirá','Pendientes','Total','Apoyos no registrados','Confirmados + apoyos'],filasResumen,{filaTotal:true,anchosMin:[20,12,12,12,8,12,12]}),'Resumen');
 
-  grupos.forEach(g=>{
+  grupos.filter(g=>g.gente.length).forEach(g=>{
     const filas=g.gente.map((p,i)=>{
       const pl=prelistaDe(p.id);
       return [i+1,p.nombre||'',p.area||'',p.seccion||'',PRELISTA_LABEL[pl.estado],textoMotivoPrelista(pl),''];
@@ -3848,6 +3905,12 @@ async function exportarPrelistaExcel(){
     XL.utils.book_append_sheet(wb,hoja(['#','Nombre','Área','Sección','Estado','Motivo','Firma'],filas,{anchosMin:[4,20,10,9,12,10,30],altoFila:24}),nombreHoja);
   });
 
+  // Hoja "Apoyos": gente fuera de la base que los líderes anotaron (ordenada por sección y nombre).
+  const filasApoyos=apoyos.length
+    ?apoyos.map((a,i)=>[i+1,a.nombre||'',a.seccion||'',padrinoDeSeccion(a.seccion)||'Sin padrino',a.registrado_por||'',a.actividad||'',textoFechaApoyo(a),''])
+    :[['','Sin apoyos no registrados','','','','','','']];
+  XL.utils.book_append_sheet(wb,hoja(['#','Nombre','Sección','Padrino','Líder que lo agregó','Actividad','Capturado','Firma'],filasApoyos,{anchosMin:[4,20,9,16,18,14,14,30],altoFila:24}),'Apoyos');
+
   XL.writeFile(wb,nombreArchivoPrelista(ev,'xlsx'));
   showToast('✓ Prelista descargada');
 }
@@ -3856,7 +3919,8 @@ async function exportarPrelistaExcel(){
 function exportarPrelistaPDF(){
   if(!prelistaCargada){ showToast('⚠️ La prelista aún no termina de cargar'); return; }
   const lista=prelistaFiltrada();
-  if(!lista.length){ showToast('⚠️ No hay personas con los filtros actuales'); return; }
+  const apoyos=apoyosFiltrados();
+  if(!lista.length&&!apoyos.length){ showToast('⚠️ No hay personas con los filtros actuales'); return; }
   const ev=eventosCache.find(e=>e.id===prelistaEventoId);
   const w=window.open('','_blank');
   if(!w){ showToast('⚠️ Permite ventanas emergentes para imprimir la prelista'); return; }
@@ -3871,7 +3935,10 @@ function exportarPrelistaPDF(){
     const conf=gente.filter(p=>prelistaDe(p.id).estado==='CONFIRMADO').length;
     return `<tr class="grupo"><td colspan="5">${escHtml(k||'Sin padrino')} — ${conf} confirmados de ${gente.length}</td></tr>`+
       gente.map(p=>`<tr><td class="c">${++n}</td><td>${escHtml(p.nombre||'')}</td><td class="c">${escHtml(p.seccion||'—')}</td><td>${escHtml(textoPrelista(prelistaDe(p.id)))}</td><td></td></tr>`).join('');
-  }).join('');
+  }).join('')+(apoyos.length
+    ?`<tr class="grupo"><td colspan="5">Apoyos no registrados — ${apoyos.length}</td></tr>`+
+      apoyos.map(a=>`<tr><td class="c">${++n}</td><td>${escHtml(a.nombre||'')}</td><td class="c">${escHtml(a.seccion||'—')}</td><td>Apoyo · ${escHtml(a.actividad||'')}</td><td></td></tr>`).join('')
+    :'');
   const conf=lista.filter(p=>prelistaDe(p.id).estado==='CONFIRMADO').length;
   const filtros=[
     document.getElementById('pl-padrino').value&&`Padrino: ${document.getElementById('pl-padrino').value}`,
@@ -3903,7 +3970,7 @@ td:last-child{height:26px}
 <h1>GEMACUU · Prelista de asistencia</h1>
 <div class="meta"><b>${escHtml(ev?.nombre||'')}</b>${ev?.fecha?' · 📅 '+escHtml(ev.fecha):''}${ev?.lugar?' · 📍 '+escHtml(ev.lugar):''}</div>
 ${filtros?`<div class="meta">Filtros: ${escHtml(filtros)}</div>`:''}
-<div class="res">Confirmados: ${conf} de ${lista.length}</div>
+<div class="res">Confirmados: ${conf} de ${lista.length}${apoyos.length?` · Apoyos no registrados: ${apoyos.length} · Confirmados + apoyos: ${conf+apoyos.length}`:''}</div>
 <table>
 <thead><tr><th style="width:5%">#</th><th style="width:34%">Nombre</th><th style="width:9%">Sección</th><th style="width:20%">Prelista</th><th style="width:32%">Firma</th></tr></thead>
 <tbody>${cuerpo}</tbody>
