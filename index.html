@@ -3732,27 +3732,123 @@ function textoPrelista(pl){
   if(pl.estado!=='NO_ASISTE') return PRELISTA_LABEL[pl.estado];
   return `No asistirá (${MOTIVO_LABEL[pl.motivo]||''}${pl.motivo_detalle?': '+pl.motivo_detalle:''})`;
 }
+// Prelista_<nombre evento>_<fecha>.<ext> (sin caracteres inválidos en nombres de archivo).
 function nombreArchivoPrelista(ev,ext){
-  return `GEMACUU_prelista_${(ev?.nombre||'evento').replace(/[^\wÁÉÍÓÚÑáéíóúñ-]+/g,'_')}_${ev?.fecha||fechaLocalHoy()}.${ext}`;
+  const limpio=t=>String(t||'').trim().replace(/[\\\/:*?"<>|]+/g,'').replace(/\s+/g,'_');
+  return `Prelista_${limpio(ev?.nombre)||'evento'}_${ev?.fecha||fechaLocalHoy()}.${ext}`;
 }
-function exportarPrelistaExcel(){
+// La versión de SheetJS que carga la página (xlsx 0.18.5) no escribe estilos (negritas).
+// Para la prelista se carga bajo demanda xlsx-js-style (mismo API, con estilos) sin reemplazar
+// el XLSX global que usan los demás exports. Si no carga, se exporta igual pero sin negritas.
+let xlsxEstilosPromesa=null;
+function cargarXlsxConEstilos(){
+  if(!xlsxEstilosPromesa){
+    xlsxEstilosPromesa=new Promise(resolve=>{
+      const previo=window.XLSX;
+      const sc=document.createElement('script');
+      sc.src='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+      sc.onload=()=>{ const conEstilos=window.XLSX; window.XLSX=previo; resolve(conEstilos); };
+      sc.onerror=()=>{ window.XLSX=previo; xlsxEstilosPromesa=null; resolve(null); };
+      document.head.appendChild(sc);
+    });
+  }
+  return xlsxEstilosPromesa;
+}
+
+function textoMotivoPrelista(pl){
+  if(pl.estado!=='NO_ASISTE') return '';
+  const m=MOTIVO_LABEL[pl.motivo]||'';
+  return pl.motivo_detalle?`${m}: ${pl.motivo_detalle}`:m;
+}
+function ordenarPorSeccionYNombre(lista){
+  const numSec=s=>{ const n=parseInt(s,10); return isNaN(n)?Infinity:n; };
+  return lista.slice().sort((a,b)=>numSec(a.seccion)-numSec(b.seccion)||String(a.seccion||'').localeCompare(String(b.seccion||''))||(a.nombre||'').localeCompare(b.nombre||'','es'));
+}
+function textoFiltrosPrelista(){
+  const v=id=>document.getElementById(id).value;
+  return [
+    v('pl-padrino')&&`Padrino: ${v('pl-padrino')}`,
+    v('pl-sec')&&`Sección: ${v('pl-sec')==='sin'?'sin sección':v('pl-sec')}`,
+    v('pl-estado')&&`Estado: ${PRELISTA_LABEL[v('pl-estado')]}`,
+    v('pl-buscar').trim()&&`Búsqueda: "${v('pl-buscar').trim()}"`
+  ].filter(Boolean).join(' · ');
+}
+
+// Excel: Prelista_<evento>_<fecha>.xlsx · hoja "Resumen" (por padrino y total) + una hoja por
+// padrino (#, Nombre, Área, Sección, Estado, Motivo, Firma), ordenada por sección y nombre.
+// Respeta los filtros activos (quedan anotados en el encabezado).
+async function exportarPrelistaExcel(){
   if(!prelistaCargada){ showToast('⚠️ La prelista aún no termina de cargar'); return; }
   const lista=prelistaFiltrada();
   if(!lista.length){ showToast('⚠️ No hay personas con los filtros actuales'); return; }
   const ev=eventosCache.find(e=>e.id===prelistaEventoId);
-  const hdr=['#','Nombre','Área','Padrino','Sección','Núm. Empleado','Prelista','Motivo','Detalle','Capturado por','Fecha captura','Firma'];
-  const filas=lista.map((p,i)=>{
-    const pl=prelistaDe(p.id);
-    return [i+1,p.nombre||'',p.area||'',p.padrino||'',p.seccion||'',p.num_empleado||'',
-      PRELISTA_LABEL[pl.estado],pl.estado==='NO_ASISTE'?(MOTIVO_LABEL[pl.motivo]||''):'',pl.motivo_detalle||'',
-      pl.capturado_por||'',pl.fecha_captura?new Date(pl.fecha_captura).toLocaleString('es-MX'):'',''];
+  showToast('⏳ Preparando Excel...');
+  const XL=(await cargarXlsxConEstilos())||XLSX;
+
+  const NEGRITA={font:{bold:true}};
+  const TITULO={font:{bold:true,sz:14,color:{rgb:'003399'}}};
+  const borde={style:'thin',color:{rgb:'999999'}};
+  const ENCABEZADO={font:{bold:true},fill:{fgColor:{rgb:'E6EEFF'}},border:{top:borde,bottom:borde,left:borde,right:borde},alignment:{vertical:'center'}};
+  const CELDA={border:{top:borde,bottom:borde,left:borde,right:borde},alignment:{vertical:'center'}};
+  const TOTAL={...ENCABEZADO,fill:{fgColor:{rgb:'F0F0F0'}}};
+
+  const generado=new Date().toLocaleString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const filtros=textoFiltrosPrelista();
+  const encabezado=[
+    [`Prelista de asistencia — ${ev?.nombre||''}`],
+    [`Fecha del evento: ${ev?.fecha||'—'}`],
+    [`Lugar: ${ev?.lugar||'—'}`],
+    [`Generado: ${generado}${currentUser?' por '+currentUser:''}`]
+  ];
+  if(filtros) encabezado.push([`Filtros: ${filtros}`]);
+  encabezado.push([]);
+  const filaTabla=encabezado.length; // índice (0-based) de la fila de encabezados de la tabla
+
+  // Arma una hoja: encabezado + tabla, con negritas, bordes y anchos ajustados al contenido.
+  function hoja(hdr,filas,{filaTotal=false,anchosMin=[],altoFila=null}={}){
+    const aoa=[...encabezado,hdr,...filas];
+    const ws=XL.utils.aoa_to_sheet(aoa);
+    const estilo=(r,c,st)=>{ const ref=XL.utils.encode_cell({r,c}); if(!ws[ref]) ws[ref]={t:'s',v:''}; ws[ref].s=st; };
+    estilo(0,0,TITULO);
+    for(let r=1;r<filaTabla;r++) if(ws[XL.utils.encode_cell({r,c:0})]) estilo(r,0,NEGRITA);
+    hdr.forEach((_,c)=>estilo(filaTabla,c,ENCABEZADO));
+    filas.forEach((_,i)=>hdr.forEach((__,c)=>estilo(filaTabla+1+i,c,filaTotal&&i===filas.length-1?TOTAL:CELDA)));
+    ws['!cols']=hdr.map((h,c)=>{
+      const largo=Math.max(String(h).length,...filas.map(f=>String(f[c]??'').length));
+      return {wch:Math.min(Math.max(largo+2,anchosMin[c]||6),60)};
+    });
+    if(altoFila) ws['!rows']=aoa.map((_,r)=>r>filaTabla?{hpt:altoFila}:null);
+    return ws;
+  }
+
+  const grupos=[...PADRINOS,''].map(pad=>({
+    padrino:pad,
+    gente:ordenarPorSeccionYNombre(lista.filter(p=>pad?p.padrino===pad:!PADRINOS.includes(p.padrino)))
+  })).filter(g=>g.gente.length);
+
+  const cuenta=gente=>{
+    const c={CONFIRMADO:0,NO_ASISTE:0,PENDIENTE:0};
+    gente.forEach(p=>c[prelistaDe(p.id).estado]++);
+    return c;
+  };
+  const wb=XL.utils.book_new();
+
+  const filasResumen=grupos.map(g=>{ const c=cuenta(g.gente); return [g.padrino||'Sin padrino',c.CONFIRMADO,c.NO_ASISTE,c.PENDIENTE,g.gente.length]; });
+  const ct=cuenta(lista);
+  filasResumen.push(['Total',ct.CONFIRMADO,ct.NO_ASISTE,ct.PENDIENTE,lista.length]);
+  XL.utils.book_append_sheet(wb,hoja(['Padrino','Confirmados','No asistirá','Pendientes','Total'],filasResumen,{filaTotal:true,anchosMin:[20,12,12,12,8]}),'Resumen');
+
+  grupos.forEach(g=>{
+    const filas=g.gente.map((p,i)=>{
+      const pl=prelistaDe(p.id);
+      return [i+1,p.nombre||'',p.area||'',p.seccion||'',PRELISTA_LABEL[pl.estado],textoMotivoPrelista(pl),''];
+    });
+    // Nombre de hoja: máx. 31 caracteres y sin : \ / ? * [ ]
+    const nombreHoja=(g.padrino||'Sin padrino').replace(/[:\\\/?*\[\]]/g,' ').slice(0,31);
+    XL.utils.book_append_sheet(wb,hoja(['#','Nombre','Área','Sección','Estado','Motivo','Firma'],filas,{anchosMin:[4,20,10,9,12,10,30],altoFila:24}),nombreHoja);
   });
-  const titulo=[`Prelista de asistencia — ${ev?.nombre||''}${ev?.fecha?' · '+ev.fecha:''}${ev?.lugar?' · '+ev.lugar:''}`];
-  const ws=XLSX.utils.aoa_to_sheet([titulo,[],hdr,...filas]);
-  ws['!cols']=[{wch:4},{wch:34},{wch:20},{wch:18},{wch:9},{wch:13},{wch:12},{wch:12},{wch:24},{wch:16},{wch:18},{wch:28}];
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Prelista');
-  XLSX.writeFile(wb,nombreArchivoPrelista(ev,'xlsx'));
+
+  XL.writeFile(wb,nombreArchivoPrelista(ev,'xlsx'));
   showToast('✓ Prelista descargada');
 }
 
