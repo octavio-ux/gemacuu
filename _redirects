@@ -1,0 +1,8 @@
+# Redirecciones permanentes: el micrositio "Alumbrado" se renombró a "Panel B"
+# (ver panel-b*.html). Cualquier enlace viejo (compartido antes de este cambio,
+# guardado en favoritos, etc.) sigue funcionando y conserva sus parámetros de
+# URL (?evento=..., ?token=...) — Netlify los reenvía automáticamente al
+# destino cuando la regla no define los suyos propios.
+/alumbrado.html                        /panel-b.html                     301
+/alumbrado-asistencia-seccion.html     /panel-b-seccion.html             301
+/alumbrado-evidencia-evento.html       /panel-b-evidencia.html           301
