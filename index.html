@@ -17,30 +17,28 @@
 html,body{overflow-x:hidden}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-/* ── LOGIN ── */
-#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#001a66 0%,#003399 60%,#cc0000 100%)}
-.lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,51,.35)}
+/* ── LOGIN (portada única, blanco y negro — sin colores de marca aquí) ── */
+#login,#panel-selector{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#0A0A0A}
+.lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
 .lhead{text-align:center;margin-bottom:1.75rem}
-.llogo{width:64px;height:64px;background:var(--pan);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
-.ltitle{font-size:22px;font-weight:800;color:var(--pan);letter-spacing:.04em}
-.lsub{font-size:12px;color:var(--muted);margin-top:3px}
-.lusers{display:flex;flex-direction:column;gap:7px;margin-bottom:1.25rem}
-.luser{display:flex;align-items:center;gap:11px;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;background:#fff}
-.luser:hover{border-color:var(--pan);background:var(--pan-light)}
-.luser.sel{border-color:var(--pan);background:var(--pan-light)}
-.lav{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;color:#fff}
-.lav-o{background:#1a1a2e}.lav-f{background:#003399}.lav-m{background:#2d6a4f}.lav-r{background:#854f0b}
-.lav-k{background:#993556}.lav-l{background:#0f6e56}.lav-v{background:#534ab7}
-/* Avatares de usuarios de micrositios externos (otras dependencias, propia base de datos cada una) */
-.lav-diana{background:#0e7490}.lav-elsa{background:#a21caf}.lav-grisel{background:#b91c1c}.lav-karol{background:#c2410c}
-.lname{font-size:13px;font-weight:700;color:var(--text)}
-.lrole{font-size:11px;color:var(--muted)}
-.lpass-row{display:flex;gap:8px}
-.lpass-row input{flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;letter-spacing:.2em;outline:none;color:var(--text)}
-.lpass-row input:focus{border-color:var(--pan)}
-.lbtn{padding:11px 18px;background:var(--pan);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
-.lbtn:hover{background:var(--pan2)}
-.lerr{font-size:12px;color:var(--red);margin-top:6px;min-height:16px;text-align:center}
+.llogo{width:64px;height:64px;background:#111;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
+.ltitle{font-size:22px;font-weight:800;color:#111;letter-spacing:.04em}
+.lsub{font-size:12px;color:#6b7280;margin-top:3px}
+/* Los campos de usuario/contraseña reusan .fg (mismo componente de formulario que el
+   resto de la app), pero solo aquí se pintan en blanco y negro — .fg en el resto de la
+   app sigue con los colores normales, esto no la afecta fuera de #login/#panel-selector. */
+#login .fg label{color:#111}
+#login .fg input{border-color:#111}
+#login .fg input:focus{border-color:#000;box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+.lbtn{width:100%;padding:11px 18px;background:#111;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;margin-top:4px}
+.lbtn:hover{background:#000}
+.lerr{font-size:12px;color:#cc0000;margin-top:6px;min-height:16px;text-align:center}
+.lfooter{font-size:11px;color:#6b7280;margin-top:1.25rem;text-align:center}
+
+/* ── SELECTOR DE PANEL (solo Octavio) ── */
+.psel-list{display:flex;flex-direction:column;gap:10px;margin-top:1.5rem}
+.psel-btn{padding:18px;background:#111;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;transition:.15s;letter-spacing:.02em}
+.psel-btn:hover{background:#000}
 
 /* ── APP ── */
 #app{display:none}
@@ -49,6 +47,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .tlogo{font-size:17px;font-weight:800;letter-spacing:.06em}
 .tdot{width:6px;height:6px;background:var(--red);border-radius:50%}
 .tuser{font-size:12px;color:rgba(255,255,255,.7)}
+.tbadge{font-size:11px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 10px;border-radius:20px}
 .tuser b{color:#fff}
 .tbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
 .tbtn:hover{background:rgba(255,255,255,.25)}
@@ -390,41 +389,31 @@ tr:hover td{background:#f8faff}
       <div class="ltitle">GEMACUU</div>
       <div class="lsub">Sistema Operativo · 2026</div>
     </div>
-    <div class="lusers" id="lusers">
-      <div class="luser" onclick="selUser('Octavio','o','lav-o','Administrador')">
-        <div class="lav lav-o">OI</div>
-        <div><div class="lname">Octavio</div><div class="lrole">Administrador</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Fernando Amezcua','f','lav-f','Responsable')">
-        <div class="lav lav-f">FA</div>
-        <div><div class="lname">Fernando</div><div class="lrole">Responsable</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Martin Yáñez','m','lav-m','Responsable')">
-        <div class="lav lav-m">MY</div>
-        <div><div class="lname">Martin</div><div class="lrole">Responsable</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Rene Espinoza','r','lav-r','Responsable')">
-        <div class="lav lav-r">RE</div>
-        <div><div class="lname">Rene</div><div class="lrole">Responsable</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Karen Alarcón','k','lav-k','Editora')">
-        <div class="lav lav-k">KA</div>
-        <div><div class="lname">Karen</div><div class="lrole">Editora</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Lluvia Aceves','l','lav-l','Editora')">
-        <div class="lav lav-l">LA</div>
-        <div><div class="lname">Lluvia</div><div class="lrole">Editora</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Vianey','v','lav-v','Editora')">
-        <div class="lav lav-v">VI</div>
-        <div><div class="lname">Vianey</div><div class="lrole">Editora</div></div>
-      </div>
+    <div class="fg">
+      <label>Usuario</label>
+      <input type="text" id="lg-usuario" placeholder="ej. usuario" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lg-pass').focus()">
     </div>
-    <div class="lpass-row">
-      <input type="password" id="lpwd" placeholder="Contraseña" maxlength="12" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="lbtn" onclick="doLogin()">Entrar →</button>
+    <div class="fg">
+      <label>Contraseña</label>
+      <input type="password" id="lg-pass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
+    <button class="lbtn" id="lg-btn" onclick="doLogin()">Entrar →</button>
     <div class="lerr" id="lerr"></div>
+    <div class="lfooter">Acceso solo para administradores dados de alta.</div>
+  </div>
+</div>
+
+<!-- SELECTOR DE PANEL — solo para Octavio, tras un login correcto. Los botones se arman
+     desde MICROSITIOS_EXTERNOS (ver el bloque de script más abajo), así que un panel-c/d
+     futuro solo necesita un elemento más ahí, sin tocar este HTML. -->
+<div id="panel-selector" style="display:none">
+  <div class="lcard">
+    <div class="lhead">
+      <div class="llogo">G</div>
+      <div class="ltitle">GEMACUU</div>
+      <div class="lsub">Selecciona el panel</div>
+    </div>
+    <div class="psel-list" id="psel-list"></div>
   </div>
 </div>
 
@@ -460,11 +449,13 @@ tr:hover td{background:#f8faff}
   <div class="topbar">
     <div class="tl">
       <span class="tlogo">GEMACUU</span>
+      <span class="tbadge">Panel A</span>
       <div class="tdot"></div>
       <span class="tuser">Sesión: <b id="tname">—</b></span>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="tbtn" id="btn-export" onclick="exportarContextual()" style="display:none">↓ Excel</button>
+      <button class="tbtn" id="btn-cambiar-panel" onclick="cambiarPanel()" style="display:none">🔀 Cambiar panel</button>
       <button class="tbtn" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -1906,6 +1897,9 @@ const PRESET='barrido_electoral';
 const PASSWORDS={'Fernando Amezcua':'24617','Martin Yáñez':'18132','Rene Espinoza':'24181','Octavio':'chelo1942','Karen Alarcón':'25068','Lluvia Aceves':'25872','Vianey':'5936'};
 const EDITORAS=['Karen Alarcón','Lluvia Aceves','Vianey'];
 const PADRINOS=['Fernando Amezcua','Martin Yáñez','Rene Espinoza'];
+// Usuario (primer nombre, minúsculas) -> nombre completo, para la portada única de login.
+// Mismas 7 personas y mismas contraseñas (PASSWORDS) de siempre — nada más cambia.
+const D17_USUARIOS={octavio:'Octavio',fernando:'Fernando Amezcua',martin:'Martin Yáñez',rene:'Rene Espinoza',karen:'Karen Alarcón',lluvia:'Lluvia Aceves',vianey:'Vianey'};
 const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
   {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
@@ -1965,58 +1959,87 @@ const BAJAS=[
 ];
 
 let currentUser=null;
-let selectedUser=null;
 let personalCache=[];
 let pendientesCache=[];
 let inePersona=null;
 
 // ── MICROSITIOS EXTERNOS ──
 // Otras dependencias/micrositios (cada uno con su propia base de datos
-// separada, mismo patrón que Alumbrado). Para agregar uno nuevo en el
-// futuro: un objeto más en este array, con su propia url y su propia
-// lista de usuarios — no hay que tocar el resto de este archivo.
+// separada). Para agregar uno nuevo en el futuro (panel-c, panel-d...):
+// un objeto más en este array — el selector de panel de Octavio (más abajo)
+// arma sus botones a partir de esta lista sin que haya que tocar nada más.
 const MICROSITIOS_EXTERNOS=[
-  {
-    id:'panel-b',
-    url:'panel-b.html',
-    usuarios:[
-      {nombre:'Diana',  iniciales:'DP', avClass:'lav-diana'},
-      {nombre:'Elsa',   iniciales:'ES', avClass:'lav-elsa'},
-      {nombre:'Grisel', iniciales:'GQ', avClass:'lav-grisel'},
-      {nombre:'Karol',  iniciales:'KG', avClass:'lav-karol'},
-    ]
-  }
+  { id:'panel-b', label:'Panel B', url:'panel-b.html' }
 ];
 
-// Tarjetas idénticas en estructura/estilo a las de login local (.luser/.lav/.lname/.lrole),
-// pero en vez de selUser()+contraseña, llevan directo al micrositio correspondiente —
-// ese micrositio ya tiene su propio login (usuario/contraseña) contra su propia tabla.
-function renderMicrositiosExternos(){
-  const cont=document.getElementById('lusers');
-  if(!cont) return;
-  const html=MICROSITIOS_EXTERNOS.flatMap(m=>m.usuarios.map(u=>`
-    <div class="luser" onclick="location.href='${m.url}'">
-      <div class="lav ${u.avClass}">${u.iniciales}</div>
-      <div><div class="lname">${u.nombre}</div><div class="lrole">Administradora</div></div>
-    </div>`)).join('');
-  cont.insertAdjacentHTML('beforeend',html);
-}
-renderMicrositiosExternos();
-
-// ── LOGIN ──
-function selUser(name,code,avClass,rol){
-  selectedUser={name,code,avClass,rol};
-  document.querySelectorAll('.luser').forEach(u=>u.classList.remove('sel'));
-  event.currentTarget.classList.add('sel');
-  document.getElementById('lpwd').focus();
-  document.getElementById('lerr').textContent='';
-}
+// ── LOGIN (portada única) ──
+// Usuario = primer nombre, sin importar mayúsculas ni espacios de sobra.
+// 1) D17: mismas 7 personas, mismas PASSWORDS y mismos permisos de siempre.
+// 2) Si no es de D17: se valida contra alumbrado_personal, igual que ya lo
+//    hacía panel-b.html — si es correcto, se deja la sesión en sessionStorage
+//    (panelb_sesion) y se manda directo a panel-b.html, sin pedirle nada otra vez.
+// 3) Si nada coincide: un solo mensaje genérico (nunca se distingue cuál falló).
 async function doLogin(){
-  if(!selectedUser){document.getElementById('lerr').textContent='Selecciona tu nombre primero.';return;}
-  const pwd=document.getElementById('lpwd').value.trim();
-  if(!pwd){document.getElementById('lerr').textContent='Ingresa tu contraseña.';return;}
-  if(PASSWORDS[selectedUser.name]!==pwd){document.getElementById('lerr').textContent='Contraseña incorrecta.';return;}
-  currentUser=selectedUser.name;
+  const usuarioRaw=document.getElementById('lg-usuario').value.trim().toLowerCase();
+  const pwd=document.getElementById('lg-pass').value;
+  const errEl=document.getElementById('lerr');
+  errEl.textContent='';
+  if(!usuarioRaw||!pwd){errEl.textContent='Ingresa usuario y contraseña.';return;}
+  const btn=document.getElementById('lg-btn');
+  btn.disabled=true;btn.textContent='Verificando…';
+
+  const nombreD17=D17_USUARIOS[usuarioRaw];
+  if(nombreD17&&PASSWORDS[nombreD17]===pwd){
+    currentUser=nombreD17;
+    document.getElementById('lg-pass').value='';
+    btn.disabled=false;btn.textContent='Entrar →';
+    if(currentUser==='Octavio'){
+      // Único caso con selector: los demás entran derecho a su panel.
+      sessionStorage.setItem('gemacuu_octavio_auth','1');
+      mostrarSelectorPanel();
+    } else {
+      await entrarPanelA();
+    }
+    return;
+  }
+
+  let rows;
+  try{
+    rows=await sbGet('alumbrado_personal',`?usuario=eq.${encodeURIComponent(usuarioRaw)}&status=eq.activo&limit=1`);
+  }catch(e){ rows=null; }
+  btn.disabled=false;btn.textContent='Entrar →';
+  const persona=Array.isArray(rows)?rows[0]:null;
+  if(persona&&persona.password!=null&&String(persona.password)===pwd){
+    document.getElementById('lg-pass').value='';
+    sessionStorage.setItem('panelb_sesion',JSON.stringify({tipo:'personal',usuario:usuarioRaw,password:pwd}));
+    location.href='panel-b.html';
+    return;
+  }
+
+  errEl.textContent='Usuario o contraseña incorrectos.';
+}
+
+// Deja a Octavio ya autenticado (currentUser+sessionStorage) sobre la pantalla de
+// selección de panel, con un botón por cada opción: Panel A (este archivo) + uno por
+// cada MICROSITIOS_EXTERNOS. Se usa tanto al iniciar sesión como al volver aquí desde
+// "Cambiar panel" (dentro de este mismo archivo o desde panel-b.html).
+function mostrarSelectorPanel(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='none';
+  const opciones=[{label:'Panel A',accion:entrarPanelA}]
+    .concat(MICROSITIOS_EXTERNOS.map(m=>({label:m.label,accion:()=>entrarMicrositio(m)})));
+  window._pselOpciones=opciones;
+  document.getElementById('psel-list').innerHTML=opciones
+    .map((o,i)=>`<button class="psel-btn" onclick="_pselOpciones[${i}].accion()">${o.label}</button>`)
+    .join('');
+  document.getElementById('panel-selector').style.display='flex';
+}
+
+// Panel A = este mismo archivo (index.html), con exactamente los mismos permisos de
+// siempre según currentUser — es el mismo bloque de código que antes vivía al final de
+// doLogin(), ahora reutilizable también cuando Octavio lo elige desde el selector.
+async function entrarPanelA(){
+  document.getElementById('panel-selector').style.display='none';
   document.getElementById('login').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('tname').textContent=currentUser;
@@ -2025,6 +2048,7 @@ async function doLogin(){
   const isPadrino=PADRINOS.includes(currentUser);
   document.getElementById('btn-export').style.display=(isAdmin||isEditor)?'inline-flex':'none';
   document.getElementById('btn-nueva-persona').style.display=(isAdmin||isEditor)?'inline-flex':'none';
+  document.getElementById('btn-cambiar-panel').style.display=isAdmin?'inline-flex':'none';
   document.getElementById('tab-red').style.display='block';
   document.getElementById('tab-eventos').style.display='block';
   document.getElementById('tab-mapasd17').style.display='block';
@@ -2040,13 +2064,42 @@ async function doLogin(){
   renderPersonal();
   renderSecciones();
 }
-function doLogout(){
-  currentUser=null;selectedUser=null;
-  document.getElementById('lpwd').value='';
-  document.getElementById('lerr').textContent='';
-  document.querySelectorAll('.luser').forEach(u=>u.classList.remove('sel'));
-  document.getElementById('login').style.display='flex';
+
+// Octavio eligió un micrositio externo (hoy solo Panel B) desde el selector — entra con
+// nivel de administradora completa, sin agregarlo a la tabla del micrositio ni tocar
+// ningún dato en Supabase: panel-b.html reconoce esta marca y arma la sesión en código.
+// (Solo cubre panel-b por ahora; un panel-c futuro necesitará su propio mecanismo aquí
+// cuando exista, ya que cada micrositio tiene su propia tabla/login.)
+function entrarMicrositio(m){
+  if(m.id==='panel-b') sessionStorage.setItem('panelb_sesion',JSON.stringify({tipo:'octavio_admin'}));
+  location.href=m.url;
+}
+
+// Botón "Cambiar panel" (solo visible para Octavio, ver entrarPanelA): vuelve al
+// selector sin cerrar sesión — a diferencia de "Salir", gemacuu_octavio_auth se queda.
+function cambiarPanel(){
   document.getElementById('app').style.display='none';
+  mostrarSelectorPanel();
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('lg-usuario').value='';
+  document.getElementById('lg-pass').value='';
+  document.getElementById('lerr').textContent='';
+  sessionStorage.removeItem('gemacuu_octavio_auth');
+  sessionStorage.removeItem('panelb_sesion');
+  document.getElementById('panel-selector').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='flex';
+}
+
+// Si Octavio ya se autenticó en esta pestaña (p.ej. viene de "Cambiar panel" desde
+// panel-b.html), se salta el formulario y entra directo al selector — nadie más
+// conserva sesión entre recargas, es el único caso especial.
+if(sessionStorage.getItem('gemacuu_octavio_auth')==='1'){
+  currentUser='Octavio';
+  mostrarSelectorPanel();
 }
 
 // ── SUPABASE ──

@@ -190,25 +190,20 @@ tr:hover td{background:#f8faff}
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-  <div class="lcard">
-    <div class="lhead">
-      <div class="llogo">G</div>
-      <div class="ltitle">GEMACUU</div>
-      <div class="lsub">💡 Panel B · Sistema Operativo 2026</div>
-    </div>
-    <div class="fg">
-      <label>Usuario</label>
-      <input type="text" id="lg-usuario" placeholder="ej. usuario" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lg-pass').focus()">
-    </div>
-    <div class="fg">
-      <label>Contraseña</label>
-      <input type="password" id="lg-pass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <button class="lbtn" id="lg-btn" onclick="doLogin()">Entrar →</button>
-    <div class="lerr" id="lerr"></div>
-  </div>
+<!-- Ya no hay login propio aquí: el acceso es siempre desde la portada única
+     (index.html), que deja la sesión guardada y manda para acá directo. Si alguien
+     abre esta página sin esa sesión, el script de más abajo lo regresa a index.html
+     antes de mostrar nada — estos campos quedan solo por si algún código viejo
+     todavía los referencia, nunca se muestran. -->
+<div id="login" style="display:none">
+  <input type="text" id="lg-usuario">
+  <input type="password" id="lg-pass">
+  <button id="lg-btn" onclick="doLogin()"></button>
+  <div id="lerr"></div>
+</div>
+<div id="redirigiendo" style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;color:var(--muted);font-size:14px">
+  <div style="font-size:40px;margin-bottom:10px">⏳</div>
+  Redirigiendo…
 </div>
 
 <!-- APP -->
@@ -216,12 +211,13 @@ tr:hover td{background:#f8faff}
   <div class="topbar">
     <div class="tl">
       <span class="tlogo">GEMACUU</span>
-      <span class="tbadge">💡 Panel B</span>
+      <span class="tbadge">Panel B</span>
       <div class="tdot"></div>
       <span class="tuser">Sesión: <b id="tname">—</b></span>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="tbtn" id="btn-export" onclick="exportarExcel()" style="display:none">↓ Excel</button>
+      <button class="tbtn" id="btn-cambiar-panel" onclick="cambiarPanel()" style="display:none">🔀 Cambiar panel</button>
       <button class="tbtn" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -301,7 +297,7 @@ tr:hover td{background:#f8faff}
   <div id="panel-organigrama" class="panel">
     <div class="card">
       <div class="org-tree">
-        <div class="org-root">💡 GEMACUU · Panel B</div>
+        <div class="org-root">GEMACUU · Panel B</div>
         <div class="org-line"></div>
         <div style="background:var(--pan-light);border:1px solid var(--border);border-radius:10px;padding:10px 20px;text-align:center;font-weight:700;font-size:14px;color:var(--pan)">👑 Administración: <span id="org-admins">cargando…</span></div>
         <div class="org-line"></div>
@@ -744,39 +740,59 @@ function nombreCompleto(p){
 }
 
 // ── LOGIN ──
+// Ya no hay formulario propio en esta página: el acceso siempre viene de la portada
+// única (index.html), que deja la sesión en sessionStorage (panelb_sesion) y manda
+// para acá — ver iniciarSesionPanelB() al final de este script.
 let currentPersona=null; // fila completa de alumbrado_personal de quien inició sesión
 let currentNombre='';
 let ALUM_isAdmin=false;
 let ALUM_isLider=false;
+let esSesionOctavio=false; // true solo si entró como Octavio desde el selector de panel
 
+// Misma validación de siempre contra alumbrado_personal (usuario+password) — solo que
+// ahora la llama iniciarSesionPanelB() con las credenciales ya guardadas, en vez de un
+// clic en un botón. Si no valida, no se muestra ningún error aquí (no hay dónde
+// mostrarlo, el formulario está oculto) — se regresa a la portada única.
 async function doLogin(){
   const usuario=document.getElementById('lg-usuario').value.trim();
   const pwd=document.getElementById('lg-pass').value;
-  const errEl=document.getElementById('lerr');
-  errEl.textContent='';
-  if(!usuario||!pwd){errEl.textContent='Ingresa usuario y contraseña.';return;}
-  const btn=document.getElementById('lg-btn');
-  btn.disabled=true;btn.textContent='Verificando…';
+  if(!usuario||!pwd){ volverAPortada(); return; }
   let rows;
   try{
     rows=await sbGet('alumbrado_personal',`?usuario=eq.${encodeURIComponent(usuario)}&status=eq.activo&limit=1`);
   }catch(e){rows=null;}
-  btn.disabled=false;btn.textContent='Entrar →';
   const persona=Array.isArray(rows)?rows[0]:null;
   if(!persona||persona.password==null||String(persona.password)!==pwd){
-    errEl.textContent='Usuario o contraseña incorrectos.';
+    volverAPortada();
     return;
   }
   currentPersona=persona;
   currentNombre=nombreCompleto(persona)||persona.usuario;
   ALUM_isAdmin=ALUM_ADMINS.includes((persona.usuario||'').toLowerCase());
   ALUM_isLider=persona.es_lider_seccion===true;
+  await entrarApp();
+}
 
+// Octavio, elegido desde el selector de panel de index.html: administradora completa
+// (mismo nivel que ALUM_ADMINS), sin agregarlo a alumbrado_personal ni tocar ningún
+// dato en Supabase — se arma la sesión aquí mismo, en código.
+async function entrarComoOctavioAdmin(){
+  currentPersona=null;
+  currentNombre='Octavio';
+  ALUM_isAdmin=true;
+  ALUM_isLider=false;
+  esSesionOctavio=true;
+  await entrarApp();
+}
+
+async function entrarApp(){
+  document.getElementById('redirigiendo').style.display='none';
   document.getElementById('login').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('tname').textContent=currentNombre;
   document.getElementById('btn-export').style.display=ALUM_isAdmin?'inline-flex':'none';
   document.getElementById('btn-nueva-persona').style.display=ALUM_isAdmin?'inline-flex':'none';
+  document.getElementById('btn-cambiar-panel').style.display=esSesionOctavio?'inline-flex':'none';
   document.getElementById('tab-mapas').style.display=ALUM_isAdmin?'block':'none';
   document.getElementById('tab-correccion').style.display=(ALUM_isAdmin||ALUM_isLider)?'block':'none';
   document.getElementById('tab-historial').style.display=(ALUM_isAdmin||ALUM_isLider)?'block':'none';
@@ -786,13 +802,45 @@ async function doLogin(){
   renderPersonal();
   renderSecciones();
 }
+
+// Sin sesión válida (o dejó de serlo): nunca se muestra un login propio aquí, se
+// regresa a la portada única de una vez.
+function volverAPortada(){
+  sessionStorage.removeItem('panelb_sesion');
+  location.href='index.html';
+}
+
+// "Salir": cierra la sesión por completo (incluida la de Octavio, si aplica) y
+// regresa a la portada única — a diferencia de "Cambiar panel", que sí la conserva.
 function doLogout(){
-  currentPersona=null;currentNombre='';ALUM_isAdmin=false;ALUM_isLider=false;
-  document.getElementById('lg-usuario').value='';
-  document.getElementById('lg-pass').value='';
-  document.getElementById('lerr').textContent='';
-  document.getElementById('login').style.display='flex';
-  document.getElementById('app').style.display='none';
+  sessionStorage.removeItem('panelb_sesion');
+  sessionStorage.removeItem('gemacuu_octavio_auth');
+  location.href='index.html';
+}
+
+// Solo visible para Octavio (ver entrarApp): vuelve al selector de panel sin cerrar
+// sesión — gemacuu_octavio_auth se queda puesto, así que index.html lo manda directo
+// ahí en vez de pedirle usuario y contraseña otra vez.
+function cambiarPanel(){
+  sessionStorage.removeItem('panelb_sesion');
+  location.href='index.html';
+}
+
+// Punto de entrada de esta página: solo puede llegarse aquí con una sesión ya
+// validada por la portada única. Se llama al final de este script (ver abajo).
+function iniciarSesionPanelB(){
+  let sesion=null;
+  try{ sesion=JSON.parse(sessionStorage.getItem('panelb_sesion')||'null'); }catch(e){ sesion=null; }
+  if(!sesion||!sesion.tipo){ location.href='index.html'; return; }
+  if(sesion.tipo==='octavio_admin'){
+    entrarComoOctavioAdmin();
+  } else if(sesion.tipo==='personal'&&sesion.usuario&&sesion.password){
+    document.getElementById('lg-usuario').value=sesion.usuario;
+    document.getElementById('lg-pass').value=sesion.password;
+    doLogin();
+  } else {
+    location.href='index.html';
+  }
 }
 
 // ── CARGAR PERSONAL ──
@@ -1840,6 +1888,8 @@ function goTab(name,btn){
   if(name==='secciones'){renderSecciones();}
   if(name==='mapas'){ cargarMapasSeccion().then(renderMapasTab); }
 }
+
+iniciarSesionPanelB();
 </script>
 </body>
 </html>
