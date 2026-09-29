@@ -399,6 +399,13 @@ function soloNumeros(input){
   input.setSelectionRange(pos-quitados,pos-quitados);
 }
 
+// Deja solo dígitos y quita ceros a la izquierda, para comparar números de empleado sin
+// que espacios ni ceros de más (007 vs 7) cuenten como distintos. '' si no queda nada.
+function soloDigitos(v){
+  const d=String(v??'').replace(/\D/g,'').replace(/^0+/,'');
+  return d;
+}
+
 function mostrarError(msg){
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('error-msg').textContent=msg;
@@ -511,6 +518,31 @@ async function confirmarAcceso(){
     btn.disabled=false;
     btn.textContent='Entrar →';
     errEl.textContent='Número de sección no válido.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  // El número de empleado escrito debe ser el del líder ACTIVO de esa sección — se compara
+  // solo por dígitos (sin espacios ni ceros a la izquierda), igual que pidió Octavio.
+  let liderRows;
+  try{
+    liderRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&es_lider_seccion=eq.true&status=eq.activo&select=num_empleado&order=nombre.asc&limit=1`);
+  }catch(e){
+    liderRows=null;
+  }
+  const liderRow=(Array.isArray(liderRows)&&liderRows[0])?liderRows[0]:null;
+  const numEmpleadoLider=liderRow?soloDigitos(liderRow.num_empleado):'';
+  if(!numEmpleadoLider){
+    btn.disabled=false;
+    btn.textContent='Entrar →';
+    errEl.textContent='Esta sección no tiene número de empleado registrado. Contacta al administrador.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if(soloDigitos(numEmpleado)!==numEmpleadoLider){
+    btn.disabled=false;
+    btn.textContent='Entrar →';
+    errEl.textContent='El número de empleado no corresponde al líder de esa sección.';
     errEl.classList.remove('hidden');
     return;
   }
