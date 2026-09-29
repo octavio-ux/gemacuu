@@ -8,7 +8,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --pan:#1a1a1a;--pan2:#000000;--red:#666666;
-  --bg:#f0f0f0;--white:#fff;--text:#1a1a1a;--muted:#6b7280;
+  --bg:#fff;--white:#fff;--text:#1a1a1a;--muted:#6b7280;
   --border:#d9d9d9;--shadow:0 2px 12px rgba(0,0,0,.08);
   --radius:14px;--radius-sm:8px;
 }
@@ -58,6 +58,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .aviso-prelista{background:#ececec;border:2px solid #777777;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#222222;line-height:1.5}
 .aviso-amigoscuu{background:#f0f0f0;border:1px solid #cccccc;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600;color:#333;text-align:center}
 .persona-usuario{display:inline-block;font-size:10px;font-weight:700;color:#555;background:#ececec;border:1px solid #d9d9d9;border-radius:6px;padding:2px 7px;margin-left:6px;white-space:nowrap;vertical-align:middle}
+.persona-usuario.copiable{cursor:pointer;user-select:none}
+.persona-usuario.copiado{background:#111;color:#fff;border-color:#111}
+.persona-ya-registrado{font-size:11px;font-weight:700;color:#666;margin-top:2px}
 .pl-contadores{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .pl-cont{flex:1;min-width:90px;text-align:center;font-size:12px;padding:6px 4px;border-radius:8px;background:#f0f0f0;color:var(--muted)}
 .pl-cont b{font-size:16px}
@@ -65,7 +68,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .pl-botones{display:flex;gap:4px;width:100%}
 .pl-btn{flex:1;padding:8px 4px;border:1.5px solid #cccccc;border-radius:7px;font-size:12px;font-weight:700;background:#ececec;color:#555;cursor:pointer}
 .pl-btn:disabled{opacity:.5;cursor:not-allowed}
-.pl-btn.on-CONFIRMADO,.pl-btn.on-NO_ASISTE,.pl-btn.on-PENDIENTE{background:#111;border-color:#111;color:#fff}
+.pl-btn.on-PENDIENTE{background:#111;border-color:#111;color:#fff}
+.pl-btn.on-CONFIRMADO{background:#2d6a4f;border-color:#2d6a4f;color:#fff}
+.pl-btn.on-NO_ASISTE{background:#cc0000;border-color:#cc0000;color:#fff}
 .pl-btn.pl-motivo.sel{background:#ececec;border-color:var(--pan);color:var(--pan)}
 .pl-motivo-txt{font-size:11px;color:#666666;font-weight:600;margin-top:2px}
 .modal-motivo{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:700;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -73,8 +78,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .persona-origen{font-size:10px;color:var(--pan);background:#ececec;border-radius:20px;padding:1px 7px;font-weight:700;flex-shrink:0}
 .estado-select{width:132px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
 .estado-select:disabled{opacity:.5;cursor:not-allowed}
-.estado-select.e-asistencia{background:#ececec;border-color:#cccccc;color:#333333}
-.estado-select.e-falta{background:#ececec;border-color:#cccccc;color:#666666}
+.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
+.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
 .estado-select.e-vacaciones{background:#ececec;border-color:#cccccc;color:#1a1a1a}
 .estado-select.e-incapacidad{background:#e5e5e5;border-color:#cccccc;color:#444444}
 .vacio{font-size:12px;color:var(--muted);padding:8px 0}
@@ -394,6 +399,13 @@ function soloNumeros(input){
   input.setSelectionRange(pos-quitados,pos-quitados);
 }
 
+// Deja solo dígitos y quita ceros a la izquierda, para comparar números de empleado sin
+// que espacios ni ceros de más (007 vs 7) cuenten como distintos. '' si no queda nada.
+function soloDigitos(v){
+  const d=String(v??'').replace(/\D/g,'').replace(/^0+/,'');
+  return d;
+}
+
 function mostrarError(msg){
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('error-msg').textContent=msg;
@@ -506,6 +518,31 @@ async function confirmarAcceso(){
     btn.disabled=false;
     btn.textContent='Entrar →';
     errEl.textContent='Número de sección no válido.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  // El número de empleado escrito debe ser el del líder ACTIVO de esa sección — se compara
+  // solo por dígitos (sin espacios ni ceros a la izquierda), igual que pidió Octavio.
+  let liderRows;
+  try{
+    liderRows=await sbGet('personal',`?seccion=eq.${encodeURIComponent(numSeccion)}&es_lider_seccion=eq.true&status=eq.activo&select=num_empleado&order=nombre.asc&limit=1`);
+  }catch(e){
+    liderRows=null;
+  }
+  const liderRow=(Array.isArray(liderRows)&&liderRows[0])?liderRows[0]:null;
+  const numEmpleadoLider=liderRow?soloDigitos(liderRow.num_empleado):'';
+  if(!numEmpleadoLider){
+    btn.disabled=false;
+    btn.textContent='Entrar →';
+    errEl.textContent='Esta sección no tiene número de empleado registrado. Contacta al administrador.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if(soloDigitos(numEmpleado)!==numEmpleadoLider){
+    btn.disabled=false;
+    btn.textContent='Entrar →';
+    errEl.textContent='El número de empleado no corresponde al líder de esa sección.';
     errEl.classList.remove('hidden');
     return;
   }
@@ -668,7 +705,7 @@ async function cargarYRenderizar(){
     const ids=personalSeccion.map(p=>p.id).join(',');
     const asis=await sbGet('asistencia_eventos',`?evento_id=eq.${eventoId}&personal_id=in.(${ids})`);
     (Array.isArray(asis)?asis:[]).forEach(a=>{
-      asistenciaPersonas[a.personal_id]={estado:a.estado||null,actividad:a.actividad||null};
+      asistenciaPersonas[a.personal_id]={estado:a.estado||null,actividad:a.actividad||null,capturado_en_seccion:a.capturado_en_seccion||null};
     });
   }
 
@@ -683,7 +720,7 @@ async function cargarYRenderizar(){
     personalExterno=Array.isArray(personalExternoRows)?personalExternoRows:[];
     asisExterna.forEach(a=>{
       if(idsPropios.has(a.personal_id)) return;
-      asistenciaPersonas[a.personal_id]={estado:a.estado||null,actividad:a.actividad||null};
+      asistenciaPersonas[a.personal_id]={estado:a.estado||null,actividad:a.actividad||null,capturado_en_seccion:num};
     });
   } else {
     personalExterno=[];
@@ -902,13 +939,19 @@ async function guardarEEPropio(){
 }
 
 function renderPersonaRow(p,esExterna){
-  const estado=asistenciaPersonas[p.id]||{estado:null,actividad:null};
+  const estado=asistenciaPersonas[p.id]||{estado:null,actividad:null,capturado_en_seccion:null};
   const marcado=estado.estado||'';
   const esAsistencia=marcado==='ASISTENCIA';
   const actividad=estado.actividad||ACTIVIDADES[0];
-  const usuarioTxt=p.usuario?escHtml(p.usuario):'sin usuario';
+  const otraSeccion=estado.capturado_en_seccion&&String(estado.capturado_en_seccion)!==String(seccionActual.num);
+  if(otraSeccion){
+    return `<div class="persona-row">
+      <div class="persona-nombre">${p.nombre}${badgeUsuario(p)}${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}</div>
+      <div class="persona-ya-registrado">YA FUE REGISTRADO (Sección ${escHtml(estado.capturado_en_seccion)})</div>
+    </div>`;
+  }
   return `<div class="persona-row">
-    <div class="persona-nombre">${p.nombre}<span class="persona-usuario">${usuarioTxt}</span>${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}${etiquetaPrelista(p.id)}</div>
+    <div class="persona-nombre">${p.nombre}${badgeUsuario(p)}${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}${etiquetaPrelista(p.id)}</div>
     <select class="persona-actividad ${esAsistencia?'':'hidden'}" onchange="cambiarActividad('${p.id}',this.value)">
       ${ACTIVIDADES.map(a=>`<option value="${a}" ${a===actividad?'selected':''}>${a}</option>`).join('')}
     </select>
@@ -940,10 +983,35 @@ function aplicarMarcaAgua(texto){
   const t=String(texto).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='320' height='200'>`+
     `<text x='160' y='105' transform='rotate(-28 160 105)' text-anchor='middle' `+
-    `font-family='Segoe UI, sans-serif' font-size='15' font-weight='700' `+
-    `fill='rgba(0,0,0,.06)'>${t}</text></svg>`;
+    `font-family='Segoe UI, sans-serif' font-size='15' font-weight='600' `+
+    `fill='rgba(0,0,0,.028)'>${t}</text></svg>`;
   const el=document.getElementById('watermark');
   if(el) el.style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+// Copia al portapapeles el texto listo para pegarle al líder por WhatsApp — "sin usuario"
+// no llama a esta función (ver onclick sólo cuando p.usuario existe).
+async function copiarUsuario(el){
+  const usuario=el.dataset.usuario;
+  if(!usuario) return;
+  const texto=`Tu usuario de AmigosCUU es: ${usuario}. Tu contraseña es tu número de empleado.`;
+  try{
+    await navigator.clipboard.writeText(texto);
+  }catch(e){
+    // Respaldo para navegadores/contextos donde el portapapeles moderno no está disponible.
+    const ta=document.createElement('textarea');
+    ta.value=texto;
+    ta.style.position='fixed';
+    ta.style.opacity='0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); }catch(e2){ console.error('No se pudo copiar',e2); }
+    document.body.removeChild(ta);
+  }
+  const textoOriginal=el.textContent;
+  el.classList.add('copiado');
+  el.textContent='Copiado';
+  setTimeout(()=>{ el.classList.remove('copiado'); el.textContent=textoOriginal; },2000);
 }
 
 // ── FOTOS DEL EVENTO (botón "Agregar fotos", sin límite, cámara o galería) ──
@@ -1252,9 +1320,8 @@ function renderFilaPrelistaSeccion(p){
   const pl=prelistaDePersona(p.id);
   const motivo=pl.estado==='NO_ASISTE'
     ?`<div class="pl-motivo-txt">${MOTIVO_PRELISTA_LABEL[pl.motivo]||''}${pl.motivo_detalle?' — '+escHtml(pl.motivo_detalle):''}</div>`:'';
-  const usuarioTxt=p.usuario?escHtml(p.usuario):'sin usuario';
   return `<div class="persona-row" id="pl-row-${p.id}">
-    <div class="persona-nombre">${escHtml(p.nombre)}<span class="persona-usuario">${usuarioTxt}</span>${motivo}</div>
+    <div class="persona-nombre">${escHtml(p.nombre)}${badgeUsuario(p)}${motivo}</div>
     <span class="persona-status" id="status-${p.id}" onclick="reintentarPrelistaSeccion('${p.id}')"></span>
     <div class="pl-botones">${PRELISTA_ESTADOS.map(e=>`<button type="button" class="pl-btn ${pl.estado===e?'on-'+e:''}" onclick="clickPrelistaSeccion('${p.id}','${e}')">${PRELISTA_ICON[e]} ${PRELISTA_LABEL[e]}</button>`).join('')}</div>
   </div>`;
@@ -1498,6 +1565,16 @@ async function guardarApoyo(){
   const nombre=document.getElementById('apoyo-nombre').value.trim();
   const actividad=document.getElementById('apoyo-actividad').value;
   if(!nombre){ showToast('Escribe el nombre de quien apoyó'); return; }
+
+  // Mismo nombre, en CUALQUIER sección de este evento — no solo la que se está viendo —
+  // para no duplicar a la misma persona de apoyo si otro líder ya la registró.
+  const existentes=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&nombre=ilike.${encodeURIComponent(nombre)}&select=seccion&limit=1`);
+  const yaExiste=Array.isArray(existentes)?existentes[0]:null;
+  if(yaExiste){
+    showToast(`YA FUE REGISTRADO (Sección ${yaExiste.seccion})`);
+    return;
+  }
+
   const payload={seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,nombre,actividad,es_no_registrado:true,enlace_token:token,registrado_por:registradoPor};
   const r=await sbPost('apoyos_no_registrados',payload);
   if(!r.ok){ showToast('⚠️ No se pudo guardar el apoyo — intenta de nuevo'); return; }
@@ -1611,6 +1688,15 @@ function renderFotoCard(f,i){
 
 function escapeAttr(s){
   return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Recuadro de usuario de AmigosCUU junto al nombre — si existe, se puede tocar para
+// copiar el mensaje listo para pegarle al líder por WhatsApp (ver copiarUsuario()).
+function badgeUsuario(p){
+  if(p.usuario){
+    return `<span class="persona-usuario copiable" data-usuario="${escapeAttr(p.usuario)}" onclick="copiarUsuario(this)">${escHtml(p.usuario)}</span>`;
+  }
+  return `<span class="persona-usuario">sin usuario</span>`;
 }
 
 function onCambioTipoFoto(domId){
