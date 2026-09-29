@@ -156,7 +156,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="topbar">
   <div class="topbar-logo"><span class="topbar-logo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/></svg></span> GEMACUU</div>
   <div class="exp-badges">
-    <div class="exp-badge" id="exp-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg> Enlace temporal</div>
+    <div class="exp-badge" id="exp-badge">Enlace temporal</div>
     <div class="exp-badge exp-countdown hidden" id="exp-countdown"></div>
   </div>
 </div>
@@ -271,7 +271,8 @@ const ICO_X='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke=
 const ICO_RELOJ='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg>';
 const ICO_LISTA='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/></svg>';
 const ICO_TAG='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5L21 12.5 12.5 21 3 11.5Z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg>';
-
+const ICO_CAMARA='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.3"/></svg>';
+const ICO_GALERIA='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><path d="M21 16l-5-5-4 4-3-3-6 6"/></svg>';
 const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
   {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
@@ -433,7 +434,7 @@ async function init(){
   // primera_apertura) para que el día del evento siga funcionando normal.
   modoPrelista=!!(eventoInfo&&eventoInfo.fecha&&eventoInfo.fecha>fechaLocalHoy());
   if(modoPrelista){
-    document.getElementById('exp-badge').innerHTML=`${ICO_LISTA} Prelista · evento ${escHtml(fechaCortaEvento(eventoInfo.fecha))}`;
+    document.getElementById('exp-badge').textContent=`Prelista · evento ${fechaCortaEvento(eventoInfo.fecha)}`;
   } else {
     // Vigencia desde la primera apertura. Si se abrió ANTES del día del evento (p.ej. para la
     // prelista), el mismo día del evento vuelve a contar desde cero.
@@ -459,7 +460,7 @@ async function init(){
       mostrarError(`Este enlace caducó el ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}.`);
       return;
     }
-    document.getElementById('exp-badge').innerHTML=`${ICO_RELOJ} Enlace temporal — caduca ${escHtml(expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}))}`;
+    document.getElementById('exp-badge').textContent=`Enlace temporal — caduca ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
     actualizarCuentaRegresiva();
     setInterval(actualizarCuentaRegresiva,60000);
   }
@@ -819,8 +820,8 @@ function renderSeccion(){
       <label>Fotos de la actividad</label>
       <div id="fotos-grid">${renderFotosCards()}</div>
       <div class="foto-btns">
-        <button type="button" class="btn btn-secondary" onclick="document.getElementById('cam-inp').click()">📷 Cámara</button>
-        <button type="button" class="btn btn-secondary" onclick="document.getElementById('gal-inp').click()">🖼️ Galería</button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('cam-inp').click()">${ICO_CAMARA} Cámara</button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('gal-inp').click()">${ICO_GALERIA} Galería</button>
       </div>
       <input type="file" id="cam-inp" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFotos(this)">
       <input type="file" id="gal-inp" accept="image/*" multiple class="hidden" onchange="handleFotos(this)">
@@ -995,8 +996,8 @@ function renderFotosEventoWidget(){
     <label>Fotos del evento</label>
     <div id="fotos-evento-grid" class="foto-grid">${renderFotosEventoCards()}</div>
     <div class="foto-btns">
-      <button type="button" class="btn btn-secondary" onclick="document.getElementById('cam-inp-evento').click()">📷 Cámara</button>
-      <button type="button" class="btn btn-secondary" onclick="document.getElementById('gal-inp-evento').click()">🖼️ Galería</button>
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('cam-inp-evento').click()">${ICO_CAMARA} Cámara</button>
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('gal-inp-evento').click()">${ICO_GALERIA} Galería</button>
     </div>
     <input type="file" id="cam-inp-evento" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFotosEvento(this)">
     <input type="file" id="gal-inp-evento" accept="image/*" multiple class="hidden" onchange="handleFotosEvento(this)">
