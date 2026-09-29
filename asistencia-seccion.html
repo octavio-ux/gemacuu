@@ -274,7 +274,6 @@ const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vaca
 const ICO_CHECK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 13l4 4L19 7"/></svg>';
 const ICO_X='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const ICO_RELOJ='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg>';
-const ICO_LISTA='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/></svg>';
 const ICO_TAG='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5L21 12.5 12.5 21 3 11.5Z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg>';
 const ICO_CAMARA='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.3"/></svg>';
 const ICO_GALERIA='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><path d="M21 16l-5-5-4 4-3-3-6 6"/></svg>';
@@ -1279,7 +1278,7 @@ function renderPrelistaSeccion(){
       <div class="seccion-evento">📅 ${escHtml(eventosNombreActual())}</div>
     </div>
     <div class="aviso-prelista">
-      ${ICO_LISTA} <b>Prelista</b> — el evento es el <b>${escHtml(fechaLegible(eventoInfo.fecha))}</b>.<br>
+      <b>Prelista</b> — el evento es el <b>${escHtml(fechaLegible(eventoInfo.fecha))}</b>.<br>
       Marca quién va a ir. Se guarda solo al tocar cada botón.<br>
       <span style="font-weight:600">El día del evento este mismo enlace sirve para tomar asistencia (su tiempo de uso empieza a contar ese día).</span>
     </div>
