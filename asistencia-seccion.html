@@ -156,7 +156,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="topbar">
   <div class="topbar-logo"><span class="topbar-logo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/></svg></span> GEMACUU</div>
   <div class="exp-badges">
-    <div class="exp-badge" id="exp-badge">⏳ Enlace temporal</div>
+    <div class="exp-badge" id="exp-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg> Enlace temporal</div>
     <div class="exp-badge exp-countdown hidden" id="exp-countdown"></div>
   </div>
 </div>
@@ -164,7 +164,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="wrap">
 
   <div id="loading" class="center-msg">
-    <div class="ico">⏳</div>
+    <div class="ico"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg></div>
     Cargando enlace…
   </div>
 
@@ -177,13 +177,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
   <div id="acceso-gate" class="card hidden">
     <div class="fg">
-      <label>Contraseña (tu número de sección)</label>
-      <input type="text" inputmode="numeric" id="inp-seccion-gate" placeholder="ej. 3244">
+      <label>Número de sección</label>
+      <input type="text" inputmode="numeric" pattern="[0-9]*" id="inp-seccion-gate" placeholder="ej. 3244" oninput="soloNumeros(this)">
     </div>
-    <div class="fg" id="fg-nombre-gate">
-      <label>Tu nombre</label>
-      <input type="text" id="inp-nombre-gate" placeholder="Ej. Octavio" oninput="mayusculizarInput(this)">
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Escribe tu primer nombre en mayúscula</div>
+    <div class="fg">
+      <label>Número de empleado</label>
+      <input type="text" inputmode="numeric" pattern="[0-9]*" id="inp-empleado-gate" placeholder="ej. 12345" oninput="soloNumeros(this)">
     </div>
     <div id="acceso-error" class="error-msg hidden"></div>
     <button class="btn btn-primary w-full" id="btn-entrar-gate" onclick="confirmarAcceso()">Entrar →</button>
@@ -225,7 +224,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <!-- Motivo de "No asistirá" (modo prelista) -->
 <div id="modal-motivo" class="modal-motivo hidden">
   <div class="modal-motivo-card">
-    <div style="font-size:15px;font-weight:800;color:var(--red);margin-bottom:4px">❌ No asistirá</div>
+    <div style="font-size:15px;font-weight:800;color:var(--red);margin-bottom:4px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6L6 18"/></svg> No asistirá</div>
     <div id="plm-nombre" style="font-weight:700;margin-bottom:12px"></div>
     <div class="fg">
       <label>Motivo</label>
@@ -263,6 +262,16 @@ const ACTIVIDADES=['Encuestador','Volanteo','Apoyo general','Cruceros','Evento p
 const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
 const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
 const ESTADO_CLASS={ASISTENCIA:'e-asistencia',FALTA:'e-falta',VACACIONES:'e-vacaciones',INCAPACIDAD:'e-incapacidad'};
+
+// Iconos en línea, blanco y negro (SVG, currentColor) — reemplazan los emoji de color
+// ✅ ❌ ⏳ 📋 🏷️ en toda la página, ya que un emoji siempre se ve a color en el celular
+// sin importar el CSS.
+const ICO_CHECK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 13l4 4L19 7"/></svg>';
+const ICO_X='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const ICO_RELOJ='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg>';
+const ICO_LISTA='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/></svg>';
+const ICO_TAG='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5L21 12.5 12.5 21 3 11.5Z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg>';
+
 const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
   {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
@@ -302,6 +311,16 @@ async function sbPost(table,body){
 async function sbPatch(table,params,body){
   return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
 }
+// Igual que sbPost, pero devuelve la fila insertada (para obtener su id al vuelo, ej. para
+// poder borrar una foto recién subida sin tener que recargar la página).
+async function sbPostReturning(table,body){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(body)});
+  if(!r.ok) return null;
+  try{ return await r.json(); }catch(e){ return null; }
+}
+async function sbDelete(table,params){
+  return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+}
 
 function showToast(msg){
   const t=document.getElementById('toast');
@@ -319,6 +338,8 @@ let eventoInfo=null; // {nombre,fecha} de la tabla "eventos"
 let seccionesValidas=[];   // universo de números de sección que trae el enlace
 let seccionActual=null;    // {num,encargado,padrino} de la sección que se muestra (la propia, o la destino si es apoyo)
 let registradoPor='';
+let empleadoActual='';   // número de empleado escrito al entrar — todavía sin validar contra la base
+let fotosEventoSeccion=[]; // fotos simples del evento (botón "Agregar fotos"), separadas de la evidencia con GPS
 const hoy=new Date().toISOString().split('T')[0];
 
 let seccionOrigenNum=null;      // número de sección que el líder escribió como contraseña
@@ -364,6 +385,14 @@ function mayusculizarInput(input){
   input.setSelectionRange(pos,pos);
 }
 
+function soloNumeros(input){
+  const antes=input.value.length;
+  const pos=input.selectionStart;
+  input.value=input.value.replace(/\D/g,'');
+  const quitados=antes-input.value.length;
+  input.setSelectionRange(pos-quitados,pos-quitados);
+}
+
 function mostrarError(msg){
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('error-msg').textContent=msg;
@@ -404,7 +433,7 @@ async function init(){
   // primera_apertura) para que el día del evento siga funcionando normal.
   modoPrelista=!!(eventoInfo&&eventoInfo.fecha&&eventoInfo.fecha>fechaLocalHoy());
   if(modoPrelista){
-    document.getElementById('exp-badge').textContent=`📋 Prelista · evento ${fechaCortaEvento(eventoInfo.fecha)}`;
+    document.getElementById('exp-badge').innerHTML=`${ICO_LISTA} Prelista · evento ${escHtml(fechaCortaEvento(eventoInfo.fecha))}`;
   } else {
     // Vigencia desde la primera apertura. Si se abrió ANTES del día del evento (p.ej. para la
     // prelista), el mismo día del evento vuelve a contar desde cero.
@@ -430,31 +459,31 @@ async function init(){
       mostrarError(`Este enlace caducó el ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}.`);
       return;
     }
-    document.getElementById('exp-badge').textContent=`⏳ Enlace temporal — caduca ${expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('exp-badge').innerHTML=`${ICO_RELOJ} Enlace temporal — caduca ${escHtml(expiraEn.toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}))}`;
     actualizarCuentaRegresiva();
     setInterval(actualizarCuentaRegresiva,60000);
   }
   document.getElementById('loading').classList.add('hidden');
 
-  registradoPor=(localStorage.getItem('gemacuu_asis_nombre')||'').toUpperCase();
-  document.getElementById('fg-nombre-gate').classList.toggle('hidden',!!registradoPor);
+  const empleadoGuardado=localStorage.getItem('gemacuu_asis_empleado')||'';
+  if(empleadoGuardado) document.getElementById('inp-empleado-gate').value=empleadoGuardado;
   document.getElementById('acceso-gate').classList.remove('hidden');
   document.getElementById('inp-seccion-gate').focus();
 }
 
 async function confirmarAcceso(){
   const numSeccion=document.getElementById('inp-seccion-gate').value.trim();
-  const nombreInput=document.getElementById('inp-nombre-gate').value.trim().toUpperCase();
+  const numEmpleado=document.getElementById('inp-empleado-gate').value.trim();
   const errEl=document.getElementById('acceso-error');
   errEl.classList.add('hidden');
 
-  if(!registradoPor && !nombreInput){
-    errEl.textContent='Escribe tu nombre.';
+  if(!numSeccion){
+    errEl.textContent='Escribe tu número de sección.';
     errEl.classList.remove('hidden');
     return;
   }
-  if(!numSeccion){
-    errEl.textContent='Escribe tu número de sección.';
+  if(!numEmpleado){
+    errEl.textContent='Escribe tu número de empleado.';
     errEl.classList.remove('hidden');
     return;
   }
@@ -480,10 +509,9 @@ async function confirmarAcceso(){
     return;
   }
 
-  if(!registradoPor){
-    registradoPor=nombreInput;
-    localStorage.setItem('gemacuu_asis_nombre',registradoPor);
-  }
+  empleadoActual=numEmpleado;
+  registradoPor=`Empleado ${numEmpleado}`;
+  localStorage.setItem('gemacuu_asis_empleado',numEmpleado);
 
   // ¿La sección ingresada está activa este evento? (tiene fila en encuestas_seccion para este evento_id)
   // Nunca se recuerda una asignación de apoyo de una sesión anterior: si la sección no está
@@ -711,6 +739,8 @@ async function cargarYRenderizar(){
   const mapas=await sbGet('mapas_seccion',`?seccion=eq.${encodeURIComponent(num)}&order=subido_en.asc`);
   mapasSeccion=Array.isArray(mapas)?mapas:[];
 
+  await cargarFotosEvento();
+
   renderSeccion();
 }
 
@@ -761,6 +791,8 @@ function renderSeccion(){
       </div>
     </div>
     <div id="apoyos-lista" class="apoyos-lista">${apoyosSeccion.map(renderApoyoChip).join('')}</div>
+
+    ${renderFotosEventoWidget()}
 
     <div class="fg">
       <label>Total de encuestas de la app (grupo de encuestadores, hoy)</label>
@@ -833,7 +865,7 @@ function renderEETotalHtml(){
   if(faltan>0){
     return `Total EE: <b>${eeCapturasSuma}</b> / Meta ${metaEE} — <span class="ee-meta-faltan">Faltan ${faltan}</span>`;
   }
-  return `Total EE: <b>${eeCapturasSuma}</b> / Meta ${metaEE} — <span class="ee-meta-cumplida">✅ META CUMPLIDA</span>`;
+  return `Total EE: <b>${eeCapturasSuma}</b> / Meta ${metaEE} — <span class="ee-meta-cumplida">${ICO_CHECK} META CUMPLIDA</span>`;
 }
 
 // Cada líder (dueño o de apoyo) mete SU propio total — el campo parte mostrando lo que
@@ -913,13 +945,125 @@ function aplicarMarcaAgua(texto){
   if(el) el.style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
+// ── FOTOS DEL EVENTO (botón "Agregar fotos", sin límite, cámara o galería) ──
+// Aparte del sistema de evidencia con GPS/calle que ya existía (fotosSeccion/handleFotos):
+// esto es solo para fotos generales de la actividad, sin formulario por foto. Usa la misma
+// tabla (fotos_actividad_seccion, tal como se pidió) pero en su propia carpeta de Cloudinary
+// ("asistencia-seccion-evento") para poder listar solo las suyas sin mezclarse con las del
+// otro sistema.
+const CARPETA_FOTOS_EVENTO='asistencia-seccion-evento';
+
+// Reduce cada foto a ~1.8MB (o menos) antes de subirla, para que suba rápido con datos
+// móviles y no llene el almacenamiento de Supabase/Cloudinary. Si algo falla (formato raro,
+// navegador viejo), sube el archivo original en vez de bloquear la subida.
+async function comprimirImagen(file,maxMB=1.8,maxDim=1600){
+  if(!file||!file.type||!file.type.startsWith('image/')) return file;
+  try{
+    const bitmap=await createImageBitmap(file);
+    let {width,height}=bitmap;
+    const escala=Math.min(1,maxDim/Math.max(width,height));
+    width=Math.max(1,Math.round(width*escala));
+    height=Math.max(1,Math.round(height*escala));
+    const canvas=document.createElement('canvas');
+    canvas.width=width;canvas.height=height;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(bitmap,0,0,width,height);
+    let calidad=0.85;
+    let blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',calidad));
+    while(blob&&blob.size>maxMB*1024*1024&&calidad>0.35){
+      calidad-=0.1;
+      blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',calidad));
+    }
+    if(!blob) return file;
+    const nombreBase=(file.name||'foto').replace(/\.\w+$/,'');
+    return new File([blob],`${nombreBase}.jpg`,{type:'image/jpeg'});
+  }catch(e){
+    console.error('No se pudo comprimir la foto, se sube el original:',e);
+    return file;
+  }
+}
+
+async function cargarFotosEvento(){
+  const num=seccionActual.num;
+  const filtro=`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&cloudinary_public_id=like.gemacuu/${CARPETA_FOTOS_EVENTO}/*&order=creado_en.desc`;
+  const rows=await sbGet('fotos_actividad_seccion',filtro);
+  fotosEventoSeccion=Array.isArray(rows)?rows:[];
+}
+
+function renderFotosEventoWidget(){
+  return `<div class="fg" style="margin-bottom:0">
+    <label>Fotos del evento</label>
+    <div id="fotos-evento-grid" class="foto-grid">${renderFotosEventoCards()}</div>
+    <div class="foto-btns">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('cam-inp-evento').click()">📷 Cámara</button>
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('gal-inp-evento').click()">🖼️ Galería</button>
+    </div>
+    <input type="file" id="cam-inp-evento" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFotosEvento(this)">
+    <input type="file" id="gal-inp-evento" accept="image/*" multiple class="hidden" onchange="handleFotosEvento(this)">
+  </div>`;
+}
+
+function renderFotosEventoCards(){
+  return fotosEventoSeccion.map((f,i)=>`<div class="foto-thumb">
+      <img src="${f.cloudinary_url}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+      <button type="button" onclick="borrarFotoEvento(${i})" title="Borrar foto" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;cursor:pointer;padding:0">✕</button>
+    </div>`).join('');
+}
+
+async function handleFotosEvento(input){
+  const files=Array.from(input.files||[]);
+  if(!files.length) return;
+  const grid=document.getElementById('fotos-evento-grid');
+  for(const file of files){
+    const thumb=document.createElement('div');
+    thumb.className='foto-thumb uploading';
+    thumb.innerHTML=ICO_RELOJ;
+    grid.prepend(thumb);
+    try{
+      const comprimida=await comprimirImagen(file);
+      const fd=new FormData();
+      fd.append('file',comprimida);
+      fd.append('upload_preset',PRESET);
+      fd.append('folder',`gemacuu/${CARPETA_FOTOS_EVENTO}/${seccionActual.num}/${hoy}`);
+      const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+      const d=await r.json();
+      if(!d.secure_url) throw new Error('Cloudinary no devolvió secure_url');
+      const payload={seccion:seccionActual.num,fecha:hoy,evento_id:eventoId,cloudinary_url:d.secure_url,cloudinary_public_id:d.public_id,enlace_token:token,registrado_por:registradoPor};
+      const creadas=await sbPostReturning('fotos_actividad_seccion',payload);
+      const nuevaId=(Array.isArray(creadas)&&creadas[0]&&creadas[0].id)?creadas[0].id:null;
+      thumb.remove();
+      fotosEventoSeccion.unshift({...payload,id:nuevaId});
+      grid.innerHTML=renderFotosEventoCards();
+    }catch(e){
+      thumb.className='foto-thumb error';
+      thumb.innerHTML='⚠️';
+      console.error(e);
+    }
+  }
+  input.value='';
+}
+
+async function borrarFotoEvento(i){
+  const f=fotosEventoSeccion[i];
+  if(!f) return;
+  if(!confirm('¿Borrar esta foto?')) return;
+  if(f.id){
+    const r=await sbDelete('fotos_actividad_seccion',`?id=eq.${f.id}`);
+    if(!r.ok){ showToast('No se pudo borrar la foto — intenta de nuevo'); return; }
+  }
+  fotosEventoSeccion.splice(i,1);
+  const grid=document.getElementById('fotos-evento-grid');
+  if(grid) grid.innerHTML=renderFotosEventoCards();
+  showToast('Foto borrada');
+}
+
 function etiquetaPrelista(personalId){
   const pl=prelistaPersonas[personalId];
   if(!pl) return '';
-  if(pl.estado==='CONFIRMADO') return '<span class="persona-prelista CONFIRMADO">✅ Confirmó</span>';
+  if(pl.estado==='CONFIRMADO') return `<span class="persona-prelista CONFIRMADO">${ICO_CHECK} Confirmó</span>`;
   if(pl.estado==='NO_ASISTE'){
     const txt=`No asistirá: ${MOTIVO_PRELISTA_LABEL[pl.motivo]||''}${pl.motivo_detalle?' — '+pl.motivo_detalle:''}`;
-    return `<span class="persona-prelista NO_ASISTE" title="${escHtml(txt)}">❌ ${escHtml(txt)}</span>`;
+    return `<span class="persona-prelista NO_ASISTE" title="${escHtml(txt)}">${ICO_X} ${escHtml(txt)}</span>`;
   }
   return '';
 }
@@ -953,7 +1097,7 @@ async function precargarPrelista(num){
   try{
     const {marcadas}=await marcarAsistenciaSinSobrescribir(filas,num);
     marcadas.forEach(m=>{ asistenciaPersonas[m.personal_id]={estado:m.estado,actividad:null}; });
-    if(marcadas.length) showToast(`📋 ${marcadas.length} marcada(s) desde la prelista (vacaciones/incapacidad)`);
+    if(marcadas.length) showToast(`${marcadas.length} marcada(s) desde la prelista (vacaciones/incapacidad)`);
   }catch(e){
     console.error('No se pudo aplicar la prelista',e);
   }
@@ -1002,7 +1146,7 @@ async function marcarAsistenciaSinSobrescribir(filas,seccionNum){
 // Eventos → Prelista en el portal). No se toca asistencia_eventos.
 const PRELISTA_ESTADOS=['CONFIRMADO','NO_ASISTE','PENDIENTE'];
 const PRELISTA_LABEL={CONFIRMADO:'Confirmado',NO_ASISTE:'No asistirá',PENDIENTE:'Pendiente'};
-const PRELISTA_ICON={CONFIRMADO:'✅',NO_ASISTE:'❌',PENDIENTE:'⏳'};
+const PRELISTA_ICON={CONFIRMADO:ICO_CHECK,NO_ASISTE:ICO_X,PENDIENTE:ICO_RELOJ};
 const prelistaColas=new Map(); // personal_id -> Promise: guarda en orden los clics de una misma persona
 const prelistaUltimoCtx={};    // personal_id -> último cambio enviado, para reintentar
 
@@ -1052,6 +1196,7 @@ async function entrarPrelista(num){
   // Apoyos no registrados de esta sección para este evento (misma tabla que el día del evento).
   const apoyos=await sbGet('apoyos_no_registrados',`?evento_id=eq.${eventoId}&seccion=eq.${encodeURIComponent(num)}&order=creado_en.asc`);
   apoyosSeccion=Array.isArray(apoyos)?apoyos:[];
+  await cargarFotosEvento();
   renderPrelistaSeccion();
 }
 
@@ -1065,7 +1210,7 @@ function renderPrelistaSeccion(){
       <div class="seccion-evento">📅 ${escHtml(eventosNombreActual())}</div>
     </div>
     <div class="aviso-prelista">
-      📋 <b>Prelista</b> — el evento es el <b>${escHtml(fechaLegible(eventoInfo.fecha))}</b>.<br>
+      ${ICO_LISTA} <b>Prelista</b> — el evento es el <b>${escHtml(fechaLegible(eventoInfo.fecha))}</b>.<br>
       Marca quién va a ir. Se guarda solo al tocar cada botón.<br>
       <span style="font-weight:600">El día del evento este mismo enlace sirve para tomar asistencia (su tiempo de uso empieza a contar ese día).</span>
     </div>
@@ -1075,7 +1220,7 @@ function renderPrelistaSeccion(){
       ${personalSeccion.length?personalSeccion.map(renderFilaPrelistaSeccion).join(''):'<div class="vacio">Sin personal activo registrado en esta sección.</div>'}
     </div>
 
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 4px">🏷️ Apoyos que van (no están en la lista)</div>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 4px">${ICO_TAG} Apoyos que van (no están en la lista)</div>
     <button type="button" class="btn-link" onclick="mostrarFormApoyo()">+ Agregar apoyo</button>
     <div id="apoyo-form" class="apoyo-form hidden">
       <input type="text" id="apoyo-nombre" placeholder="Nombre de quien va a apoyar">
@@ -1088,6 +1233,8 @@ function renderPrelistaSeccion(){
       </div>
     </div>
     <div id="apoyos-lista" class="apoyos-lista">${apoyosSeccion.map(renderApoyoChip).join('')}</div>
+
+    ${renderFotosEventoWidget()}
   </div>`;
   renderContadoresPrelistaSeccion();
 }
@@ -1217,7 +1364,7 @@ function confirmarMotivoPrelistaSeccion(){
 function marcarEstadoFila(personalId,estado){
   const el=document.getElementById(`status-${personalId}`);
   if(!el) return;
-  if(estado==='guardando'){ el.textContent='⏳'; el.style.cursor='default'; el.title='Guardando…'; }
+  if(estado==='guardando'){ el.innerHTML=ICO_RELOJ; el.style.cursor='default'; el.title='Guardando…'; }
   else if(estado==='ok'){
     el.textContent='✓'; el.style.cursor='default'; el.title='Guardado';
     setTimeout(()=>{ if(el.textContent==='✓') el.textContent=''; },1200);
@@ -1360,7 +1507,7 @@ async function guardarApoyo(){
 }
 
 function renderApoyoChip(a){
-  return `<div class="apoyo-chip">🏷️ ${escHtml(a.nombre)} · ${escHtml(a.actividad)} <span class="apoyo-tag">apoyo no registrado</span></div>`;
+  return `<div class="apoyo-chip">${ICO_TAG} ${escHtml(a.nombre)} · ${escHtml(a.actividad)} <span class="apoyo-tag">apoyo no registrado</span></div>`;
 }
 
 async function handleFotos(input){
@@ -1373,7 +1520,7 @@ async function handleFotos(input){
     const thumb=document.createElement('div');
     thumb.className='foto-thumb uploading';
     thumb.style.cssText='aspect-ratio:1;max-width:110px;background:#f0f0f0;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px';
-    thumb.textContent='⏳';
+    thumb.innerHTML=ICO_RELOJ;
     grid.prepend(thumb);
     try{
       const fd=new FormData();
@@ -1417,7 +1564,7 @@ function renderFotosCards(){
 function textoGpsPrevio(ev){
   if(!ev||typeof ev.latitud!=='number'||typeof ev.longitud!=='number') return '';
   const prec=typeof ev.precision_metros==='number'?` · precisión: ${Math.round(ev.precision_metros)} m`:'';
-  return `<span class="gps-ok">✅ Ubicación guardada: ${ev.latitud.toFixed(6)}, ${ev.longitud.toFixed(6)}${prec}</span>`;
+  return `<span class="gps-ok">${ICO_CHECK} Ubicación guardada: ${ev.latitud.toFixed(6)}, ${ev.longitud.toFixed(6)}${prec}</span>`;
 }
 
 function renderFotoCard(f,i){
@@ -1488,7 +1635,7 @@ function capturarUbicacionFoto(domId){
 
   btn.disabled=true;
   campoCalle.classList.remove('autocompletado');
-  estadoEl.innerHTML='<span class="gps-info">⏳ Obteniendo ubicación… espera unos segundos.</span>';
+  estadoEl.innerHTML=`<span class="gps-info">${ICO_RELOJ} Obteniendo ubicación… espera unos segundos.</span>`;
 
   navigator.geolocation.getCurrentPosition(
     async function(posicion){
@@ -1500,7 +1647,7 @@ function capturarUbicacionFoto(domId){
       document.getElementById(`${domId}-lon`).value=lon;
       document.getElementById(`${domId}-precision`).value=precision;
 
-      const lineaCoords=`<span class="gps-ok">✅ Ubicación capturada (${lat.toFixed(6)}, ${lon.toFixed(6)} · precisión: ${Math.round(precision)} m)</span>`;
+      const lineaCoords=`<span class="gps-ok">${ICO_CHECK} Ubicación capturada (${lat.toFixed(6)}, ${lon.toFixed(6)} · precisión: ${Math.round(precision)} m)</span>`;
       estadoEl.innerHTML=`${lineaCoords}<br><span class="gps-info">Buscando nombre de la calle…</span>`;
 
       try{
@@ -1516,7 +1663,7 @@ function capturarUbicacionFoto(domId){
         if(nombreCalle){
           campoCalle.value=nombreCalle;
           campoCalle.classList.add('autocompletado');
-          estadoEl.innerHTML=`${lineaCoords}<br><span class="gps-ok">✅ Calle autocompletada: "${escapeAttr(nombreCalle)}". Puedes editarla si no es correcta.</span>`;
+          estadoEl.innerHTML=`${lineaCoords}<br><span class="gps-ok">${ICO_CHECK} Calle autocompletada: "${escapeAttr(nombreCalle)}". Puedes editarla si no es correcta.</span>`;
         } else {
           estadoEl.innerHTML=`${lineaCoords}<br><span class="gps-error">⚠️ No se encontró nombre de calle en esta zona — escríbela manualmente.</span>`;
         }
@@ -1672,7 +1819,7 @@ async function guardarTodo(){
   } else if(encuestasConError){
     showToast('⚠️ No se pudo guardar el total de encuestas — vuelve a intentar');
   } else {
-    showToast('✅ Asistencia guardada correctamente');
+    showToast('Asistencia guardada correctamente');
   }
 }
 
