@@ -7,18 +7,18 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --pan:#003399;--pan2:#1a4fc4;--pan3:#4a7fe0;--pan-light:#e6eeff;
-  --red:#cc0000;--red2:#e63333;
-  --bg:#f0f4ff;--white:#fff;
-  --text:#1a1a2e;--muted:#6b7280;
-  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --pan:#1a1a1a;--pan2:#000000;--pan3:#999999;--pan-light:#ececec;
+  --red:#666666;--red2:#000000;
+  --bg:#f0f0f0;--white:#fff;
+  --text:#1a1a1a;--muted:#6b7280;
+  --border:#d9d9d9;--shadow:0 2px 12px rgba(0,0,0,.08);
   --radius:14px;--radius-sm:8px;
 }
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* ── LOGIN ── */
-#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#001a66 0%,#003399 60%,#cc0000 100%)}
-.lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,51,.35)}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#111111 0%,#1a1a1a 60%,#666666 100%)}
+.lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .lhead{text-align:center;margin-bottom:1.75rem}
 .llogo{width:64px;height:64px;background:var(--pan);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
 .ltitle{font-size:22px;font-weight:800;color:var(--pan);letter-spacing:.04em}
@@ -30,7 +30,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 /* ── APP ── */
 #app{display:none}
-.topbar{background:var(--pan);color:#fff;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,102,.2)}
+.topbar{background:var(--pan);color:#fff;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .tl{display:flex;align-items:center;gap:12px}
 .tlogo{font-size:17px;font-weight:800;letter-spacing:.06em}
 .tbadge{font-size:11px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 10px;border-radius:20px}
@@ -41,12 +41,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .tbtn:hover{background:rgba(255,255,255,.25)}
 
 /* ── RESUMEN BAR ── */
-.rbar{background:#001a66;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
+.rbar{background:#111111;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
 .rblock{padding:6px 20px;border-right:1px solid rgba(255,255,255,.12);flex-shrink:0}
 .rblock:last-child{border-right:none}
 .rnum{font-size:18px;font-weight:800;color:#fff;line-height:1}
 .rlbl{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.rtag{font-size:11px;color:#7aabf7;font-weight:600}
+.rtag{font-size:11px;color:#999999;font-weight:600}
 
 /* ── NAV TABS ── */
 .nav{background:#fff;border-bottom:2px solid var(--border);display:flex;flex-wrap:wrap;padding:6px 1rem;gap:2px}
@@ -57,10 +57,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   border:none;border-radius:9px;background:none;cursor:pointer;
   transition:background .15s,color .15s;white-space:nowrap;font-family:inherit;
 }
-.ntab .ntab-ico{font-size:15px;filter:grayscale(45%) opacity(.75);transition:filter .15s}
+.ntab .ntab-ico{font-size:15px;filter:grayscale(100%) opacity(.75);transition:filter .15s}
 .ntab:hover{background:var(--bg)}
 .ntab.on{color:var(--c);background:var(--c-bg)}
-.ntab.on .ntab-ico{filter:none}
+.ntab.on .ntab-ico{filter:grayscale(100%)}
 
 /* ── PANELS ── */
 .panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
@@ -79,17 +79,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* ── TABLE ── */
 .tbl-wrap{overflow:auto;border-radius:var(--radius);border:1px solid var(--border);background:#fff}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#f0f4ff;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;white-space:nowrap}
+th{background:#f0f0f0;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;white-space:nowrap}
 td{padding:10px 14px;border-top:1px solid var(--border);vertical-align:middle}
-tr:hover td{background:#f8faff}
+tr:hover td{background:#f7f7f7}
 
 /* ── BADGES ── */
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
-.badge-pan{background:#e6eeff;color:#003399}
-.badge-red{background:#fce8e8;color:#cc0000}
+.badge-pan{background:#ececec;color:#1a1a1a}
+.badge-red{background:#ececec;color:#666666}
 .badge-gray{background:#f0f0f0;color:#555}
-.badge-green{background:#eaf3de;color:#2d6a4f}
-.badge-amber{background:#fef3c7;color:#854f0b}
+.badge-green{background:#ececec;color:#333333}
+.badge-amber{background:#e5e5e5;color:#444444}
 
 /* ── FORM ── */
 .fg{margin-bottom:12px}
@@ -101,16 +101,16 @@ tr:hover td{background:#f8faff}
 .btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
 .btn-primary{background:var(--pan);color:#fff}
 .btn-primary:hover{background:var(--pan2)}
-.btn-secondary{background:#f0f4ff;color:var(--pan);border:1px solid var(--border)}
+.btn-secondary{background:#f0f0f0;color:var(--pan);border:1px solid var(--border)}
 .btn-secondary:hover{background:var(--pan-light)}
-.btn-danger{background:#fce8e8;color:var(--red);border:1px solid #f5c2c2}
+.btn-danger{background:#ececec;color:var(--red);border:1px solid #cccccc}
 .btn-sm{padding:5px 10px;font-size:12px}
 .btn-xs{padding:3px 8px;font-size:11px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .w-full{width:100%}
 
 /* ── PERSONA CHIP ── */
-.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:#f0f4ff;color:var(--pan);border:1px solid var(--border);margin:2px}
+.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:#f0f0f0;color:var(--pan);border:1px solid var(--border);margin:2px}
 
 /* ── SECCION CARD ── */
 .sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
@@ -126,18 +126,18 @@ tr:hover td{background:#f8faff}
 .org-branches{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;width:100%}
 .org-branch{display:flex;flex-direction:column;align-items:center}
 .org-pad{border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;font-size:14px;box-shadow:var(--shadow);width:100%}
-.org-o60{background:#003399;color:#fff}
-.org-o30{background:#2d6a4f;color:#fff}
+.org-o60{background:#1a1a1a;color:#fff}
+.org-o30{background:#333333;color:#fff}
 .org-pad-sub{font-size:11px;opacity:.75;font-weight:400;margin-top:3px}
 
 /* ── MAPAS DE SECCIÓN ── */
 .mapas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
-.mapa-card{border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;background:#f8faff}
+.mapa-card{border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;background:#f7f7f7}
 .mapa-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:#fff;display:block;margin-bottom:6px;cursor:pointer}
 .mapa-pdf-icon{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:28px;background:#fff;border-radius:6px;margin-bottom:6px;border:1px solid var(--border);cursor:pointer;text-decoration:none}
 .mapa-pdf-thumb-wrap{position:relative;display:block;margin-bottom:6px}
 .mapa-pdf-thumb-wrap .mapa-thumb{margin-bottom:0}
-.mapa-pdf-thumb-wrap .mapa-pdf-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(0,51,153,.8);color:#fff;font-size:9px;text-align:center;padding:2px;border-radius:0 0 6px 6px;pointer-events:none}
+.mapa-pdf-thumb-wrap .mapa-pdf-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.8);color:#fff;font-size:9px;text-align:center;padding:2px;border-radius:0 0 6px 6px;pointer-events:none}
 .mapa-fecha{font-size:9px;color:var(--muted);margin-bottom:4px}
 
 /* ── MODAL ── */
@@ -149,29 +149,29 @@ tr:hover td{background:#f8faff}
 .modal-persona-card{max-width:640px;max-height:calc(100vh - 2rem);overflow-y:auto}
 .persona-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
 .persona-form-grid .fg{min-width:0}
-.persona-lider{display:flex;align-items:center;gap:9px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#f8faff}
+.persona-lider{display:flex;align-items:center;gap:9px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#f7f7f7}
 .persona-lider input{width:17px;height:17px;accent-color:var(--pan)}
 .persona-lider span{font-size:13px;font-weight:700}
 .persona-actions{display:flex;gap:8px;margin-top:1rem}
 
 /* ── TOAST ── */
-#toast{position:fixed;bottom:24px;right:24px;background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,51,153,.3)}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 #toast.show{opacity:1}
 
 /* ── EVENTO CHIPS / FALTAS SUBTABS ── */
 .evento-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)}
-.evento-chip.sel{background:#e6f1fb;border-color:#185fa5;color:#0c447c;font-weight:700}
-.evento-chip.sel-faltas{background:#fce4ea;border-color:#e11d48;color:#e11d48;font-weight:700}
+.evento-chip.sel{background:#ececec;border-color:#333333;color:#222222;font-weight:700}
+.evento-chip.sel-faltas{background:#e5e5e5;border-color:#262626;color:#262626;font-weight:700}
 
 /* ── CORREGIR ASISTENCIA ── */
 .corr-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
 .corr-row:last-child{border-bottom:none}
 .estado-select{width:132px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
 .estado-select:disabled{opacity:.5;cursor:not-allowed}
-.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
-.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
-.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
-.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
+.estado-select.e-asistencia{background:#ececec;border-color:#cccccc;color:#333333}
+.estado-select.e-falta{background:#ececec;border-color:#cccccc;color:#666666}
+.estado-select.e-vacaciones{background:#ececec;border-color:#cccccc;color:#1a1a1a}
+.estado-select.e-incapacidad{background:#e5e5e5;border-color:#cccccc;color:#444444}
 
 /* ── MOBILE ── */
 @media(max-width:640px){
@@ -237,14 +237,14 @@ tr:hover td{background:#f8faff}
 
   <!-- NAV -->
   <div class="nav" id="nav-bar">
-    <button class="ntab on" style="--c:#1d4ed8;--c-bg:#e2e8fa" onclick="goTab('operativa',this)"><span class="ntab-ico">👥</span>Base Operativa</button>
-    <button class="ntab" style="--c:#6d28d9;--c-bg:#ece3fa" onclick="goTab('organigrama',this)"><span class="ntab-ico">🏛</span>Organigrama</button>
-    <button class="ntab" style="--c:#0e7490;--c-bg:#e0edf1" onclick="goTab('secciones',this)"><span class="ntab-ico">🗳</span>Secciones</button>
-    <button class="ntab" style="--c:#15803d;--c-bg:#e1eee6" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
-    <button class="ntab" id="tab-mapas" style="--c:#003399;--c-bg:#dde6f6;display:none" onclick="goTab('mapas',this)"><span class="ntab-ico">📍</span>Mapas</button>
-    <button class="ntab" style="--c:#e11d48;--c-bg:#fce4ea" onclick="goTab('faltas',this)"><span class="ntab-ico">📊</span>Faltas</button>
-    <button class="ntab" id="tab-correccion" style="--c:#c2410c;--c-bg:#f7e6df;display:none" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
-    <button class="ntab" id="tab-historial" style="--c:#3730a3;--c-bg:#e5e4f3;display:none" onclick="goTab('historial',this)"><span class="ntab-ico">📜</span>Historial de cambios</button>
+    <button class="ntab on" style="--c:#1a1a1a;--c-bg:#ececec" onclick="goTab('operativa',this)"><span class="ntab-ico">👥</span>Base Operativa</button>
+    <button class="ntab" style="--c:#1a1a1a;--c-bg:#ececec" onclick="goTab('organigrama',this)"><span class="ntab-ico">🏛</span>Organigrama</button>
+    <button class="ntab" style="--c:#1a1a1a;--c-bg:#ececec" onclick="goTab('secciones',this)"><span class="ntab-ico">🗳</span>Secciones</button>
+    <button class="ntab" style="--c:#1a1a1a;--c-bg:#ececec" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
+    <button class="ntab" id="tab-mapas" style="--c:#1a1a1a;--c-bg:#ececec;display:none" onclick="goTab('mapas',this)"><span class="ntab-ico">📍</span>Mapas</button>
+    <button class="ntab" style="--c:#262626;--c-bg:#e5e5e5" onclick="goTab('faltas',this)"><span class="ntab-ico">📊</span>Faltas</button>
+    <button class="ntab" id="tab-correccion" style="--c:#1a1a1a;--c-bg:#ececec;display:none" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
+    <button class="ntab" id="tab-historial" style="--c:#1a1a1a;--c-bg:#ececec;display:none" onclick="goTab('historial',this)"><span class="ntab-ico">📜</span>Historial de cambios</button>
   </div>
 
   <!-- PANEL: BASE OPERATIVA -->
@@ -304,12 +304,12 @@ tr:hover td{background:#f8faff}
         <div class="org-branches">
           <div class="org-branch">
             <div class="org-pad org-o60">Oficinas Centrales (60)<div class="org-pad-sub" id="org-sub-60">cargando…</div></div>
-            <div class="org-line" style="background:#003399"></div>
+            <div class="org-line" style="background:#1a1a1a"></div>
             <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-60"></div>
           </div>
           <div class="org-branch">
             <div class="org-pad org-o30">Centro de Acopio (30)<div class="org-pad-sub" id="org-sub-30">cargando…</div></div>
-            <div class="org-line" style="background:#2d6a4f"></div>
+            <div class="org-line" style="background:#333333"></div>
             <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-30"></div>
           </div>
         </div>
@@ -383,21 +383,21 @@ tr:hover td{background:#f8faff}
             <div id="ev-total" style="font-size:22px;font-weight:800;color:var(--pan)">0</div>
             <div style="font-size:10px;color:var(--muted)">Total</div>
           </div>
-          <div style="background:#eaf3de;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-asistencia" style="font-size:22px;font-weight:800;color:#2d6a4f">0</div>
-            <div style="font-size:10px;color:#2d6a4f">Asistencia</div>
+          <div style="background:#ececec;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-asistencia" style="font-size:22px;font-weight:800;color:#333333">0</div>
+            <div style="font-size:10px;color:#333333">Asistencia</div>
           </div>
-          <div style="background:#fce8e8;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-falta" style="font-size:22px;font-weight:800;color:#cc0000">0</div>
-            <div style="font-size:10px;color:#cc0000">Falta</div>
+          <div style="background:#ececec;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-falta" style="font-size:22px;font-weight:800;color:#666666">0</div>
+            <div style="font-size:10px;color:#666666">Falta</div>
           </div>
-          <div style="background:#e6eeff;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-vacaciones" style="font-size:22px;font-weight:800;color:#003399">0</div>
-            <div style="font-size:10px;color:#003399">Vacaciones</div>
+          <div style="background:#ececec;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-vacaciones" style="font-size:22px;font-weight:800;color:#1a1a1a">0</div>
+            <div style="font-size:10px;color:#1a1a1a">Vacaciones</div>
           </div>
-          <div style="background:#fef3c7;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-incapacidad" style="font-size:22px;font-weight:800;color:#854f0b">0</div>
-            <div style="font-size:10px;color:#854f0b">Incapacidad</div>
+          <div style="background:#e5e5e5;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-incapacidad" style="font-size:22px;font-weight:800;color:#444444">0</div>
+            <div style="font-size:10px;color:#444444">Incapacidad</div>
           </div>
           <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
             <div id="ev-sin-capturar" style="font-size:22px;font-weight:800;color:var(--muted)">0</div>
@@ -651,8 +651,8 @@ tr:hover td{background:#f8faff}
       <button class="close-btn" onclick="closeModal('modal-confirmar-eliminar-evento')">✕</button>
     </div>
     <div style="font-size:13px;margin-bottom:10px">Vas a eliminar permanentemente el evento:</div>
-    <div style="background:#fce8e8;border:1px solid #f5c2c2;border-radius:8px;padding:10px 12px;margin-bottom:12px">
-      <div id="cee-nombre" style="font-weight:800;color:#cc0000"></div>
+    <div style="background:#ececec;border:1px solid #cccccc;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+      <div id="cee-nombre" style="font-weight:800;color:#666666"></div>
       <div id="cee-fecha" style="font-size:12px;color:var(--muted)"></div>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
@@ -889,9 +889,9 @@ function renderStats(){
   document.getElementById('rb-30').textContent=`${c30.personas} personas · ${c30.secciones} secciones`;
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Total activos</div></div>
-    <div class="stat"><div class="stat-n" style="color:#003399">${c60.personas}</div><div class="stat-l">Oficinas Centrales</div></div>
-    <div class="stat"><div class="stat-n" style="color:#2d6a4f">${c30.personas}</div><div class="stat-l">Centro de Acopio</div></div>
-    <div class="stat"><div class="stat-n" style="color:#854f0b">${lideres}</div><div class="stat-l">Líderes de sección</div></div>
+    <div class="stat"><div class="stat-n" style="color:#1a1a1a">${c60.personas}</div><div class="stat-l">Oficinas Centrales</div></div>
+    <div class="stat"><div class="stat-n" style="color:#333333">${c30.personas}</div><div class="stat-l">Centro de Acopio</div></div>
+    <div class="stat"><div class="stat-n" style="color:#444444">${lideres}</div><div class="stat-l">Líderes de sección</div></div>
   `;
   renderOrganigrama();
 }
@@ -1014,7 +1014,7 @@ function renderSecciones(){
   document.getElementById('sec-grid').innerHTML=lista.length?lista.map(num=>{
     const personas=personalCache.filter(p=>p.seccion===num);
     const oficinaPredom=personas[0]?String(personas[0].oficina):'';
-    const color=oficinaPredom==='60'?'#003399':'#2d6a4f';
+    const color=oficinaPredom==='60'?'#1a1a1a':'#333333';
     const label=OFICINA_LABEL[oficinaPredom]||'';
     return `<div class="sec-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -1202,10 +1202,10 @@ function renderResumenEventosTbody(){
     const activa=r.evento.evidencia_publica!==false;
     return `<tr>
       <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}</td>
-      <td style="color:#2d6a4f;font-weight:700">${r.asistencia}</td>
-      <td style="color:#cc0000;font-weight:700">${r.falta}</td>
-      <td style="color:#003399;font-weight:700">${r.vacaciones}</td>
-      <td style="color:#854f0b;font-weight:700">${r.incapacidad}</td>
+      <td style="color:#333333;font-weight:700">${r.asistencia}</td>
+      <td style="color:#666666;font-weight:700">${r.falta}</td>
+      <td style="color:#1a1a1a;font-weight:700">${r.vacaciones}</td>
+      <td style="color:#444444;font-weight:700">${r.incapacidad}</td>
       <td style="color:var(--muted)">${r.sinCapturar}</td>
       <td>${r.total}</td>
       <td>${r.encuestas}</td>
@@ -1525,7 +1525,7 @@ async function generarEnlace(){
   if(!r.ok){ showToast('⚠️ Error al generar el enlace'); return; }
   const url=urlEnlaceSeccion(token);
   document.getElementById('enl-resultado').innerHTML=`
-    <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
+    <div style="background:#ececec;border:1px solid #cccccc;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
       ✅ Enlace generado (${secciones.length} secciones):<br><b>${url}</b>
       <div style="margin-top:6px"><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋 copiar enlace</button></div>
     </div>`;
@@ -1644,7 +1644,7 @@ function renderFaltasAcumuladasTabla(){
       <td><b>${nombreCompleto(r.persona)||''}</b></td>
       <td>${OFICINA_LABEL[String(r.persona.oficina)]||r.persona.oficina||'—'}</td>
       <td>${r.persona.seccion?'Sec. '+r.persona.seccion:'—'}</td>
-      <td style="color:#cc0000;font-weight:700">${r.total}</td>
+      <td style="color:#666666;font-weight:700">${r.total}</td>
       <td><button class="btn btn-secondary btn-xs" onclick="verDetalleFaltas(${i})">🔍 Ver detalle</button></td>
     </tr>`).join('');
 }
