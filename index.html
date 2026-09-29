@@ -7,48 +7,48 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --pan:#003399;--pan2:#1a4fc4;--pan3:#4a7fe0;--pan-light:#e6eeff;
-  --red:#cc0000;--red2:#e63333;
-  --bg:#f0f4ff;--white:#fff;
-  --text:#1a1a2e;--muted:#6b7280;
-  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --pan:#1a1a1a;--pan2:#000000;--pan3:#999999;--pan-light:#ececec;
+  --red:#666666;--red2:#000000;
+  --bg:#f0f0f0;--white:#fff;
+  --text:#1a1a1a;--muted:#6b7280;
+  --border:#d9d9d9;--shadow:0 2px 12px rgba(0,0,0,.08);
   --radius:14px;--radius-sm:8px;
 }
 html,body{overflow-x:hidden}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-/* ── LOGIN ── */
-#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#001a66 0%,#003399 60%,#cc0000 100%)}
-.lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,51,.35)}
+/* ── LOGIN (portada única, blanco y negro — sin colores de marca aquí) ── */
+#login,#panel-selector{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#0A0A0A}
+.lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
 .lhead{text-align:center;margin-bottom:1.75rem}
-.llogo{width:64px;height:64px;background:var(--pan);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
-.ltitle{font-size:22px;font-weight:800;color:var(--pan);letter-spacing:.04em}
-.lsub{font-size:12px;color:var(--muted);margin-top:3px}
-.lusers{display:flex;flex-direction:column;gap:7px;margin-bottom:1.25rem}
-.luser{display:flex;align-items:center;gap:11px;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;background:#fff}
-.luser:hover{border-color:var(--pan);background:var(--pan-light)}
-.luser.sel{border-color:var(--pan);background:var(--pan-light)}
-.lav{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;color:#fff}
-.lav-o{background:#1a1a2e}.lav-f{background:#003399}.lav-m{background:#2d6a4f}.lav-r{background:#854f0b}
-.lav-k{background:#993556}.lav-l{background:#0f6e56}.lav-v{background:#534ab7}
-/* Avatares de usuarios de micrositios externos (otras dependencias, propia base de datos cada una) */
-.lav-diana{background:#0e7490}.lav-elsa{background:#a21caf}.lav-grisel{background:#b91c1c}.lav-karol{background:#c2410c}
-.lname{font-size:13px;font-weight:700;color:var(--text)}
-.lrole{font-size:11px;color:var(--muted)}
-.lpass-row{display:flex;gap:8px}
-.lpass-row input{flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;letter-spacing:.2em;outline:none;color:var(--text)}
-.lpass-row input:focus{border-color:var(--pan)}
-.lbtn{padding:11px 18px;background:var(--pan);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
-.lbtn:hover{background:var(--pan2)}
-.lerr{font-size:12px;color:var(--red);margin-top:6px;min-height:16px;text-align:center}
+.llogo{width:64px;height:64px;background:#111;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:#fff}
+.llogo svg{width:34px;height:34px}
+.ltitle{font-size:22px;font-weight:800;color:#111;letter-spacing:.04em}
+.lsub{font-size:12px;color:#6b7280;margin-top:3px}
+/* Los campos de usuario/contraseña reusan .fg (mismo componente de formulario que el
+   resto de la app), pero solo aquí se pintan en blanco y negro — .fg en el resto de la
+   app sigue con los colores normales, esto no la afecta fuera de #login/#panel-selector. */
+#login .fg label{color:#111}
+#login .fg input{border-color:#111}
+#login .fg input:focus{border-color:#000;box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+.lbtn{width:100%;padding:11px 18px;background:#111;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;margin-top:4px}
+.lbtn:hover{background:#000}
+.lerr{font-size:12px;color:#cc0000;margin-top:6px;min-height:16px;text-align:center}
+.lfooter{font-size:11px;color:#6b7280;margin-top:1.25rem;text-align:center}
+
+/* ── SELECTOR DE PANEL (solo Octavio) ── */
+.psel-list{display:flex;flex-direction:column;gap:10px;margin-top:1.5rem}
+.psel-btn{padding:18px;background:#111;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;transition:.15s;letter-spacing:.02em}
+.psel-btn:hover{background:#000}
 
 /* ── APP ── */
 #app{display:none}
-.topbar{background:var(--pan);color:#fff;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,102,.2)}
+.topbar{background:var(--pan);color:#fff;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .tl{display:flex;align-items:center;gap:12px}
 .tlogo{font-size:17px;font-weight:800;letter-spacing:.06em}
 .tdot{width:6px;height:6px;background:var(--red);border-radius:50%}
 .tuser{font-size:12px;color:rgba(255,255,255,.7)}
+.tbadge{font-size:11px;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:2px 10px;border-radius:20px}
 .tuser b{color:#fff}
 .tbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
 .tbtn:hover{background:rgba(255,255,255,.25)}
@@ -58,7 +58,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 /* ── SIDEBAR ── */
 .sidebar{
-  width:240px;min-width:240px;background:#0B2545;color:#fff;
+  width:240px;min-width:240px;background:#111111;color:#fff;
   display:flex;flex-direction:column;padding:14px 10px;
   transition:width .25s ease,min-width .25s ease;
   height:100vh;position:sticky;top:0;overflow-y:auto;z-index:250;
@@ -66,7 +66,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .sidebar.collapsed{width:64px;min-width:64px;padding:14px 6px}
 .side-head{display:flex;align-items:center;justify-content:space-between;padding:0 6px 14px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.12)}
 .side-brand{display:flex;align-items:center;gap:9px;overflow:hidden}
-.side-logo{width:26px;height:26px;min-width:26px;border-radius:7px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}
+.side-logo{width:26px;height:26px;min-width:26px;border-radius:7px;background:#111;display:flex;align-items:center;justify-content:center;color:#fff}
+.side-logo svg{width:15px;height:15px}
 .side-title{font-size:14px;font-weight:800;letter-spacing:.05em;white-space:nowrap;transition:opacity .15s}
 .sidebar.collapsed .side-title{opacity:0;width:0}
 .side-toggle{background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:16px;padding:4px;line-height:1}
@@ -77,10 +78,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;
   transition:background .15s,color .15s;font-family:inherit;width:100%;text-align:left;
 }
-.side-item .side-ico{font-size:15px;min-width:18px;text-align:center;filter:grayscale(40%) opacity(.8)}
+.side-item .side-ico{font-size:15px;min-width:18px;text-align:center;filter:grayscale(100%) opacity(.8)}
 .side-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.side-item.on{background:#fff;color:#0B2545}
-.side-item.on .side-ico{filter:none}
+.side-item.on{background:#fff;color:#111111}
+.side-item.on .side-ico{filter:grayscale(100%)}
 .side-label{transition:opacity .15s .05s}
 .sidebar.collapsed .side-item{justify-content:center;padding:10px 0}
 .sidebar.collapsed .side-label{opacity:0;width:0;pointer-events:none}
@@ -128,7 +129,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   .rbar{position:relative;-webkit-overflow-scrolling:touch}
   .rbar::after{
     content:'';position:absolute;top:0;right:0;bottom:0;width:26px;
-    background:linear-gradient(to right,rgba(0,26,102,0),#001a66);
+    background:linear-gradient(to right,rgba(0,0,0,0),#111111);
     pointer-events:none;
   }
 
@@ -146,12 +147,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 }
 
 /* ── RESUMEN BAR ── */
-.rbar{background:#001a66;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
+.rbar{background:#111111;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
 .rblock{padding:6px 20px;border-right:1px solid rgba(255,255,255,.12);flex-shrink:0}
 .rblock:last-child{border-right:none}
 .rnum{font-size:18px;font-weight:800;color:#fff;line-height:1}
 .rlbl{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.rtag{font-size:11px;color:#7aabf7;font-weight:600}
+.rtag{font-size:11px;color:#999999;font-weight:600}
 
 /* ── PANELS ── */
 .panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
@@ -170,17 +171,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* ── TABLE ── */
 .tbl-wrap{overflow:auto;border-radius:var(--radius);border:1px solid var(--border);background:#fff}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#f0f4ff;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;white-space:nowrap}
+th{background:#f0f0f0;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;white-space:nowrap}
 td{padding:10px 14px;border-top:1px solid var(--border);vertical-align:middle}
-tr:hover td{background:#f8faff}
+tr:hover td{background:#f7f7f7}
 
 /* ── BADGES ── */
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
-.badge-pan{background:#e6eeff;color:#003399}
-.badge-red{background:#fce8e8;color:#cc0000}
+.badge-pan{background:#ececec;color:#1a1a1a}
+.badge-red{background:#ececec;color:#666666}
 .badge-gray{background:#f0f0f0;color:#555}
-.badge-green{background:#eaf3de;color:#2d6a4f}
-.badge-amber{background:#fef3c7;color:#854f0b}
+.badge-green{background:#ececec;color:#333333}
+.badge-amber{background:#e5e5e5;color:#444444}
 
 /* ── FORM ── */
 .fg{margin-bottom:12px}
@@ -189,7 +190,7 @@ tr:hover td{background:#f8faff}
 .fg input:focus,.fg select:focus{border-color:var(--pan)}
 .fg-seccion label{color:var(--pan)}
 .fg-seccion select{border:2px solid var(--pan);background:var(--pan-light);font-weight:700;color:var(--pan)}
-.fg-seccion select:focus{border-color:var(--pan);box-shadow:0 0 0 3px rgba(0,51,153,.15)}
+.fg-seccion select:focus{border-color:var(--pan);box-shadow:0 0 0 3px rgba(0,0,0,.15)}
 .fg-seccion-hint{font-size:11px;color:var(--pan);font-weight:600;margin-top:4px}
 
 /* ── SECCIONES ACTIVAS / META EE (modal de evento) ── */
@@ -197,16 +198,16 @@ tr:hover td{background:#f8faff}
 @media(max-width:900px){.ev-secciones-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.ev-secciones-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:380px){.ev-secciones-grid{grid-template-columns:1fr}}
-.ev-sec-row{display:flex;flex-direction:column;gap:5px;padding:6px 7px;border:1px solid var(--border);border-radius:7px;background:#f8faff;min-width:0}
+.ev-sec-row{display:flex;flex-direction:column;gap:5px;padding:6px 7px;border:1px solid var(--border);border-radius:7px;background:#f7f7f7;min-width:0}
 .ev-sec-row-top{display:flex;align-items:center;gap:5px;min-width:0}
 .ev-sec-row-top input[type=checkbox]{width:15px;height:15px;flex-shrink:0;accent-color:var(--pan);cursor:pointer}
 .ev-sec-label{font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ev-sec-meta{width:100%;padding:5px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:11.5px}
 
 /* ── BLOQUEAR TOTAL DE ENCUESTAS (destacado, no debe pasar desapercibido) ── */
-.fg-bloqueo-encuestas{display:flex;align-items:center;gap:10px;background:#fff8e1;border:2px solid #f5a623;border-radius:10px;padding:12px 14px;box-shadow:0 2px 8px rgba(245,166,35,.2)}
-.fg-bloqueo-encuestas input[type=checkbox]{width:22px;height:22px;flex-shrink:0;accent-color:#b45309;cursor:pointer}
-.fg-bloqueo-encuestas label{margin:0;text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.3px;color:#854f0b;cursor:pointer}
+.fg-bloqueo-encuestas{display:flex;align-items:center;gap:10px;background:#f2f2f2;border:2px solid #999999;border-radius:10px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.fg-bloqueo-encuestas input[type=checkbox]{width:22px;height:22px;flex-shrink:0;accent-color:#444444;cursor:pointer}
+.fg-bloqueo-encuestas label{margin:0;text-transform:uppercase;font-weight:800;font-size:13px;letter-spacing:.3px;color:#444444;cursor:pointer}
 
 /* ── MODAL EVENTO: alto fijo con scroll solo en el cuerpo, para que "Guardar
    evento" quede siempre visible sin importar cuántas secciones haya (no
@@ -222,15 +223,15 @@ tr:hover td{background:#f8faff}
 .btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:6px}
 .btn-primary{background:var(--pan);color:#fff}
 .btn-primary:hover{background:var(--pan2)}
-.btn-secondary{background:#f0f4ff;color:var(--pan);border:1px solid var(--border)}
+.btn-secondary{background:#f0f0f0;color:var(--pan);border:1px solid var(--border)}
 .btn-secondary:hover{background:var(--pan-light)}
-.btn-danger{background:#fce8e8;color:var(--red);border:1px solid #f5c2c2}
+.btn-danger{background:#ececec;color:var(--red);border:1px solid #cccccc}
 .btn-sm{padding:5px 10px;font-size:12px}
 .btn-xs{padding:3px 8px;font-size:11px}
 .w-full{width:100%}
 
 /* ── PERSONA CHIP ── */
-.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:#f0f4ff;color:var(--pan);border:1px solid var(--border);margin:2px}
+.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:#f0f0f0;color:var(--pan);border:1px solid var(--border);margin:2px}
 
 /* ── SECCION CARD ── */
 .sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
@@ -247,31 +248,31 @@ tr:hover td{background:#f8faff}
 .org-branches{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
 .org-branch{display:flex;flex-direction:column;align-items:center}
 .org-pad{border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;font-size:14px;box-shadow:var(--shadow);width:100%}
-.org-f{background:#003399;color:#fff}
-.org-m{background:#2d6a4f;color:#fff}
-.org-r{background:#854f0b;color:#fff}
+.org-f{background:#1a1a1a;color:#fff}
+.org-m{background:#333333;color:#fff}
+.org-r{background:#444444;color:#fff}
 .org-pad-sub{font-size:11px;opacity:.75;font-weight:400;margin-top:3px}
 .org-line-h{height:2px;width:100%;background:var(--border);margin:12px 0}
 
 /* ── INE ── */
 .ine-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
-.ine-thumb{aspect-ratio:1;background:#f0f4ff;border:1px solid var(--border);border-radius:8px;cursor:pointer;position:relative;overflow:hidden}
+.ine-thumb{aspect-ratio:1;background:#f0f0f0;border:1px solid var(--border);border-radius:8px;cursor:pointer;position:relative;overflow:hidden}
 .ine-thumb img{width:100%;height:100%;object-fit:cover}
-.ine-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,51,153,.8);color:#fff;font-size:9px;text-align:center;padding:2px}
+.ine-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.8);color:#fff;font-size:9px;text-align:center;padding:2px}
 
 /* ── MAPAS DE SECCIÓN ── */
 .mapas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
-.mapa-card{border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;background:#f8faff}
+.mapa-card{border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;background:#f7f7f7}
 .mapa-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:#fff;display:block;margin-bottom:6px;cursor:pointer}
 .mapa-pdf-icon{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:28px;background:#fff;border-radius:6px;margin-bottom:6px;border:1px solid var(--border);cursor:pointer;text-decoration:none}
 .mapa-pdf-thumb-wrap{position:relative;display:block;margin-bottom:6px}
 .mapa-pdf-thumb-wrap .mapa-thumb{margin-bottom:0}
-.mapa-pdf-thumb-wrap .mapa-pdf-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(0,51,153,.8);color:#fff;font-size:9px;text-align:center;padding:2px;border-radius:0 0 6px 6px;pointer-events:none}
+.mapa-pdf-thumb-wrap .mapa-pdf-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.8);color:#fff;font-size:9px;text-align:center;padding:2px;border-radius:0 0 6px 6px;pointer-events:none}
 .mapa-fecha{font-size:9px;color:var(--muted);margin-bottom:4px}
 
 /* ── BAJAS ── */
 .baja-row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:10px;background:#fff;border:1px solid var(--border);margin-bottom:8px}
-.baja-ico{width:36px;height:36px;background:#fce8e8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.baja-ico{width:36px;height:36px;background:#ececec;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .baja-name{font-size:14px;font-weight:700}
 .baja-motivo{font-size:11px;color:var(--red);font-weight:600;margin-top:2px}
 .baja-meta{font-size:11px;color:var(--muted);margin-top:1px}
@@ -285,14 +286,14 @@ tr:hover td{background:#f8faff}
 .modal-persona-card{max-width:760px;max-height:calc(100vh - 2rem);overflow-y:auto}
 .persona-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
 .persona-form-grid .fg{min-width:0}
-.persona-lider{display:flex;align-items:center;gap:9px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#f8faff}
+.persona-lider{display:flex;align-items:center;gap:9px;padding:10px 12px;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#f7f7f7}
 .persona-lider input{width:17px;height:17px;accent-color:var(--pan)}
 .persona-lider span{font-size:13px;font-weight:700}
 .persona-actions{display:flex;gap:8px;margin-top:1rem}
 .persona-baja{margin-top:8px}
 
 /* ── TOAST ── */
-#toast{position:fixed;bottom:24px;right:24px;background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,51,153,.3)}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 #toast.show{opacity:1}
 
 /* ── RED AMIGOS ── */
@@ -301,14 +302,14 @@ tr:hover td{background:#f8faff}
 .red-persona-name{font-size:15px;font-weight:800;color:var(--pan)}
 .red-persona-meta{font-size:11px;color:var(--muted)}
 .amigo-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:#fff;transition:.15s}
-.amigo-row.activo{border-color:#a3d977;background:#f2fae8}
-.amigo-row.sustituido{border-color:#f5c2c2;background:#fce8e8;opacity:.85}
+.amigo-row.activo{border-color:#cccccc;background:#f2f2f2}
+.amigo-row.sustituido{border-color:#cccccc;background:#ececec;opacity:.85}
 .amigo-num{width:24px;height:24px;border-radius:50%;background:var(--pan);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.amigo-num.sustituido{background:#cc0000}
+.amigo-num.sustituido{background:#666666}
 .amigo-nombre{flex:1;font-size:13px;font-weight:600}
-.amigo-badge-activo{font-size:10px;font-weight:700;color:#2d6a4f;background:#eaf3de;padding:2px 7px;border-radius:20px}
-.amigo-badge-sustituido{font-size:10px;font-weight:700;color:#cc0000;background:#fce8e8;padding:2px 7px;border-radius:20px}
-.amigo-badge-nuevo{font-size:10px;font-weight:700;color:#2d6a4f;background:#d1fae5;padding:2px 7px;border-radius:20px;border:1px solid #6ee7b7}
+.amigo-badge-activo{font-size:10px;font-weight:700;color:#333333;background:#ececec;padding:2px 7px;border-radius:20px}
+.amigo-badge-sustituido{font-size:10px;font-weight:700;color:#666666;background:#ececec;padding:2px 7px;border-radius:20px}
+.amigo-badge-nuevo{font-size:10px;font-weight:700;color:#333333;background:#e5e5e5;padding:2px 7px;border-radius:20px;border:1px solid #bbbbbb}
 
 .inc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:10px;box-shadow:var(--shadow)}
 .inc-card-name{font-size:14px;font-weight:800;color:var(--pan)}
@@ -318,50 +319,50 @@ tr:hover td{background:#f8faff}
 .inc-search-item:hover{background:var(--bg2)}
 .inc-search-item:last-child{border-bottom:none}
 .evento-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--muted)}
-.evento-chip.sel{background:#e6f1fb;border-color:#185fa5;color:#0c447c;font-weight:700}
-.evento-chip.sel-faltas{background:#fce4ea;border-color:#e11d48;color:#e11d48;font-weight:700}
+.evento-chip.sel{background:#ececec;border-color:#333333;color:#222222;font-weight:700}
+.evento-chip.sel-faltas{background:#e5e5e5;border-color:#262626;color:#262626;font-weight:700}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.evento-chip .chip-fase{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:#ede9fe;color:#5b21b6}
-.evento-chip .chip-fase.hoy{background:#d1fae5;color:#065f46}
-.fase-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#ede9fe;color:#5b21b6}
-.fase-badge.hoy{background:#d1fae5;color:#065f46}
+.evento-chip .chip-fase{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:#ececec;color:#333333}
+.evento-chip .chip-fase.hoy{background:#e5e5e5;color:#222222}
+.fase-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#ececec;color:#333333}
+.fase-badge.hoy{background:#e5e5e5;color:#222222}
 .fase-badge.pasado{background:#f0f0f0;color:#555}
 /* ── PRELISTA ── */
 .pl-contadores{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
-.pl-cont{background:#f0f4ff;border-radius:8px;padding:10px;text-align:center}
-.pl-cont-n{font-size:20px;font-weight:800;color:#2d6a4f;line-height:1.1}
+.pl-cont{background:#f0f0f0;border-radius:8px;padding:10px;text-align:center}
+.pl-cont-n{font-size:20px;font-weight:800;color:#333333;line-height:1.1}
 .pl-cont-n small{font-size:12px;color:var(--muted);font-weight:600}
 .pl-cont-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
 .pl-lista{border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff}
 .pl-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
 .pl-row:last-child{border-bottom:none}
-.pl-row.ro{background:#fafbff}
+.pl-row.ro{background:#f7f7f7}
 .pl-botones{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap}
 .pl-btn{padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
 .pl-btn:disabled{cursor:not-allowed;opacity:.55}
-.pl-btn.on-CONFIRMADO{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
-.pl-btn.on-NO_ASISTE{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
-.pl-btn.on-PENDIENTE{background:#fef3c7;border-color:#fac775;color:#854f0b}
+.pl-btn.on-CONFIRMADO{background:#ececec;border-color:#cccccc;color:#333333}
+.pl-btn.on-NO_ASISTE{background:#ececec;border-color:#cccccc;color:#666666}
+.pl-btn.on-PENDIENTE{background:#e5e5e5;border-color:#cccccc;color:#444444}
 .pl-btn.pl-motivo.sel{background:var(--pan-light);border-color:var(--pan);color:var(--pan)}
 .pl-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
-.pl-badge.CONFIRMADO{background:#eaf3de;color:#2d6a4f}
-.pl-badge.NO_ASISTE{background:#fce8e8;color:#cc0000}
-.pl-badge.PENDIENTE{background:#fef3c7;color:#854f0b}
-.pl-motivo-txt{font-size:11px;color:#cc0000;font-weight:600}
+.pl-badge.CONFIRMADO{background:#ececec;color:#333333}
+.pl-badge.NO_ASISTE{background:#ececec;color:#666666}
+.pl-badge.PENDIENTE{background:#e5e5e5;color:#444444}
+.pl-motivo-txt{font-size:11px;color:#666666;font-weight:600}
 @media(max-width:640px){.pl-botones{width:100%;flex-wrap:nowrap}.pl-botones .pl-btn{flex:1;padding:6px 4px;font-size:11px}}
 .corr-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
 .corr-row:last-child{border-bottom:none}
 .estado-select{width:126px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
 .estado-select:disabled{opacity:.5;cursor:not-allowed}
-.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
-.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
-.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
-.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
-.badge-nuevo-reg{background:#e6f1fb;color:#185fa5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
-.badge-reingreso-reg{background:#faeeda;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
-.badge-pendiente{background:#fef3c7;color:#854f0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
-.badge-aprobado{background:#d1fae5;color:#065f46;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
-.badge-enviado{background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.estado-select.e-asistencia{background:#ececec;border-color:#cccccc;color:#333333}
+.estado-select.e-falta{background:#ececec;border-color:#cccccc;color:#666666}
+.estado-select.e-vacaciones{background:#ececec;border-color:#cccccc;color:#1a1a1a}
+.estado-select.e-incapacidad{background:#e5e5e5;border-color:#cccccc;color:#444444}
+.badge-nuevo-reg{background:#ececec;color:#333333;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-reingreso-reg{background:#ececec;color:#444444;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-pendiente{background:#e5e5e5;color:#444444;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-aprobado{background:#e5e5e5;color:#222222;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-enviado{background:#e5e5e5;color:#333333;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
 .nuevo-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:10px;box-shadow:var(--shadow)}
 .nuevo-card-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
 .nuevo-card-name{font-size:14px;font-weight:800;color:var(--pan)}
@@ -386,45 +387,35 @@ tr:hover td{background:#f8faff}
 <div id="login">
   <div class="lcard">
     <div class="lhead">
-      <div class="llogo">G</div>
+      <div class="llogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/></svg></div>
       <div class="ltitle">GEMACUU</div>
       <div class="lsub">Sistema Operativo · 2026</div>
     </div>
-    <div class="lusers" id="lusers">
-      <div class="luser" onclick="selUser('Octavio','o','lav-o','Administrador')">
-        <div class="lav lav-o">OI</div>
-        <div><div class="lname">Octavio</div><div class="lrole">Administrador</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Fernando Amezcua','f','lav-f','Responsable')">
-        <div class="lav lav-f">FA</div>
-        <div><div class="lname">Fernando</div><div class="lrole">Responsable</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Martin Yáñez','m','lav-m','Responsable')">
-        <div class="lav lav-m">MY</div>
-        <div><div class="lname">Martin</div><div class="lrole">Responsable</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Rene Espinoza','r','lav-r','Responsable')">
-        <div class="lav lav-r">RE</div>
-        <div><div class="lname">Rene</div><div class="lrole">Responsable</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Karen Alarcón','k','lav-k','Editora')">
-        <div class="lav lav-k">KA</div>
-        <div><div class="lname">Karen</div><div class="lrole">Editora</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Lluvia Aceves','l','lav-l','Editora')">
-        <div class="lav lav-l">LA</div>
-        <div><div class="lname">Lluvia</div><div class="lrole">Editora</div></div>
-      </div>
-      <div class="luser" onclick="selUser('Vianey','v','lav-v','Editora')">
-        <div class="lav lav-v">VI</div>
-        <div><div class="lname">Vianey</div><div class="lrole">Editora</div></div>
-      </div>
+    <div class="fg">
+      <label>Usuario</label>
+      <input type="text" id="lg-usuario" placeholder="ej. usuario" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lg-pass').focus()">
     </div>
-    <div class="lpass-row">
-      <input type="password" id="lpwd" placeholder="Contraseña" maxlength="12" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="lbtn" onclick="doLogin()">Entrar →</button>
+    <div class="fg">
+      <label>Contraseña</label>
+      <input type="password" id="lg-pass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
+    <button class="lbtn" id="lg-btn" onclick="doLogin()">Entrar →</button>
     <div class="lerr" id="lerr"></div>
+    <div class="lfooter">Acceso solo para administradores dados de alta.</div>
+  </div>
+</div>
+
+<!-- SELECTOR DE PANEL — solo para Octavio, tras un login correcto. Los botones se arman
+     desde MICROSITIOS_EXTERNOS (ver el bloque de script más abajo), así que un panel-c/d
+     futuro solo necesita un elemento más ahí, sin tocar este HTML. -->
+<div id="panel-selector" style="display:none">
+  <div class="lcard">
+    <div class="lhead">
+      <div class="llogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/></svg></div>
+      <div class="ltitle">GEMACUU</div>
+      <div class="lsub">Selecciona el panel</div>
+    </div>
+    <div class="psel-list" id="psel-list"></div>
   </div>
 </div>
 
@@ -434,7 +425,7 @@ tr:hover td{background:#f8faff}
   <nav class="sidebar" id="sidebar">
     <div class="side-head">
       <div class="side-brand">
-        <div class="side-logo">G</div>
+        <div class="side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/></svg></div>
         <span class="side-title">GEMACUU</span>
       </div>
       <button class="side-toggle" id="side-toggle" aria-label="Colapsar menú">☰</button>
@@ -460,11 +451,13 @@ tr:hover td{background:#f8faff}
   <div class="topbar">
     <div class="tl">
       <span class="tlogo">GEMACUU</span>
+      <span class="tbadge">Panel A</span>
       <div class="tdot"></div>
       <span class="tuser">Sesión: <b id="tname">—</b></span>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="tbtn" id="btn-export" onclick="exportarContextual()" style="display:none">↓ Excel</button>
+      <button class="tbtn" id="btn-cambiar-panel" onclick="cambiarPanel()" style="display:none">🔀 Cambiar panel</button>
       <button class="tbtn" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -534,25 +527,25 @@ tr:hover td{background:#f8faff}
         <div class="org-line"></div>
         <div style="background:var(--pan-light);border:1px solid var(--border);border-radius:10px;padding:10px 20px;text-align:center;font-weight:700;font-size:14px;color:var(--pan)">Lic. Armando Ruiz Ponce · Director</div>
         <div class="org-line"></div>
-        <div style="background:#f0f4ff;border:1px solid var(--border);border-radius:10px;padding:8px 20px;text-align:center;font-size:13px;font-weight:700;color:var(--pan)">Octavio Irigoyen · Enlace</div>
+        <div style="background:#f0f0f0;border:1px solid var(--border);border-radius:10px;padding:8px 20px;text-align:center;font-size:13px;font-weight:700;color:var(--pan)">Octavio Irigoyen · Enlace</div>
         <div class="org-line"></div>
         <div class="org-branches">
           <div class="org-branch">
             <div class="org-pad org-f">Fernando Amezcua<div class="org-pad-sub" id="org-sub-f">cargando…</div></div>
-            <div class="org-line" style="background:#003399"></div>
-            <div style="background:#e6eeff;border:1px solid #b3c6ff;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#003399;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Vianey</div>
+            <div class="org-line" style="background:#1a1a1a"></div>
+            <div style="background:#ececec;border:1px solid #cccccc;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#1a1a1a;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Vianey</div>
             <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-f"></div>
           </div>
           <div class="org-branch">
             <div class="org-pad org-m">Martin Yáñez<div class="org-pad-sub" id="org-sub-m">cargando…</div></div>
-            <div class="org-line" style="background:#2d6a4f"></div>
-            <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#2d6a4f;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Karen</div>
+            <div class="org-line" style="background:#333333"></div>
+            <div style="background:#ececec;border:1px solid #cccccc;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#333333;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Karen</div>
             <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-m"></div>
           </div>
           <div class="org-branch">
             <div class="org-pad org-r">Rene Espinoza<div class="org-pad-sub" id="org-sub-r">cargando…</div></div>
-            <div class="org-line" style="background:#854f0b"></div>
-            <div style="background:#fef3c7;border:1px solid #fac775;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#854f0b;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Lluvia</div>
+            <div class="org-line" style="background:#444444"></div>
+            <div style="background:#e5e5e5;border:1px solid #cccccc;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#444444;text-align:center;margin-bottom:6px">🗂️ Apoyo Administrativo: Lluvia</div>
             <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-r"></div>
           </div>
         </div>
@@ -590,8 +583,8 @@ tr:hover td{background:#f8faff}
 
     <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem">
       <div class="stat"><div class="stat-n" id="ine-total">—</div><div class="stat-l">Red Total</div></div>
-      <div class="stat"><div class="stat-n" style="color:#2d6a4f" id="ine-cap">—</div><div class="stat-l">Capturadas</div></div>
-      <div class="stat"><div class="stat-n" style="color:#854f0b" id="ine-pend">—</div><div class="stat-l">Pendientes</div></div>
+      <div class="stat"><div class="stat-n" style="color:#333333" id="ine-cap">—</div><div class="stat-l">Capturadas</div></div>
+      <div class="stat"><div class="stat-n" style="color:#444444" id="ine-pend">—</div><div class="stat-l">Pendientes</div></div>
     </div>
     <div class="card" style="margin-bottom:1rem">
       <div class="card-title">📤 Subir INE</div>
@@ -599,7 +592,7 @@ tr:hover td{background:#f8faff}
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;color:var(--pan)">
           <input type="radio" name="inelado" value="frente" checked> FRENTE
         </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;color:#854f0b">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;color:#444444">
           <input type="radio" name="inelado" value="reverso"> REVERSO
         </label>
       </div>
@@ -705,21 +698,21 @@ tr:hover td{background:#f8faff}
             <div id="ev-total" style="font-size:22px;font-weight:800;color:var(--pan)">0</div>
             <div style="font-size:10px;color:var(--muted)">Total</div>
           </div>
-          <div style="background:#eaf3de;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-asistencia" style="font-size:22px;font-weight:800;color:#2d6a4f">0</div>
-            <div style="font-size:10px;color:#2d6a4f">Asistencia</div>
+          <div style="background:#ececec;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-asistencia" style="font-size:22px;font-weight:800;color:#333333">0</div>
+            <div style="font-size:10px;color:#333333">Asistencia</div>
           </div>
-          <div style="background:#fce8e8;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-falta" style="font-size:22px;font-weight:800;color:#cc0000">0</div>
-            <div style="font-size:10px;color:#cc0000">Falta</div>
+          <div style="background:#ececec;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-falta" style="font-size:22px;font-weight:800;color:#666666">0</div>
+            <div style="font-size:10px;color:#666666">Falta</div>
           </div>
-          <div style="background:#e6eeff;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-vacaciones" style="font-size:22px;font-weight:800;color:#003399">0</div>
-            <div style="font-size:10px;color:#003399">Vacaciones</div>
+          <div style="background:#ececec;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-vacaciones" style="font-size:22px;font-weight:800;color:#1a1a1a">0</div>
+            <div style="font-size:10px;color:#1a1a1a">Vacaciones</div>
           </div>
-          <div style="background:#fef3c7;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-incapacidad" style="font-size:22px;font-weight:800;color:#854f0b">0</div>
-            <div style="font-size:10px;color:#854f0b">Incapacidad</div>
+          <div style="background:#e5e5e5;border-radius:8px;padding:10px;text-align:center">
+            <div id="ev-incapacidad" style="font-size:22px;font-weight:800;color:#444444">0</div>
+            <div style="font-size:10px;color:#444444">Incapacidad</div>
           </div>
           <div style="background:var(--bg2);border-radius:8px;padding:10px;text-align:center">
             <div id="ev-sin-capturar" style="font-size:22px;font-weight:800;color:var(--muted)">0</div>
@@ -1043,7 +1036,7 @@ tr:hover td{background:#f8faff}
       <!-- PENDIENTES -->
       <div class="card">
         <div class="card-title">⏳ Pendientes de confirmar</div>
-        <div style="font-size:12px;color:#854f0b;background:#fef3c7;padding:8px 12px;border-radius:8px;margin-bottom:12px">
+        <div style="font-size:12px;color:#444444;background:#e5e5e5;padding:8px 12px;border-radius:8px;margin-bottom:12px">
           ⚠️ Preguntar si van a apoyar. Si dice SÍ → asignar padrino y sección. Si dice NO → pasa a bajas.
         </div>
         <input type="text" id="pend-buscar" placeholder="buscar..." oninput="filtrarPendientes()" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:10px;outline:none">
@@ -1085,20 +1078,20 @@ tr:hover td{background:#f8faff}
 <div id="panel-resultados" class="panel">
 <style>
   #panel-resultados{
-    --navy:#0B2545;
-    --navy-deep:#081A33;
-    --paper:#FAFAF8;
-    --ink:#1B2733;
+    --navy:#111111;
+    --navy-deep:#0a0a0a;
+    --paper:#fafafa;
+    --ink:#1a1a1a;
     --muted:#5C6B7A;
-    --line:#E1DED4;
-    --pan:#0B4FA0;
-    --pan-bg:#E7EFFA;
-    --pri:#B5121B;
-    --pri-bg:#FAE7E8;
-    --mrn:#7A1B3D;
-    --mrn-bg:#F5E4EC;
-    --tie:#8A8478;
-    --tie-bg:#EFEDE6;
+    --line:#e1e1e1;
+    --pan:#1a1a1a;
+    --pan-bg:#ececec;
+    --pri:#444444;
+    --pri-bg:#ececec;
+    --mrn:#777777;
+    --mrn-bg:#ececec;
+    --tie:#999999;
+    --tie-bg:#f0f0f0;
     font-family: 'Helvetica Neue', Arial, sans-serif;
     color: var(--ink);
     background: var(--paper);
@@ -1209,7 +1202,7 @@ tr:hover td{background:#f8faff}
     vertical-align:middle;
     white-space:nowrap;
   }
-  #panel-resultados tbody tr:hover{background:#F7F6F2;}
+  #panel-resultados tbody tr:hover{background:#f5f5f5;}
   #panel-resultados .r-zona-row td{
     background:var(--navy-deep);
     color:#fff;
@@ -1616,9 +1609,9 @@ tr:hover td{background:#f8faff}
       <button class="close-btn" onclick="closeModal('modal-sustituto')">✕</button>
     </div>
     <input type="hidden" id="sust-amigo-id">
-    <div style="background:#fce8e8;border:1px solid #f5c2c2;border-radius:8px;padding:10px 14px;margin-bottom:1rem">
-      <div style="font-size:11px;font-weight:700;color:#cc0000;text-transform:uppercase;margin-bottom:2px">🔴 Quedará fuera (disponible para otros apoyos):</div>
-      <div id="sust-sale-nombre" style="font-size:14px;font-weight:800;color:#cc0000"></div>
+    <div style="background:#ececec;border:1px solid #cccccc;border-radius:8px;padding:10px 14px;margin-bottom:1rem">
+      <div style="font-size:11px;font-weight:700;color:#666666;text-transform:uppercase;margin-bottom:2px">🔴 Quedará fuera (disponible para otros apoyos):</div>
+      <div id="sust-sale-nombre" style="font-size:14px;font-weight:800;color:#666666"></div>
     </div>
     <div class="fg">
       <label>✅ Nuevo integrante que entra</label>
@@ -1630,7 +1623,7 @@ tr:hover td{background:#f8faff}
     </div>
     <div style="display:flex;gap:8px;margin-top:1rem">
       <button class="btn btn-secondary w-full" onclick="closeModal('modal-sustituto')">Cancelar</button>
-      <button class="btn btn-primary w-full" onclick="confirmarSustituto()" style="background:#2d6a4f">✅ Confirmar cambio</button>
+      <button class="btn btn-primary w-full" onclick="confirmarSustituto()" style="background:#333333">✅ Confirmar cambio</button>
     </div>
   </div>
 </div>
@@ -1733,8 +1726,8 @@ tr:hover td{background:#f8faff}
       <button class="close-btn" onclick="closeModal('modal-confirmar-eliminar-evento')">✕</button>
     </div>
     <div style="font-size:13px;margin-bottom:10px">Vas a eliminar permanentemente el evento:</div>
-    <div style="background:#fce8e8;border:1px solid #f5c2c2;border-radius:8px;padding:10px 12px;margin-bottom:12px">
-      <div id="cee-nombre" style="font-weight:800;color:#cc0000"></div>
+    <div style="background:#ececec;border:1px solid #cccccc;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+      <div id="cee-nombre" style="font-weight:800;color:#666666"></div>
       <div id="cee-fecha" style="font-size:12px;color:var(--muted)"></div>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
@@ -1906,6 +1899,9 @@ const PRESET='barrido_electoral';
 const PASSWORDS={'Fernando Amezcua':'24617','Martin Yáñez':'18132','Rene Espinoza':'24181','Octavio':'chelo1942','Karen Alarcón':'25068','Lluvia Aceves':'25872','Vianey':'5936'};
 const EDITORAS=['Karen Alarcón','Lluvia Aceves','Vianey'];
 const PADRINOS=['Fernando Amezcua','Martin Yáñez','Rene Espinoza'];
+// Usuario (primer nombre, minúsculas) -> nombre completo, para la portada única de login.
+// Mismas 7 personas y mismas contraseñas (PASSWORDS) de siempre — nada más cambia.
+const D17_USUARIOS={octavio:'Octavio',fernando:'Fernando Amezcua',martin:'Martin Yáñez',rene:'Rene Espinoza',karen:'Karen Alarcón',lluvia:'Lluvia Aceves',vianey:'Vianey'};
 const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
   {num:'856',encargado:'Jorge Lom',padrino:'Fernando Amezcua'},
@@ -1965,58 +1961,87 @@ const BAJAS=[
 ];
 
 let currentUser=null;
-let selectedUser=null;
 let personalCache=[];
 let pendientesCache=[];
 let inePersona=null;
 
 // ── MICROSITIOS EXTERNOS ──
 // Otras dependencias/micrositios (cada uno con su propia base de datos
-// separada, mismo patrón que Alumbrado). Para agregar uno nuevo en el
-// futuro: un objeto más en este array, con su propia url y su propia
-// lista de usuarios — no hay que tocar el resto de este archivo.
+// separada). Para agregar uno nuevo en el futuro (panel-c, panel-d...):
+// un objeto más en este array — el selector de panel de Octavio (más abajo)
+// arma sus botones a partir de esta lista sin que haya que tocar nada más.
 const MICROSITIOS_EXTERNOS=[
-  {
-    id:'panel-b',
-    url:'panel-b.html',
-    usuarios:[
-      {nombre:'Diana',  iniciales:'DP', avClass:'lav-diana'},
-      {nombre:'Elsa',   iniciales:'ES', avClass:'lav-elsa'},
-      {nombre:'Grisel', iniciales:'GQ', avClass:'lav-grisel'},
-      {nombre:'Karol',  iniciales:'KG', avClass:'lav-karol'},
-    ]
-  }
+  { id:'panel-b', label:'Panel B', url:'panel-b.html' }
 ];
 
-// Tarjetas idénticas en estructura/estilo a las de login local (.luser/.lav/.lname/.lrole),
-// pero en vez de selUser()+contraseña, llevan directo al micrositio correspondiente —
-// ese micrositio ya tiene su propio login (usuario/contraseña) contra su propia tabla.
-function renderMicrositiosExternos(){
-  const cont=document.getElementById('lusers');
-  if(!cont) return;
-  const html=MICROSITIOS_EXTERNOS.flatMap(m=>m.usuarios.map(u=>`
-    <div class="luser" onclick="location.href='${m.url}'">
-      <div class="lav ${u.avClass}">${u.iniciales}</div>
-      <div><div class="lname">${u.nombre}</div><div class="lrole">Administradora</div></div>
-    </div>`)).join('');
-  cont.insertAdjacentHTML('beforeend',html);
-}
-renderMicrositiosExternos();
-
-// ── LOGIN ──
-function selUser(name,code,avClass,rol){
-  selectedUser={name,code,avClass,rol};
-  document.querySelectorAll('.luser').forEach(u=>u.classList.remove('sel'));
-  event.currentTarget.classList.add('sel');
-  document.getElementById('lpwd').focus();
-  document.getElementById('lerr').textContent='';
-}
+// ── LOGIN (portada única) ──
+// Usuario = primer nombre, sin importar mayúsculas ni espacios de sobra.
+// 1) D17: mismas 7 personas, mismas PASSWORDS y mismos permisos de siempre.
+// 2) Si no es de D17: se valida contra alumbrado_personal, igual que ya lo
+//    hacía panel-b.html — si es correcto, se deja la sesión en sessionStorage
+//    (panelb_sesion) y se manda directo a panel-b.html, sin pedirle nada otra vez.
+// 3) Si nada coincide: un solo mensaje genérico (nunca se distingue cuál falló).
 async function doLogin(){
-  if(!selectedUser){document.getElementById('lerr').textContent='Selecciona tu nombre primero.';return;}
-  const pwd=document.getElementById('lpwd').value.trim();
-  if(!pwd){document.getElementById('lerr').textContent='Ingresa tu contraseña.';return;}
-  if(PASSWORDS[selectedUser.name]!==pwd){document.getElementById('lerr').textContent='Contraseña incorrecta.';return;}
-  currentUser=selectedUser.name;
+  const usuarioRaw=document.getElementById('lg-usuario').value.trim().toLowerCase();
+  const pwd=document.getElementById('lg-pass').value;
+  const errEl=document.getElementById('lerr');
+  errEl.textContent='';
+  if(!usuarioRaw||!pwd){errEl.textContent='Ingresa usuario y contraseña.';return;}
+  const btn=document.getElementById('lg-btn');
+  btn.disabled=true;btn.textContent='Verificando…';
+
+  const nombreD17=D17_USUARIOS[usuarioRaw];
+  if(nombreD17&&PASSWORDS[nombreD17]===pwd){
+    currentUser=nombreD17;
+    document.getElementById('lg-pass').value='';
+    btn.disabled=false;btn.textContent='Entrar →';
+    if(currentUser==='Octavio'){
+      // Único caso con selector: los demás entran derecho a su panel.
+      sessionStorage.setItem('gemacuu_octavio_auth','1');
+      mostrarSelectorPanel();
+    } else {
+      await entrarPanelA();
+    }
+    return;
+  }
+
+  let rows;
+  try{
+    rows=await sbGet('alumbrado_personal',`?usuario=eq.${encodeURIComponent(usuarioRaw)}&status=eq.activo&limit=1`);
+  }catch(e){ rows=null; }
+  btn.disabled=false;btn.textContent='Entrar →';
+  const persona=Array.isArray(rows)?rows[0]:null;
+  if(persona&&persona.password!=null&&String(persona.password)===pwd){
+    document.getElementById('lg-pass').value='';
+    sessionStorage.setItem('panelb_sesion',JSON.stringify({tipo:'personal',usuario:usuarioRaw,password:pwd}));
+    location.href='panel-b.html';
+    return;
+  }
+
+  errEl.textContent='Usuario o contraseña incorrectos.';
+}
+
+// Deja a Octavio ya autenticado (currentUser+sessionStorage) sobre la pantalla de
+// selección de panel, con un botón por cada opción: Panel A (este archivo) + uno por
+// cada MICROSITIOS_EXTERNOS. Se usa tanto al iniciar sesión como al volver aquí desde
+// "Cambiar panel" (dentro de este mismo archivo o desde panel-b.html).
+function mostrarSelectorPanel(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='none';
+  const opciones=[{label:'Panel A',accion:entrarPanelA}]
+    .concat(MICROSITIOS_EXTERNOS.map(m=>({label:m.label,accion:()=>entrarMicrositio(m)})));
+  window._pselOpciones=opciones;
+  document.getElementById('psel-list').innerHTML=opciones
+    .map((o,i)=>`<button class="psel-btn" onclick="_pselOpciones[${i}].accion()">${o.label}</button>`)
+    .join('');
+  document.getElementById('panel-selector').style.display='flex';
+}
+
+// Panel A = este mismo archivo (index.html), con exactamente los mismos permisos de
+// siempre según currentUser — es el mismo bloque de código que antes vivía al final de
+// doLogin(), ahora reutilizable también cuando Octavio lo elige desde el selector.
+async function entrarPanelA(){
+  document.getElementById('panel-selector').style.display='none';
   document.getElementById('login').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('tname').textContent=currentUser;
@@ -2025,6 +2050,7 @@ async function doLogin(){
   const isPadrino=PADRINOS.includes(currentUser);
   document.getElementById('btn-export').style.display=(isAdmin||isEditor)?'inline-flex':'none';
   document.getElementById('btn-nueva-persona').style.display=(isAdmin||isEditor)?'inline-flex':'none';
+  document.getElementById('btn-cambiar-panel').style.display=isAdmin?'inline-flex':'none';
   document.getElementById('tab-red').style.display='block';
   document.getElementById('tab-eventos').style.display='block';
   document.getElementById('tab-mapasd17').style.display='block';
@@ -2040,13 +2066,42 @@ async function doLogin(){
   renderPersonal();
   renderSecciones();
 }
-function doLogout(){
-  currentUser=null;selectedUser=null;
-  document.getElementById('lpwd').value='';
-  document.getElementById('lerr').textContent='';
-  document.querySelectorAll('.luser').forEach(u=>u.classList.remove('sel'));
-  document.getElementById('login').style.display='flex';
+
+// Octavio eligió un micrositio externo (hoy solo Panel B) desde el selector — entra con
+// nivel de administradora completa, sin agregarlo a la tabla del micrositio ni tocar
+// ningún dato en Supabase: panel-b.html reconoce esta marca y arma la sesión en código.
+// (Solo cubre panel-b por ahora; un panel-c futuro necesitará su propio mecanismo aquí
+// cuando exista, ya que cada micrositio tiene su propia tabla/login.)
+function entrarMicrositio(m){
+  if(m.id==='panel-b') sessionStorage.setItem('panelb_sesion',JSON.stringify({tipo:'octavio_admin'}));
+  location.href=m.url;
+}
+
+// Botón "Cambiar panel" (solo visible para Octavio, ver entrarPanelA): vuelve al
+// selector sin cerrar sesión — a diferencia de "Salir", gemacuu_octavio_auth se queda.
+function cambiarPanel(){
   document.getElementById('app').style.display='none';
+  mostrarSelectorPanel();
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('lg-usuario').value='';
+  document.getElementById('lg-pass').value='';
+  document.getElementById('lerr').textContent='';
+  sessionStorage.removeItem('gemacuu_octavio_auth');
+  sessionStorage.removeItem('panelb_sesion');
+  document.getElementById('panel-selector').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='flex';
+}
+
+// Si Octavio ya se autenticó en esta pestaña (p.ej. viene de "Cambiar panel" desde
+// panel-b.html), se salta el formulario y entra directo al selector — nadie más
+// conserva sesión entre recargas, es el único caso especial.
+if(sessionStorage.getItem('gemacuu_octavio_auth')==='1'){
+  currentUser='Octavio';
+  mostrarSelectorPanel();
 }
 
 // ── SUPABASE ──
@@ -2124,10 +2179,10 @@ function renderStats(){
   document.getElementById('rb-r').textContent=`${cr.personas} personas · ${cr.secciones} secciones`;
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Total activos</div></div>
-    <div class="stat"><div class="stat-n" style="color:#003399">${cf.personas}</div><div class="stat-l">Fernando</div></div>
-    <div class="stat"><div class="stat-n" style="color:#2d6a4f">${cm.personas}</div><div class="stat-l">Martin</div></div>
-    <div class="stat"><div class="stat-n" style="color:#854f0b">${cr.personas}</div><div class="stat-l">Rene</div></div>
-    <div class="stat"><div class="stat-n" style="color:#cc0000">${BAJAS.length}</div><div class="stat-l">Bajas</div></div>
+    <div class="stat"><div class="stat-n" style="color:#1a1a1a">${cf.personas}</div><div class="stat-l">Fernando</div></div>
+    <div class="stat"><div class="stat-n" style="color:#333333">${cm.personas}</div><div class="stat-l">Martin</div></div>
+    <div class="stat"><div class="stat-n" style="color:#444444">${cr.personas}</div><div class="stat-l">Rene</div></div>
+    <div class="stat"><div class="stat-n" style="color:#666666">${BAJAS.length}</div><div class="stat-l">Bajas</div></div>
   `;
   renderOrganigrama();
 }
@@ -2167,11 +2222,11 @@ function filtrarPersonal(){
       ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#f0f0f0;color:#888;padding:3px 8px;border-radius:20px;font-size:11px">⚪ sin red</span>`;
     } else if(red===0&&cap>0){
       // Tiene INEs capturadas pero sin red_total definido
-      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#854f0b;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟡 ${cap}/—</span>`;
+      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#e5e5e5;color:#444444;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟡 ${cap}/—</span>`;
     } else if(cap>=red){
-      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#eaf3de;color:#2d6a4f;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟢 ${cap}/${red}</span>`;
+      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#ececec;color:#333333;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟢 ${cap}/${red}</span>`;
     } else {
-      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#854f0b;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟡 ${cap}/${red}</span>`;
+      ineIcon=`<span style="display:inline-flex;align-items:center;gap:4px;background:#e5e5e5;color:#444444;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700">🟡 ${cap}/${red}</span>`;
     }
     return `<tr>
     <td style="font-weight:600">${p.nombre||'—'}</td>
@@ -2282,7 +2337,7 @@ function filtroSec(pad){
 }
 function renderSecciones(){
   const lista=secFiltro?SECCIONES.filter(s=>s.padrino===secFiltro):SECCIONES;
-  const PAD_COLOR={'Fernando Amezcua':'#003399','Martin Yáñez':'#2d6a4f','Rene Espinoza':'#854f0b'};
+  const PAD_COLOR={'Fernando Amezcua':'#1a1a1a','Martin Yáñez':'#333333','Rene Espinoza':'#444444'};
   const isAdmin=currentUser==='Octavio';
   // Las Editoras ven y descargan mapas en todas las secciones, igual que el admin — pero
   // sin subir ni eliminar (eso sigue restringido a Octavio, ver abrirMapasSeccion).
@@ -2410,7 +2465,7 @@ function filtrarBajas(){
   const baja=BAJAS.filter(b=>b.motivo==='BAJA'||b.motivo.includes('SISTEMA')).length;
   const otros=tot-noTrabaja-baja;
   document.getElementById('bajas-stats').innerHTML=`
-    <div class="stat"><div class="stat-n" style="color:#cc0000">${tot}</div><div class="stat-l">Total bajas</div></div>
+    <div class="stat"><div class="stat-n" style="color:#666666">${tot}</div><div class="stat-l">Total bajas</div></div>
     <div class="stat"><div class="stat-n">${noTrabaja}</div><div class="stat-l">Ya no trabaja</div></div>
     <div class="stat"><div class="stat-n">${baja}</div><div class="stat-l">Baja sistema</div></div>
     <div class="stat"><div class="stat-n">${otros}</div><div class="stat-l">Otros motivos</div></div>
@@ -2461,11 +2516,11 @@ function filtrarPendientes(){
           style="width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:7px;font-size:12px;resize:none;outline:none;color:var(--text);background:#fff"></textarea>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
           <button onclick="pendienteSi('${p.id}','${p.nombre.replace(/'/g,"\\'")}')"
-            style="padding:9px;background:#eaf3de;border:1.5px solid #a3d977;border-radius:8px;font-size:12px;font-weight:700;color:#2d6a4f;cursor:pointer">
+            style="padding:9px;background:#ececec;border:1.5px solid #cccccc;border-radius:8px;font-size:12px;font-weight:700;color:#333333;cursor:pointer">
             ✅ SÍ apoya
           </button>
           <button onclick="pendienteNo('${p.id}','${p.nombre.replace(/'/g,"\\'")}')"
-            style="padding:9px;background:#fce8e8;border:1.5px solid #f5c2c2;border-radius:8px;font-size:12px;font-weight:700;color:#cc0000;cursor:pointer">
+            style="padding:9px;background:#ececec;border:1.5px solid #cccccc;border-radius:8px;font-size:12px;font-weight:700;color:#666666;cursor:pointer">
             ❌ NO apoya
           </button>
         </div>
@@ -2515,7 +2570,7 @@ function buscarParaCambio(){
   if(q.length<2){document.getElementById('cambio-resultado').innerHTML='';return;}
   const lista=personalCache.filter(p=>(p.nombre||'').toLowerCase().includes(q)).slice(0,5);
   document.getElementById('cambio-resultado').innerHTML=lista.map(p=>`
-    <div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:#f8faff">
+    <div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:#f7f7f7">
       <div style="font-weight:700;font-size:13px">${p.nombre}</div>
       <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
         <select onchange="cambiarPadrino('${p.id}',this.value)" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff">
@@ -2585,7 +2640,7 @@ async function generarEnlace(){
   if(!r.ok){ showToast('⚠️ Error al generar el enlace'); return; }
   const url=urlEnlaceSeccion(token);
   document.getElementById('enl-resultado').innerHTML=`
-    <div style="background:#eaf3de;border:1px solid #a3d977;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
+    <div style="background:#ececec;border:1px solid #cccccc;border-radius:8px;padding:10px 12px;font-size:12px;word-break:break-all">
       ✅ Enlace generado (${secciones.length} secciones):<br><b>${url}</b>
       <div style="margin-top:6px"><button class="btn btn-secondary btn-xs" onclick="copiarEnlaceGenerado('${url}')">📋 copiar enlace</button></div>
     </div>`;
@@ -2616,7 +2671,7 @@ function renderListaEnlaces(){
     if(en.revocado){
       estadoHtml=`<span class="badge badge-red">🚫 revocado</span>`;
     } else if(faseEn==='programado'){
-      estadoHtml=`<span class="badge" style="background:#ede9fe;color:#5b21b6">📋 prelista — vigencia inicia el día del evento</span>`;
+      estadoHtml=`<span class="badge" style="background:#ececec;color:#333333">📋 prelista — vigencia inicia el día del evento</span>`;
     } else if(abiertoAntesDeHoy){
       estadoHtml=`<span class="badge badge-gray">⏳ disponible — la vigencia empieza al abrirlo hoy</span>`;
     } else if(!en.primera_apertura){
@@ -2678,14 +2733,14 @@ async function renderInes(){
     sub.textContent='No tienes INEs que subir';
     link.style.display='none';
   } else if(cap>=red){
-    banner.style.background='#2d6a4f';
+    banner.style.background='#333333';
     banner.style.color='#fff';
     icon.textContent='🟢';
     txt.textContent=`¡Red completa! ${cap}/${red} INEs`;
     sub.textContent='Todas las INEs de tu red están capturadas';
     link.style.display='inline-block';
   } else {
-    banner.style.background='#854f0b';
+    banner.style.background='#444444';
     banner.style.color='#fff';
     icon.textContent='🟡';
     txt.textContent=`${cap}/${red} INEs capturadas`;
@@ -2882,19 +2937,19 @@ async function filtrarRed(){
       // Si es sustituto: NO mostrarlo como fila separada (ya aparece dentro del sustituido)
       if(esNuevo) return ''; // el sustituto se muestra dentro de la fila del sustituido
       const nombreMostrar=a.nombre_amigo
-        ?`<span style="${esSust?'text-decoration:line-through;color:#cc0000;font-weight:700':''}">${a.nombre_amigo}</span>`
+        ?`<span style="${esSust?'text-decoration:line-through;color:#666666;font-weight:700':''}">${a.nombre_amigo}</span>`
         :`<span style="color:var(--muted);font-style:italic${esSust?';text-decoration:line-through':''}">Sin nombre</span>`;
       return `<div class="amigo-row ${esSust?'sustituido':'activo'}">
         <div class="amigo-num ${esSust?'sustituido':''}">${a.numero||'?'}</div>
         <div class="amigo-nombre">
           <div>${nombreMostrar}</div>
-          ${esSust&&a.nombre_sustituto?`<div style="font-size:12px;color:#2d6a4f;font-weight:700;margin-top:3px">🟢 Entra: ${a.nombre_sustituto}</div>`:''}
-          ${esSust&&!a.nombre_sustituto?`<div style="font-size:11px;color:#cc0000;margin-top:2px">🔴 Fuera — disponible para otro apoyo</div>`:''}
+          ${esSust&&a.nombre_sustituto?`<div style="font-size:12px;color:#333333;font-weight:700;margin-top:3px">🟢 Entra: ${a.nombre_sustituto}</div>`:''}
+          ${esSust&&!a.nombre_sustituto?`<div style="font-size:11px;color:#666666;margin-top:2px">🔴 Fuera — disponible para otro apoyo</div>`:''}
           ${a.motivo_sustituto?`<div style="font-size:10px;color:var(--muted)">${a.motivo_sustituto}</div>`:''}
         </div>
         <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;flex-shrink:0">
           ${esSust?`<span class="amigo-badge-sustituido">🔴 fuera</span>`:`<span class="amigo-badge-activo">✅</span>`}
-          ${canEdit&&!esSust?`<button class="btn btn-xs" style="background:#fef3c7;border:1px solid #f59e0b;color:#854f0b;font-weight:700" 
+          ${canEdit&&!esSust?`<button class="btn btn-xs" style="background:#e5e5e5;border:1px solid #999999;color:#444444;font-weight:700" 
             onclick="abrirModalSustituto('${a.id}','${(a.nombre_amigo||'Sin nombre').replace(/'/g,"\\'")}')">🔄 Cambiar</button>`:''}
         </div>
       </div>`;
@@ -2923,7 +2978,7 @@ async function filtrarRed(){
         </div>
       </div>
       ${totalRegistrados>0?`<div style="margin-top:6px">${amigosHtml}</div>`:`<div style="font-size:12px;color:var(--muted);padding:6px 0">${redTotal>0?`Red de ${redTotal} — nombres pendientes de capturar`:'Sin red registrada aún.'}</div>`}
-      ${sustituidos>0?`<div style="font-size:11px;color:#cc0000;margin-top:6px">🔴 ${sustituidos} fuera — disponible${sustituidos>1?'s':''} para otro tipo de apoyo</div>`:''}
+      ${sustituidos>0?`<div style="font-size:11px;color:#666666;margin-top:6px">🔴 ${sustituidos} fuera — disponible${sustituidos>1?'s':''} para otro tipo de apoyo</div>`:''}
     </div>`;
   }).join('');
 }
@@ -2947,19 +3002,19 @@ async function renderModalAmigos(personalId){
     const esNuevo=a.status==='sustituto';
     if(esNuevo) return ''; // el sustituto se muestra dentro de la fila del sustituido
     const nombreMostrar=a.nombre_amigo
-      ?`<span style="${esSust?'text-decoration:line-through;color:#cc0000;font-weight:700':''}">${a.nombre_amigo}</span>`
+      ?`<span style="${esSust?'text-decoration:line-through;color:#666666;font-weight:700':''}">${a.nombre_amigo}</span>`
       :`<span style="color:var(--muted);font-style:italic${esSust?';text-decoration:line-through':''}">Sin nombre</span>`;
     return `<div class="amigo-row ${esSust?'sustituido':'activo'}" id="arow-${a.id}">
       <div class="amigo-num ${esSust?'sustituido':''}">${a.numero||'?'}</div>
       <div class="amigo-nombre" style="flex:1">
         <div>${nombreMostrar}</div>
-        ${esSust&&a.nombre_sustituto?`<div style="font-size:12px;color:#2d6a4f;font-weight:700;margin-top:3px">🟢 Entra: ${a.nombre_sustituto}</div>`:''}
-        ${esSust&&!a.nombre_sustituto?`<div style="font-size:11px;color:#cc0000;margin-top:2px">🔴 Fuera — disponible para otro apoyo</div>`:''}
+        ${esSust&&a.nombre_sustituto?`<div style="font-size:12px;color:#333333;font-weight:700;margin-top:3px">🟢 Entra: ${a.nombre_sustituto}</div>`:''}
+        ${esSust&&!a.nombre_sustituto?`<div style="font-size:11px;color:#666666;margin-top:2px">🔴 Fuera — disponible para otro apoyo</div>`:''}
         ${a.motivo_sustituto?`<div style="font-size:10px;color:var(--muted)">${a.motivo_sustituto}</div>`:''}
       </div>
       <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
         ${esSust?`<span class="amigo-badge-sustituido">🔴 fuera</span>`:`<span class="amigo-badge-activo">✅</span>`}
-        ${canEdit&&!esSust?`<button class="btn btn-xs" style="background:#fef3c7;border:1px solid #f59e0b;color:#854f0b;font-weight:700"
+        ${canEdit&&!esSust?`<button class="btn btn-xs" style="background:#e5e5e5;border:1px solid #999999;color:#444444;font-weight:700"
           onclick="abrirModalSustituto('${a.id}','${(a.nombre_amigo||'Sin nombre').replace(/'/g,"\\'")}')">🔄 Cambiar</button>`:''}
         ${canEdit?`<button class="btn btn-danger btn-xs" onclick="eliminarAmigo('${a.id}','${personalId}')">🗑</button>`:''}
       </div>
@@ -3160,13 +3215,13 @@ function renderResumenEventosTbody(){
     const activa=r.evento.evidencia_publica!==false;
     return `<tr>
       <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}${faseEvento(r.evento)==='programado'?' <span class="fase-badge" style="font-size:10px;padding:1px 7px">🗓 Programado</span>':''}</td>
-      <td style="color:#2d6a4f;font-weight:700">${r.asistencia}</td>
-      <td style="color:#cc0000;font-weight:700">${r.falta}</td>
-      <td style="color:#003399;font-weight:700">${r.vacaciones}</td>
-      <td style="color:#854f0b;font-weight:700">${r.incapacidad}</td>
+      <td style="color:#333333;font-weight:700">${r.asistencia}</td>
+      <td style="color:#666666;font-weight:700">${r.falta}</td>
+      <td style="color:#1a1a1a;font-weight:700">${r.vacaciones}</td>
+      <td style="color:#444444;font-weight:700">${r.incapacidad}</td>
       <td style="color:var(--muted)">${r.sinCapturar}</td>
       <td>${r.total}</td>
-      <td style="color:#2d6a4f;font-weight:700">${r.confirmados}</td>
+      <td style="color:#333333;font-weight:700">${r.confirmados}</td>
       <td style="font-weight:700">${textoCumplimiento(r)}</td>
       <td>${faseEvento(r.evento)==='programado'?'—':r.asistieronSinConfirmar}</td>
       <td>${r.encuestas}</td>
@@ -3191,7 +3246,7 @@ function porcentajeCumplimiento(r){
 function textoCumplimiento(r){
   const pct=porcentajeCumplimiento(r);
   if(pct===null) return '<span style="color:var(--muted)">—</span>';
-  const color=pct>=90?'#2d6a4f':(pct>=70?'#854f0b':'#cc0000');
+  const color=pct>=90?'#333333':(pct>=70?'#444444':'#666666');
   return `<span style="color:${color}" title="${r.confirmadosAsistieron} de ${r.confirmados} confirmados asistieron">${pct}%</span>`;
 }
 
@@ -3283,7 +3338,7 @@ function renderFaltasAcumuladasTabla(){
       <td><b>${r.persona.nombre||''}</b></td>
       <td>${r.persona.seccion?'Sec. '+r.persona.seccion:'—'}</td>
       <td>${r.persona.padrino||'—'}</td>
-      <td style="color:#cc0000;font-weight:700">${r.total}</td>
+      <td style="color:#666666;font-weight:700">${r.total}</td>
       <td><button class="btn btn-secondary btn-xs" onclick="verDetalleFaltas(${i})">🔍 Ver detalle</button></td>
     </tr>`).join('');
 }
@@ -3642,15 +3697,15 @@ function renderContadoresPrelista(){
   const pads=[['Fernando Amezcua','Fernando'],['Martin Yáñez','Martín'],['Rene Espinoza','René']];
   let html=pads.map(([clave,corto])=>{
     const gente=personalCache.filter(p=>p.padrino===clave);
-    return tarjeta(gente.filter(conf).length,gente.length,`Confirmados · ${corto}`,'#2d6a4f');
+    return tarjeta(gente.filter(conf).length,gente.length,`Confirmados · ${corto}`,'#333333');
   }).join('');
   const noAsiste=personalCache.filter(p=>prelistaDe(p.id).estado==='NO_ASISTE').length;
   const pendientes=personalCache.filter(p=>prelistaDe(p.id).estado==='PENDIENTE').length;
   html+=tarjeta(personalCache.filter(conf).length,personalCache.length,'Confirmados · Total','var(--pan)');
-  html+=tarjeta(noAsiste,null,'No asistirán','#cc0000');
-  html+=tarjeta(pendientes,null,'Pendientes','#854f0b');
+  html+=tarjeta(noAsiste,null,'No asistirán','#666666');
+  html+=tarjeta(pendientes,null,'Pendientes','#444444');
   if(prelistaApoyos.length){
-    html+=tarjeta(prelistaApoyos.length,null,'Apoyos no registrados','#5b21b6');
+    html+=tarjeta(prelistaApoyos.length,null,'Apoyos no registrados','#333333');
     html+=tarjeta(personalCache.filter(conf).length+prelistaApoyos.length,null,'Confirmados + apoyos','var(--pan)');
   }
   document.getElementById('pl-contadores').innerHTML=html;
@@ -3962,14 +4017,14 @@ function exportarPrelistaPDF(){
 <style>
 @page{size:letter;margin:12mm}
 *{box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;color:#1a1a2e;font-size:11px;margin:0}
-h1{font-size:16px;margin:0 0 2px;color:#003399}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:#1a1a1a;font-size:11px;margin:0}
+h1{font-size:16px;margin:0 0 2px;color:#1a1a1a}
 .meta{font-size:11px;color:#444;margin-bottom:2px}
 .res{font-size:11px;margin:6px 0 10px;font-weight:700}
 table{width:100%;border-collapse:collapse}
 thead{display:table-header-group}
 th,td{border:1px solid #999;padding:5px 6px;text-align:left;vertical-align:middle}
-th{background:#e6eeff;font-size:10px;text-transform:uppercase}
+th{background:#ececec;font-size:10px;text-transform:uppercase}
 tr{page-break-inside:avoid}
 td.c{text-align:center}
 tr.grupo td{background:#f0f0f0;font-weight:800}
@@ -4812,15 +4867,15 @@ function filtrarNuevos(){
         <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
           <button class="btn btn-secondary btn-sm" onclick="editarNuevo('${r.id}')">✏️</button>
           <button class="btn btn-danger btn-sm" onclick="eliminarNuevo('${r.id}')">🗑</button>
-          ${canAprobar&&r.estado!=='aprobado'?`<button class="btn btn-primary btn-sm" style="background:#2d6a4f" onclick="aprobarNuevo('${r.id}')">\u2705 Aprobar</button>`:''}
-          ${currentUser==='Octavio'&&r.estado!=='aprobado'?`<button class="btn btn-sm" style="background:#D97706;color:#fff;font-size:11px" onclick="toggleEnviadoSistemas('${r.id}',${r.enviado_sistemas?true:false})">${r.enviado_sistemas?'↩ Quitar enviado':'📤 Enviar a sistemas'}</button>`:''}
+          ${canAprobar&&r.estado!=='aprobado'?`<button class="btn btn-primary btn-sm" style="background:#333333" onclick="aprobarNuevo('${r.id}')">\u2705 Aprobar</button>`:''}
+          ${currentUser==='Octavio'&&r.estado!=='aprobado'?`<button class="btn btn-sm" style="background:#444444;color:#fff;font-size:11px" onclick="toggleEnviadoSistemas('${r.id}',${r.enviado_sistemas?true:false})">${r.enviado_sistemas?'↩ Quitar enviado':'📤 Enviar a sistemas'}</button>`:''}
         </div>
       </div>
       ${amigos.length?`<div style="margin-top:6px">${amigos.map((a,i)=>`<div class="amigo-mini">
         <div class="amigo-mini-num">${i+1}</div>
         <div style="flex:1"><b>${a.nombre||'—'}</b>${a.celular?` · ${a.celular}`:''}</div>
       </div>`).join('')}</div>`:'<div style="font-size:12px;color:var(--muted)">Sin amigos registrados aún</div>'}
-      ${r.estado==='aprobado'?`<div style="font-size:11px;color:#065f46;margin-top:6px">✅ Aprobado por ${r.aprobado_por||'—'} · pasado a Red de Amigos</div>`:''}
+      ${r.estado==='aprobado'?`<div style="font-size:11px;color:#222222;margin-top:6px">✅ Aprobado por ${r.aprobado_por||'—'} · pasado a Red de Amigos</div>`:''}
     </div>`;
   }).join(''):'<div style="text-align:center;color:var(--muted);padding:2rem">Sin registros aún.</div>';
 }
@@ -4848,7 +4903,7 @@ function setTipo(t){
   document.getElementById('btn-tipo-reingreso').style.flex='1';
   document.getElementById('btn-tipo-nuevo').style.fontSize='13px';
   document.getElementById('btn-tipo-reingreso').style.fontSize='13px';
-  if(t==='reingreso') document.getElementById('btn-tipo-reingreso').style.background='#854f0b';
+  if(t==='reingreso') document.getElementById('btn-tipo-reingreso').style.background='#444444';
   else document.getElementById('btn-tipo-reingreso').style.background='';
 }
 
@@ -4868,7 +4923,7 @@ function renderAmigosTempList(){
     <div class="amigo-mini">
       <div class="amigo-mini-num">${i+1}</div>
       <div style="flex:1"><b>${a.nombre}</b>${a.celular?` · ${a.celular}`:''}</div>
-      <button onclick="quitarAmigoTemp(${i})" style="border:none;background:none;color:#cc0000;cursor:pointer;font-size:14px">✕</button>
+      <button onclick="quitarAmigoTemp(${i})" style="border:none;background:none;color:#666666;cursor:pointer;font-size:14px">✕</button>
     </div>`).join('');
 }
 
