@@ -7,19 +7,22 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --pan:#003399;--pan2:#1a4fc4;--red:#cc0000;
-  --bg:#f0f4ff;--white:#fff;--text:#1a1a2e;--muted:#6b7280;
-  --border:#d1d9f0;--shadow:0 2px 12px rgba(0,51,153,.08);
+  --pan:#1a1a1a;--pan2:#000000;--red:#666666;
+  --bg:#f0f0f0;--white:#fff;--text:#1a1a1a;--muted:#6b7280;
+  --border:#d9d9d9;--shadow:0 2px 12px rgba(0,0,0,.08);
   --radius:14px;--radius-sm:8px;
 }
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
 .hidden{display:none!important}
-.topbar{background:var(--pan);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,102,.2)}
-.topbar-logo{font-size:17px;font-weight:800;letter-spacing:.06em}
+#watermark{position:fixed;inset:0;z-index:5;pointer-events:none;background-repeat:repeat}
+.topbar{background:var(--pan);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.topbar-logo{font-size:17px;font-weight:800;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.topbar-logo-ico{width:24px;height:24px;min-width:24px;border-radius:7px;background:#111;display:flex;align-items:center;justify-content:center}
+.topbar-logo-ico svg{width:14px;height:14px}
 .exp-badges{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .exp-badge{display:block;width:100%;box-sizing:border-box;text-align:center;font-size:26px;font-weight:700;line-height:1.25;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:14px;padding:10px 12px}
 .exp-countdown{font-size:32px;font-weight:800}
-.exp-countdown.exp-warn{background:#fce8e8;border-color:#f5c2c2;color:var(--red)}
+.exp-countdown.exp-warn{background:#ececec;border-color:#cccccc;color:var(--red)}
 @media(max-width:380px){
   .exp-badge{font-size:20px}
   .exp-countdown{font-size:24px}
@@ -35,7 +38,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn{padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:.15s}
 .btn-primary{background:var(--pan);color:#fff}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-secondary{background:#f0f4ff;color:var(--pan);border:1px solid var(--border)}
+.btn-secondary{background:#f0f0f0;color:var(--pan);border:1px solid var(--border)}
 .btn-link{background:none;border:none;color:var(--pan);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;margin-bottom:8px}
 .w-full{width:100%}
 .error-msg{color:var(--red);font-size:12px;font-weight:700;margin-bottom:10px}
@@ -49,33 +52,33 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .persona-actividad{max-width:150px;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px}
 .persona-status{font-size:13px;width:16px;text-align:center;flex-shrink:0}
 .persona-prelista{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:4px;vertical-align:middle}
-.persona-prelista.CONFIRMADO{background:#eaf3de;color:#2d6a4f}
-.persona-prelista.NO_ASISTE{background:#fce8e8;color:#cc0000}
+.persona-prelista.CONFIRMADO{background:#ececec;color:#333333}
+.persona-prelista.NO_ASISTE{background:#ececec;color:#666666}
 /* ── Modo prelista (evento futuro) ── */
-.aviso-prelista{background:#ede9fe;border:2px solid #8b5cf6;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#4c1d95;line-height:1.5}
+.aviso-prelista{background:#ececec;border:2px solid #777777;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#222222;line-height:1.5}
+.aviso-amigoscuu{background:#f0f0f0;border:1px solid #cccccc;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600;color:#333;text-align:center}
+.persona-usuario{display:inline-block;font-size:10px;font-weight:700;color:#555;background:#ececec;border:1px solid #d9d9d9;border-radius:6px;padding:2px 7px;margin-left:6px;white-space:nowrap;vertical-align:middle}
 .pl-contadores{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.pl-cont{flex:1;min-width:90px;text-align:center;font-size:12px;padding:6px 4px;border-radius:8px;background:#f0f4ff;color:var(--muted)}
+.pl-cont{flex:1;min-width:90px;text-align:center;font-size:12px;padding:6px 4px;border-radius:8px;background:#f0f0f0;color:var(--muted)}
 .pl-cont b{font-size:16px}
-.pl-cont.CONFIRMADO b{color:#2d6a4f}.pl-cont.NO_ASISTE b{color:#cc0000}.pl-cont.PENDIENTE b{color:#854f0b}
+.pl-cont.CONFIRMADO b{color:#333333}.pl-cont.NO_ASISTE b{color:#666666}.pl-cont.PENDIENTE b{color:#444444}
 .pl-botones{display:flex;gap:4px;width:100%}
-.pl-btn{flex:1;padding:8px 4px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
+.pl-btn{flex:1;padding:8px 4px;border:1.5px solid #cccccc;border-radius:7px;font-size:12px;font-weight:700;background:#ececec;color:#555;cursor:pointer}
 .pl-btn:disabled{opacity:.5;cursor:not-allowed}
-.pl-btn.on-CONFIRMADO{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
-.pl-btn.on-NO_ASISTE{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
-.pl-btn.on-PENDIENTE{background:#fef3c7;border-color:#fac775;color:#854f0b}
-.pl-btn.pl-motivo.sel{background:#e6eeff;border-color:var(--pan);color:var(--pan)}
-.pl-motivo-txt{font-size:11px;color:#cc0000;font-weight:600;margin-top:2px}
+.pl-btn.on-CONFIRMADO,.pl-btn.on-NO_ASISTE,.pl-btn.on-PENDIENTE{background:#111;border-color:#111;color:#fff}
+.pl-btn.pl-motivo.sel{background:#ececec;border-color:var(--pan);color:var(--pan)}
+.pl-motivo-txt{font-size:11px;color:#666666;font-weight:600;margin-top:2px}
 .modal-motivo{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:700;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal-motivo-card{background:#fff;border-radius:var(--radius);padding:1.1rem;width:100%;max-width:380px}
-.persona-origen{font-size:10px;color:var(--pan);background:#e6eeff;border-radius:20px;padding:1px 7px;font-weight:700;flex-shrink:0}
+.persona-origen{font-size:10px;color:var(--pan);background:#ececec;border-radius:20px;padding:1px 7px;font-weight:700;flex-shrink:0}
 .estado-select{width:132px;flex-shrink:0;padding:6px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;background:#fff;color:var(--muted);cursor:pointer}
 .estado-select:disabled{opacity:.5;cursor:not-allowed}
-.estado-select.e-asistencia{background:#eaf3de;border-color:#a3d977;color:#2d6a4f}
-.estado-select.e-falta{background:#fce8e8;border-color:#f5c2c2;color:#cc0000}
-.estado-select.e-vacaciones{background:#e6eeff;border-color:#b3c6ff;color:#003399}
-.estado-select.e-incapacidad{background:#fef3c7;border-color:#fac775;color:#854f0b}
+.estado-select.e-asistencia{background:#ececec;border-color:#cccccc;color:#333333}
+.estado-select.e-falta{background:#ececec;border-color:#cccccc;color:#666666}
+.estado-select.e-vacaciones{background:#ececec;border-color:#cccccc;color:#1a1a1a}
+.estado-select.e-incapacidad{background:#e5e5e5;border-color:#cccccc;color:#444444}
 .vacio{font-size:12px;color:var(--muted);padding:8px 0}
-.mapa-preview{display:flex;align-items:center;gap:10px;padding:8px;background:#f8faff;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;cursor:pointer}
+.mapa-preview{display:flex;align-items:center;gap:10px;padding:8px;background:#f7f7f7;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;cursor:pointer}
 .mapa-preview-thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0}
 .mapa-preview-pdf{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff;border:1px solid var(--border);border-radius:6px;flex-shrink:0}
 .mapa-preview .btn{flex:1}
@@ -94,52 +97,52 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .buscar-otra-resultados{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);margin-top:4px;max-height:220px;overflow-y:auto;z-index:20}
 .buscar-otra-item{padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border)}
 .buscar-otra-item:last-child{border-bottom:none}
-.buscar-otra-item:hover{background:#f0f4ff}
+.buscar-otra-item:hover{background:#f0f0f0}
 .buscar-otra-item .bo-sec{font-size:11px;color:var(--muted)}
 .buscar-otra-vacio{padding:9px 12px;font-size:12px;color:var(--muted)}
-.aviso-apoyo{background:#fef3c7;border:2px solid #f5a623;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:14px;font-weight:700;color:#854f0b;text-align:center;box-shadow:0 2px 8px rgba(245,166,35,.25)}
-.ee-meta-cumplida{color:#2d6a4f;font-weight:800}
-.ee-meta-faltan{color:#cc0000;font-weight:800}
+.aviso-apoyo{background:#e5e5e5;border:2px solid #999999;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:14px;font-weight:700;color:#444444;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.ee-meta-cumplida{color:#333333;font-weight:800}
+.ee-meta-faltan{color:#666666;font-weight:800}
 .ee-total-row{font-size:13px;font-weight:700;margin-top:6px}
-.ee-aclaracion-ee{background:#fef3c7;border:2px solid #f5a623;border-radius:10px;color:#000;text-align:center;padding:10px 12px;margin-bottom:10px}
+.ee-aclaracion-ee{background:#e5e5e5;border:2px solid #999999;border-radius:10px;color:#000;text-align:center;padding:10px 12px;margin-bottom:10px}
 .ee-aclaracion-ee .linea1{font-weight:800;font-size:16px;display:block}
 .ee-aclaracion-ee .linea2{font-weight:600;font-size:12.5px;display:block;margin-top:6px}
-.ee-aviso-equipo{background:#fce8e8;border:2px solid var(--red);color:var(--red);font-weight:700;font-size:13px;border-radius:10px;padding:10px 12px;margin-top:8px}
-.apoyo-form{display:flex;gap:8px;flex-wrap:wrap;background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
+.ee-aviso-equipo{background:#ececec;border:2px solid var(--red);color:var(--red);font-weight:700;font-size:13px;border-radius:10px;padding:10px 12px;margin-top:8px}
+.apoyo-form{display:flex;gap:8px;flex-wrap:wrap;background:#f7f7f7;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
 .apoyo-form input{flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
 .apoyo-form select{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px}
 .apoyo-form-btns{display:flex;gap:8px;width:100%;justify-content:flex-end}
 .apoyos-lista{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.apoyo-chip{font-size:12px;background:#fef3c7;border:1px solid #fac775;border-radius:7px;padding:6px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.apoyo-tag{font-size:10px;font-weight:700;color:#854f0b;background:#fff;border:1px solid #fac775;border-radius:20px;padding:1px 7px}
+.apoyo-chip{font-size:12px;background:#e5e5e5;border:1px solid #cccccc;border-radius:7px;padding:6px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.apoyo-tag{font-size:10px;font-weight:700;color:#444444;background:#fff;border:1px solid #cccccc;border-radius:20px;padding:1px 7px}
 .foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-bottom:10px}
-.foto-thumb{aspect-ratio:1;background:#f0f4ff;border:1px solid var(--border);border-radius:8px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px}
+.foto-thumb{aspect-ratio:1;background:#f0f0f0;border:1px solid var(--border);border-radius:8px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px}
 .foto-thumb img{width:100%;height:100%;object-fit:cover}
 .foto-thumb.uploading{color:var(--muted)}
-.foto-thumb.error{color:var(--red);background:#fce8e8}
-.foto-check{position:absolute;bottom:2px;right:2px;background:#2d6a4f;color:#fff;font-size:11px;font-weight:800;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+.foto-thumb.error{color:var(--red);background:#ececec}
+.foto-check{position:absolute;bottom:2px;right:2px;background:#333333;color:#fff;font-size:11px;font-weight:800;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center}
 .foto-btns{display:flex;gap:8px}
 
-.foto-card{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;background:#f8faff}
-.foto-card-img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;display:block;margin-bottom:10px;background:#f0f4ff}
+.foto-card{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;background:#f7f7f7}
+.foto-card-img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;display:block;margin-bottom:10px;background:#f0f0f0}
 .foto-card-img-wrap{position:relative}
 .foto-card .fg{margin-bottom:10px}
 .foto-card .fg:last-of-type{margin-bottom:0}
 .foto-card .fg-ayuda{font-size:11px;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:normal;font-weight:500}
 .fg-gps{margin-bottom:10px}
 .gps-estado{font-size:12px;margin-top:6px;line-height:1.5}
-.gps-estado .gps-ok{color:#2d6a4f;font-weight:600}
+.gps-estado .gps-ok{color:#333333;font-weight:600}
 .gps-estado .gps-error{color:var(--red);font-weight:600}
 .gps-estado .gps-info{color:var(--muted);font-weight:600}
-.foto-card input.autocompletado{background:#eef2ff;border-color:var(--pan)}
+.foto-card input.autocompletado{background:#f0f0f0;border-color:var(--pan)}
 .tipo-opciones{display:flex;flex-direction:column;gap:8px;margin-top:2px}
 .tipo-opcion{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text)}
 .tipo-opcion input{width:16px;height:16px;flex-shrink:0}
 .foto-card-guardar-row{display:flex;align-items:center;gap:10px;margin-top:12px}
-.foto-card-guardado{font-size:11px;font-weight:700;color:#2d6a4f}
+.foto-card-guardado{font-size:11px;font-weight:700;color:#333333}
 .save-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:12px 16px;box-shadow:0 -2px 12px rgba(0,0,0,.08);z-index:50}
 .save-bar-inner{max-width:640px;margin:0 auto}
-#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,51,153,.3);max-width:calc(100vw - 32px);width:max-content;text-align:center}
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--pan);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:calc(100vw - 32px);width:max-content;text-align:center}
 #toast.show{opacity:1}
 @media(max-width:420px){
   .persona-actividad{max-width:110px}
@@ -148,8 +151,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </head>
 <body>
 
+<div id="watermark" aria-hidden="true"></div>
+
 <div class="topbar">
-  <div class="topbar-logo">🧹 GEMACUU</div>
+  <div class="topbar-logo"><span class="topbar-logo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/></svg></span> GEMACUU</div>
   <div class="exp-badges">
     <div class="exp-badge" id="exp-badge">⏳ Enlace temporal</div>
     <div class="exp-badge exp-countdown hidden" id="exp-countdown"></div>
@@ -711,12 +716,15 @@ async function cargarYRenderizar(){
 
 function renderSeccion(){
   const s=seccionActual;
+  aplicarMarcaAgua(`SECCIÓN ${s.num}${eventoInfo?.fecha?' · '+fechaCortaEvento(eventoInfo.fecha):''}`);
   document.getElementById('seccion-cont').innerHTML=`<div class="card">
     <div class="seccion-hdr">
       <div class="seccion-num">Sección ${s.num}</div>
       ${s.encargado?`<div class="seccion-lider">Líder: ${s.encargado}</div>`:''}
       <div class="seccion-evento">📅 ${eventosNombreActual()}</div>
     </div>
+
+    <div class="aviso-amigoscuu">Ayuda a cada quien a entrar a AmigosCUU. Su contraseña es su número de empleado.</div>
 
     ${mapasSeccion.length?`
     <div class="mapa-preview" onclick="abrirVisorMapas()">
@@ -865,8 +873,9 @@ function renderPersonaRow(p,esExterna){
   const marcado=estado.estado||'';
   const esAsistencia=marcado==='ASISTENCIA';
   const actividad=estado.actividad||ACTIVIDADES[0];
+  const usuarioTxt=p.usuario?escHtml(p.usuario):'sin usuario';
   return `<div class="persona-row">
-    <div class="persona-nombre">${p.nombre}${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}${etiquetaPrelista(p.id)}</div>
+    <div class="persona-nombre">${p.nombre}<span class="persona-usuario">${usuarioTxt}</span>${esExterna&&p.seccion?` <span class="persona-origen">Sec. ${p.seccion}</span>`:''}${etiquetaPrelista(p.id)}</div>
     <select class="persona-actividad ${esAsistencia?'':'hidden'}" onchange="cambiarActividad('${p.id}',this.value)">
       ${ACTIVIDADES.map(a=>`<option value="${a}" ${a===actividad?'selected':''}>${a}</option>`).join('')}
     </select>
@@ -889,6 +898,19 @@ function fechaLocalHoy(){
 
 function escHtml(s){
   return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Marca de agua de fondo — texto repetido en diagonal, gris muy tenue, detrás de toda
+// la pantalla (no bloquea clics: #watermark tiene pointer-events:none). Se arma como un
+// patrón SVG en mosaico porque el texto cambia según la sección/fecha del enlace.
+function aplicarMarcaAgua(texto){
+  const t=String(texto).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='320' height='200'>`+
+    `<text x='160' y='105' transform='rotate(-28 160 105)' text-anchor='middle' `+
+    `font-family='Segoe UI, sans-serif' font-size='15' font-weight='700' `+
+    `fill='rgba(0,0,0,.06)'>${t}</text></svg>`;
+  const el=document.getElementById('watermark');
+  if(el) el.style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
 function etiquetaPrelista(personalId){
@@ -1035,6 +1057,7 @@ async function entrarPrelista(num){
 
 function renderPrelistaSeccion(){
   const s=seccionActual;
+  aplicarMarcaAgua(`SECCIÓN ${s.num}${eventoInfo?.fecha?' · '+fechaCortaEvento(eventoInfo.fecha):''}`);
   document.getElementById('seccion-cont').innerHTML=`<div class="card">
     <div class="seccion-hdr">
       <div class="seccion-num">Sección ${s.num}</div>
@@ -1046,6 +1069,7 @@ function renderPrelistaSeccion(){
       Marca quién va a ir. Se guarda solo al tocar cada botón.<br>
       <span style="font-weight:600">El día del evento este mismo enlace sirve para tomar asistencia (su tiempo de uso empieza a contar ese día).</span>
     </div>
+    <div class="aviso-amigoscuu">Ayuda a cada quien a entrar a AmigosCUU. Su contraseña es su número de empleado.</div>
     <div id="pl-contadores" class="pl-contadores"></div>
     <div class="personas-lista" id="pl-lista">
       ${personalSeccion.length?personalSeccion.map(renderFilaPrelistaSeccion).join(''):'<div class="vacio">Sin personal activo registrado en esta sección.</div>'}
@@ -1080,8 +1104,9 @@ function renderFilaPrelistaSeccion(p){
   const pl=prelistaDePersona(p.id);
   const motivo=pl.estado==='NO_ASISTE'
     ?`<div class="pl-motivo-txt">${MOTIVO_PRELISTA_LABEL[pl.motivo]||''}${pl.motivo_detalle?' — '+escHtml(pl.motivo_detalle):''}</div>`:'';
+  const usuarioTxt=p.usuario?escHtml(p.usuario):'sin usuario';
   return `<div class="persona-row" id="pl-row-${p.id}">
-    <div class="persona-nombre">${escHtml(p.nombre)}${motivo}</div>
+    <div class="persona-nombre">${escHtml(p.nombre)}<span class="persona-usuario">${usuarioTxt}</span>${motivo}</div>
     <span class="persona-status" id="status-${p.id}" onclick="reintentarPrelistaSeccion('${p.id}')"></span>
     <div class="pl-botones">${PRELISTA_ESTADOS.map(e=>`<button type="button" class="pl-btn ${pl.estado===e?'on-'+e:''}" onclick="clickPrelistaSeccion('${p.id}','${e}')">${PRELISTA_ICON[e]} ${PRELISTA_LABEL[e]}</button>`).join('')}</div>
   </div>`;
@@ -1347,7 +1372,7 @@ async function handleFotos(input){
     // cuanto la foto se sube y se convierte en su propia tarjeta con el formulario de detalle.
     const thumb=document.createElement('div');
     thumb.className='foto-thumb uploading';
-    thumb.style.cssText='aspect-ratio:1;max-width:110px;background:#f0f4ff;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px';
+    thumb.style.cssText='aspect-ratio:1;max-width:110px;background:#f0f0f0;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px';
     thumb.textContent='⏳';
     grid.prepend(thumb);
     try{
