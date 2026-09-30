@@ -188,7 +188,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     </div>
     <div class="fg">
       <label>Número de empleado</label>
-      <input type="text" inputmode="numeric" pattern="[0-9]*" id="inp-empleado-gate" placeholder="ej. 12345" oninput="soloNumeros(this)">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" id="inp-empleado-gate" placeholder="ej. 12345" autocomplete="off" oninput="soloNumeros(this)">
     </div>
     <div id="acceso-error" class="error-msg hidden"></div>
     <button class="btn btn-primary w-full" id="btn-entrar-gate" onclick="confirmarAcceso()">Entrar →</button>
@@ -1001,10 +1001,10 @@ function escHtml(s){
 // patrón SVG en mosaico porque el texto cambia según la sección/fecha del enlace.
 function aplicarMarcaAgua(texto){
   const t=String(texto).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='320' height='200'>`+
-    `<text x='160' y='105' transform='rotate(-28 160 105)' text-anchor='middle' `+
-    `font-family='Segoe UI, sans-serif' font-size='15' font-weight='600' `+
-    `fill='rgba(0,0,0,.028)'>${t}</text></svg>`;
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='380' height='260'>`+
+    `<text x='190' y='135' transform='rotate(-28 190 135)' text-anchor='middle' `+
+    `font-family='Segoe UI, sans-serif' font-size='22' font-weight='700' `+
+    `fill='rgba(120,120,120,.18)'>${t}</text></svg>`;
   const el=document.getElementById('watermark');
   if(el) el.style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
