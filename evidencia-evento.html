@@ -8,12 +8,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0F1B33;
+    --ink:#1a1a1a;
     --paper:#EEF1F8;
     --card:#FFFFFF;
-    --brand:#1D3FA0;
-    --brand-deep:#132B72;
-    --gold:#C9922F;
+    --brand:#1E3A4C;
+    --brand-deep:#152A38;
+    --gold:#1E3A4C;
     --green:#1F8F5F;
     --green-bg:#E6F4ED;
     --amber:#C67C1E;
@@ -22,6 +22,8 @@
     --red-bg:#FBE9E9;
     --line:#E1E5F0;
     --muted:#616B87;
+    --vac:#1E3A4C;
+    --inc:#444444;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{
@@ -33,7 +35,10 @@
   }
   .hidden{display:none!important}
   .center-msg{text-align:center;padding:4rem 1.5rem;color:var(--muted);font-size:16px}
-  .center-msg .ico{font-size:48px;margin-bottom:12px}
+  .center-msg .ico{font-size:48px;margin-bottom:12px;display:flex;justify-content:center}
+  .center-msg .ico svg{width:44px;height:44px}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--brand);animation:spin 0.8s linear infinite;margin:0 auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
   .page{max-width:1100px;margin:0 auto;}
 
   /* Status strip */
@@ -94,7 +99,7 @@
   }
   .ee-hero-num .meta{font-size:19px;font-weight:500;color:#AEBBE0;}
   .ee-bar-track{background:rgba(255,255,255,0.16);border-radius:999px;height:10px;margin:14px 0 10px;overflow:hidden;}
-  .ee-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg, var(--gold), #E4B45D);}
+  .ee-bar-fill{height:100%;border-radius:999px;background:var(--brand);}
   .ee-hero-foot{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:#D7DEF3;}
 
   /* Body */
@@ -114,8 +119,8 @@
   .seg{height:100%;}
   .seg.asis{background:var(--green);}
   .seg.falta{background:var(--red);}
-  .seg.vac{background:var(--gold);}
-  .seg.inc{background:#8B5CF6;}
+  .seg.vac{background:var(--vac);}
+  .seg.inc{background:var(--inc);}
   .seg.sinreg{background:#D5DAE8;}
 
   .legend{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;}
@@ -123,8 +128,8 @@
   .dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
   .dot.asis{background:var(--green);}
   .dot.falta{background:var(--red);}
-  .dot.vac{background:var(--gold);}
-  .dot.inc{background:#8B5CF6;}
+  .dot.vac{background:var(--vac);}
+  .dot.inc{background:var(--inc);}
   .dot.sinreg{background:#D5DAE8;}
   .legend-item .val{margin-left:auto;color:var(--muted);font-weight:700;}
 
@@ -158,7 +163,7 @@
   /* Top 3 (solo eventos sin sistema de EE) */
   .top3-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}
   .top3-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;border:1px solid #EBD9BC;background:linear-gradient(135deg,#FBF6EC 0%,#fff 100%);}
-  .top3-medalla{font-size:30px;line-height:1;flex-shrink:0;}
+  .top3-medalla{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;line-height:1;flex-shrink:0;color:var(--brand);width:34px;text-align:center;}
   .top3-info{flex:1;min-width:0;}
   .top3-seccion{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;color:var(--brand);}
   .top3-lider{font-size:12px;font-weight:600;color:var(--ink);}
@@ -205,8 +210,8 @@
   .attend-tag{margin-left:auto;font-weight:800;font-size:12px;padding:2px 9px;border-radius:999px;white-space:nowrap;}
   .attend-tag.asis{color:var(--green);background:transparent;font-size:15px;padding:0;}
   .attend-tag.falta{color:var(--red);background:var(--red-bg);}
-  .attend-tag.vac{color:var(--brand);background:#E6ECFB;}
-  .attend-tag.inc{color:var(--amber);background:var(--amber-bg);}
+  .attend-tag.vac{color:var(--vac);background:#E9EDF0;}
+  .attend-tag.inc{color:var(--inc);background:#ececec;}
   .attend-tag.sin{color:var(--muted);background:#EEF0F6;}
 
   .btn-download-all{border:none;background:var(--brand);color:#fff;font-size:11.5px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;}
@@ -251,30 +256,63 @@
     width:max-content;text-align:center;
   }
   #toast.show{opacity:1;}
+
+  /* ── FORMATO "EVENTO MASIVO" ── */
+  .mhead{background:linear-gradient(160deg, var(--brand) 0%, var(--brand-deep) 100%);color:#fff;padding:22px 20px 26px;}
+  .mhead-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .mhead-brand{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;opacity:.9;}
+  .mhead-actualizado{font-size:11.5px;color:#C9D3EC;font-weight:600;}
+  .mhead-nombre{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;line-height:1.25;margin-bottom:6px;}
+  .mhead-meta{font-size:12.5px;color:#C4D0EF;font-weight:500;display:flex;flex-wrap:wrap;gap:4px 12px;}
+
+  .m-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .m-stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;}
+  .m-stat .num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--ink);line-height:1;}
+  .m-stat .lab{font-size:11.5px;font-weight:600;color:var(--muted);margin-top:6px;}
+  @media (min-width:640px){ .m-stats-grid{grid-template-columns:repeat(4,1fr);} }
+
+  .m-padrino-row{margin-bottom:14px;}
+  .m-padrino-row:last-child{margin-bottom:0;}
+  .m-padrino-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:13px;}
+  .m-padrino-nombre{font-weight:700;color:var(--ink);}
+  .m-padrino-frac{font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--muted);}
+  .m-padrino-bar-track{background:var(--paper);border-radius:999px;height:10px;overflow:hidden;}
+  .m-padrino-bar-fill{height:100%;border-radius:999px;background:var(--brand);}
+
+  .m-pill{font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;}
+  .m-pill.ok{background:var(--green-bg);color:var(--green);}
+  .m-pill.bajo{background:var(--red-bg);color:var(--red);}
+
+  .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;align-items:center;justify-content:center;padding:24px;}
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:8px;}
+  .lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .photo-thumb{cursor:pointer;}
+  .photo-thumb .photo-sec-tag{position:absolute;top:6px;left:6px;background:rgba(15,27,51,.72);color:#fff;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;}
 </style>
 </head>
 <body>
 
 <div id="loading" class="center-msg">
-  <div class="ico">⏳</div>
+  <div class="ico"><div class="spinner"></div></div>
   Cargando…
 </div>
 
 <div id="error-box" class="page hidden" style="padding:24px">
   <div class="panel center-msg">
-    <div class="ico">⚠️</div>
+    <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 22 20H2Z"/><path d="M12 9.5v5"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg></div>
     <div id="error-msg"></div>
   </div>
 </div>
 
 <div id="revocado-box" class="page hidden" style="padding:24px">
   <div class="panel center-msg">
-    <div class="ico">🔒</div>
+    <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg></div>
     <div>Esta evidencia ya no está disponible públicamente.</div>
   </div>
 </div>
 
-<div id="contenido" class="hidden">
+<div id="contenido-recorrido" class="hidden">
 <div class="page">
 
   <div class="status-strip">
@@ -285,7 +323,7 @@
   <div class="hero">
     <div class="hero-top">
       <div>
-        <div class="hero-brand">🧹 GEMACUU</div>
+        <div class="hero-brand"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/></svg> GEMACUU</div>
         <div class="hero-title" id="d-evento"></div>
         <div class="hero-date" id="d-fecha"></div>
       </div>
@@ -320,7 +358,7 @@
     </div>
 
     <div class="panel" id="card-top3" hidden>
-      <div class="panel-head"><h2>🏆 Top 3 secciones</h2><span class="sub">Encuestas/puertas</span></div>
+      <div class="panel-head"><h2>Top 3 secciones</h2><span class="sub">Encuestas/puertas</span></div>
       <div id="top3-cont"></div>
     </div>
 
@@ -340,13 +378,13 @@
     </div>
 
     <div class="panel" id="card-resumen-tipos" hidden>
-      <div class="panel-head"><h2>📋 Evidencia de campo</h2><span class="sub" id="resumen-tipos-sub">0 registros</span></div>
+      <div class="panel-head"><h2><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3" rx="1"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4"/></svg> Evidencia de campo</h2><span class="sub" id="resumen-tipos-sub">0 registros</span></div>
       <div class="lead-tiles" id="tipos-tiles-global" style="margin-bottom:14px;"></div>
       <div id="tabla-calles-global-cont"></div>
     </div>
 
     <div class="panel" id="card-faltaron" hidden>
-      <div class="panel-head"><h2>❌ Faltaron</h2><span class="sub" id="faltaron-count">0</span></div>
+      <div class="panel-head"><h2><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6 6 18"/></svg> Faltaron</h2><span class="sub" id="faltaron-count">0</span></div>
       <div id="faltaron-cont"></div>
     </div>
 
@@ -354,7 +392,7 @@
       <h2>Secciones</h2>
       <span class="sub">Toca cualquiera</span>
     </div>
-    <p class="helper-hint">👆 Toca "Ver detalles" en cualquier sección para ver su asistencia y sus fotos.</p>
+    <p class="helper-hint">Toca "Ver detalles" en cualquier sección para ver su asistencia y sus fotos.</p>
 
     <div class="sec-accordion" id="secciones-cont"></div>
 
@@ -364,9 +402,70 @@
 </div>
 </div>
 
+<div id="contenido-masivo" class="hidden">
+<div class="page">
+
+  <div class="mhead">
+    <div class="mhead-top">
+      <div class="mhead-brand"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/></svg> GEMACUU</div>
+      <div class="mhead-actualizado" id="m-actualizado">Actualizado --:--</div>
+    </div>
+    <div class="mhead-nombre" id="m-nombre"></div>
+    <div class="mhead-meta" id="m-meta"></div>
+  </div>
+
+  <div class="body">
+
+    <div class="m-stats-grid">
+      <div class="m-stat"><div class="num" id="m-asistieron">0</div><div class="lab">Asistieron</div></div>
+      <div class="m-stat"><div class="num" id="m-cumplimiento">—</div><div class="lab">% Cumplimiento vs. confirmados</div></div>
+      <div class="m-stat"><div class="num" id="m-convocados">0</div><div class="lab">Convocados</div></div>
+      <div class="m-stat"><div class="num" id="m-apoyos">0</div><div class="lab">Apoyos externos</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Avance por padrino</h2></div>
+      <div id="m-padrinos"></div>
+    </div>
+
+    <div class="section-label" style="margin-top:12px;">
+      <h2>Secciones</h2>
+      <span class="sub" id="m-secciones-sub"></span>
+    </div>
+    <p class="helper-hint">Toca cualquier sección para ver quién asistió/faltó y sus fotos.</p>
+    <div class="sec-accordion" id="m-secciones-cont"></div>
+
+    <div class="panel" id="m-galeria-panel" style="margin-top:14px" hidden>
+      <div class="panel-head"><h2>Fotos del evento</h2><span class="sub" id="m-galeria-sub"></span></div>
+      <div class="photo-grid" id="m-galeria-cont"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">Documento generado por GEMACUU</div>
+</div>
+</div>
+
+<div class="lightbox" id="m-lightbox" onclick="cerrarLightbox(event)">
+  <button class="lightbox-close" onclick="cerrarLightbox(event)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <img id="m-lightbox-img" src="" alt="Foto ampliada">
+</div>
+
 <div id="toast"></div>
 
 <script>
+// Íconos SVG de línea (currentColor) en lugar de emoji, mismo estilo que el resto de GEMACUU.
+const ICO_ESCOBA='<path d="M16 3 L9.5 13.5 M9.5 13.5 L4.5 20 M9.5 13.5 L7 21 M9.5 13.5 L10 21.5 M9.5 13.5 L13 20.5 M9.5 13.5 L15 18.5 M7.3 16.6 L12.6 16.6"/>';
+const ICO_ALERTA='<path d="M12 3 22 20H2Z"/><path d="M12 9.5v5"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/>';
+const ICO_CANDADO='<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>';
+const ICO_CLIP='<rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3" rx="1"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4"/>';
+const ICO_X='<path d="M6 6l12 12M18 6 6 18"/>';
+const ICO_LINK='<path d="M9 15 15 9"/><path d="M11 7l1.5-1.5a3.5 3.5 0 0 1 5 5L16 12"/><path d="M13 17l-1.5 1.5a3.5 3.5 0 0 1-5-5L8 12"/>';
+const ICO_BAJAR='<path d="M12 4v11M7 11l5 5 5-5"/><path d="M5 20h14"/>';
+function svgIco(pathInner,size=16){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px">${pathInner}</svg>`;
+}
+
 const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
 const SECCIONES=[
@@ -397,7 +496,6 @@ const SECCIONES=[
 const ESTADOS=['ASISTENCIA','FALTA','VACACIONES','INCAPACIDAD'];
 const ESTADO_LABEL={ASISTENCIA:'Asistencia',FALTA:'Falta',VACACIONES:'Vacaciones',INCAPACIDAD:'Incapacidad'};
 const TIPOS_EVIDENCIA=['Terreno','Negocio','Casa deshabitada','Otro'];
-const TIPO_ICONO={'Terreno':'🌳','Negocio':'🏪','Casa deshabitada':'🏚️','Otro':'📦'};
 
 let evento=null;
 let personalCache=[];
@@ -463,56 +561,63 @@ async function init(){
     if(!evento){ mostrarError('No se encontró el evento indicado en este enlace.'); return; }
     if(evento.evidencia_publica===false){ mostrarRevocado(); return; }
 
-    const [personal,asisEvento,faltasTodas,fotos,encuestas,eeCapturas]=await Promise.all([
-      sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion&order=nombre.asc'),
-      sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado,capturado_en_seccion`),
-      sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id'),
-      sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`),
-      sbGet('encuestas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion,total_encuestas,meta_ee`),
-      sbGet('ee_capturas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion_destino,cantidad_ee`)
-    ]);
-
-    personalCache=Array.isArray(personal)?personal:[];
-    personalCache
-      .filter(p=>p.es_lider_seccion===true && p.seccion)
-      .forEach(p=>{ if(!liderPorSeccion[p.seccion]) liderPorSeccion[p.seccion]=p.nombre; });
-    (Array.isArray(asisEvento)?asisEvento:[]).forEach(a=>{
-      asisMap[a.personal_id]=a.estado||null;
-      const persona=personalCache.find(p=>p.id===a.personal_id);
-      const seccionEfectiva=a.capturado_en_seccion||(persona&&persona.seccion);
-      if(!seccionEfectiva) return;
-      if(!estadoPorSeccion[seccionEfectiva]) estadoPorSeccion[seccionEfectiva]={};
-      estadoPorSeccion[seccionEfectiva][a.personal_id]=a.estado||null;
-    });
-    (Array.isArray(faltasTodas)?faltasTodas:[]).forEach(a=>{ faltasAcumuladas[a.personal_id]=(faltasAcumuladas[a.personal_id]||0)+1; });
-    (Array.isArray(fotos)?fotos:[]).forEach(f=>{
-      if(!fotosPorSeccion[f.seccion]) fotosPorSeccion[f.seccion]=[];
-      fotosPorSeccion[f.seccion].push(f);
-    });
-    (Array.isArray(encuestas)?encuestas:[]).forEach(e=>{
-      encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
-      if(typeof e.meta_ee==='number') metaEEPorSeccion[e.seccion]=e.meta_ee;
-      seccionesActivasEvento.add(e.seccion); // toda fila en encuestas_seccion = sección activa este evento
-    });
-    (Array.isArray(eeCapturas)?eeCapturas:[]).forEach(c=>{
-      eeCapturadoPorSeccion[c.seccion_destino]=(eeCapturadoPorSeccion[c.seccion_destino]||0)+(typeof c.cantidad_ee==='number'?c.cantidad_ee:0);
-    });
-
-    // evidencias_campo no tiene evento_id — se relaciona con las fotos de este evento por
-    // foto_url. Se consulta después de tener el listado de fotos de arriba.
-    const urlsFotos=(Array.isArray(fotos)?fotos:[]).map(f=>f.cloudinary_url);
-    if(urlsFotos.length){
-      const evidencias=await sbGet('evidencias_campo',`?foto_url=in.(${urlsFotos.map(u=>encodeURIComponent(u)).join(',')})`);
-      evidenciasCampoTodas=Array.isArray(evidencias)?evidencias:[];
-    }
+    // "tipo" es una columna nueva y opcional en eventos — sin valor (columna sin migrar
+    // todavía, o evento creado antes de que existiera) se trata como "recorrido", el
+    // formato de siempre.
+    if(evento.tipo==='masivo') await initMasivo(eventoId);
+    else await initRecorrido(eventoId);
   }catch(e){
     console.error(e);
     mostrarError('No se pudo cargar la evidencia de este evento. Intenta de nuevo más tarde.');
-    return;
+  }
+}
+
+async function initRecorrido(eventoId){
+  const [personal,asisEvento,faltasTodas,fotos,encuestas,eeCapturas]=await Promise.all([
+    sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion&order=nombre.asc'),
+    sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado,capturado_en_seccion`),
+    sbGet('asistencia_eventos','?estado=eq.FALTA&select=personal_id'),
+    sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`),
+    sbGet('encuestas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion,total_encuestas,meta_ee`),
+    sbGet('ee_capturas_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=seccion_destino,cantidad_ee`)
+  ]);
+
+  personalCache=Array.isArray(personal)?personal:[];
+  personalCache
+    .filter(p=>p.es_lider_seccion===true && p.seccion)
+    .forEach(p=>{ if(!liderPorSeccion[p.seccion]) liderPorSeccion[p.seccion]=p.nombre; });
+  (Array.isArray(asisEvento)?asisEvento:[]).forEach(a=>{
+    asisMap[a.personal_id]=a.estado||null;
+    const persona=personalCache.find(p=>p.id===a.personal_id);
+    const seccionEfectiva=a.capturado_en_seccion||(persona&&persona.seccion);
+    if(!seccionEfectiva) return;
+    if(!estadoPorSeccion[seccionEfectiva]) estadoPorSeccion[seccionEfectiva]={};
+    estadoPorSeccion[seccionEfectiva][a.personal_id]=a.estado||null;
+  });
+  (Array.isArray(faltasTodas)?faltasTodas:[]).forEach(a=>{ faltasAcumuladas[a.personal_id]=(faltasAcumuladas[a.personal_id]||0)+1; });
+  (Array.isArray(fotos)?fotos:[]).forEach(f=>{
+    if(!fotosPorSeccion[f.seccion]) fotosPorSeccion[f.seccion]=[];
+    fotosPorSeccion[f.seccion].push(f);
+  });
+  (Array.isArray(encuestas)?encuestas:[]).forEach(e=>{
+    encuestasPorSeccion[e.seccion]=(encuestasPorSeccion[e.seccion]||0)+(typeof e.total_encuestas==='number'?e.total_encuestas:0);
+    if(typeof e.meta_ee==='number') metaEEPorSeccion[e.seccion]=e.meta_ee;
+    seccionesActivasEvento.add(e.seccion); // toda fila en encuestas_seccion = sección activa este evento
+  });
+  (Array.isArray(eeCapturas)?eeCapturas:[]).forEach(c=>{
+    eeCapturadoPorSeccion[c.seccion_destino]=(eeCapturadoPorSeccion[c.seccion_destino]||0)+(typeof c.cantidad_ee==='number'?c.cantidad_ee:0);
+  });
+
+  // evidencias_campo no tiene evento_id — se relaciona con las fotos de este evento por
+  // foto_url. Se consulta después de tener el listado de fotos de arriba.
+  const urlsFotos=(Array.isArray(fotos)?fotos:[]).map(f=>f.cloudinary_url);
+  if(urlsFotos.length){
+    const evidencias=await sbGet('evidencias_campo',`?foto_url=in.(${urlsFotos.map(u=>encodeURIComponent(u)).join(',')})`);
+    evidenciasCampoTodas=Array.isArray(evidencias)?evidencias:[];
   }
 
   document.getElementById('loading').classList.add('hidden');
-  document.getElementById('contenido').classList.remove('hidden');
+  document.getElementById('contenido-recorrido').classList.remove('hidden');
   document.getElementById('d-evento').textContent=evento.nombre||'—';
   document.getElementById('d-fecha').textContent=evento.fecha||'—';
 
@@ -549,7 +654,7 @@ function renderResumenHoy(){
   document.getElementById('ee-hero-num').innerHTML=`${eeTotal}<span class="meta">/ ${metaTotal}</span>`;
   document.getElementById('ee-hero-bar').style.width=`${Math.min(pct,100)}%`;
   document.getElementById('ee-hero-pct').textContent=`${pct}% de la meta`;
-  document.getElementById('ee-hero-faltan').textContent=faltan>0?`Faltan ${faltan}`:'✅ Meta cumplida';
+  document.getElementById('ee-hero-faltan').textContent=faltan>0?`Faltan ${faltan}`:'Meta cumplida';
 }
 
 // "Personal de hoy": una sola barra segmentada (Asistencia/Falta/Vacaciones/Incapacidad +
@@ -590,7 +695,7 @@ function renderTop3(){
   if(Object.keys(metaEEPorSeccion).length>0){ card.hidden=true; return; }
   card.hidden=false;
   const cont=document.getElementById('top3-cont');
-  const medallas=['🥇','🥈','🥉'];
+  const medallas=['1°','2°','3°'];
   const ranking=SECCIONES
     .map(s=>({...s, total:encuestasPorSeccion[s.num]||0}))
     .filter(s=>s.total>0)
@@ -702,7 +807,7 @@ function resumenTiposCalles(filas){
 
 function tiposTilesHtml(porTipo){
   return TIPOS_EVIDENCIA.map(t=>`
-    <div class="tile"><div class="num">${porTipo[t]||0}</div><div class="lab">${TIPO_ICONO[t]} ${escapeHtml(t)}</div></div>`).join('');
+    <div class="tile"><div class="num">${porTipo[t]||0}</div><div class="lab">${escapeHtml(t)}</div></div>`).join('');
 }
 
 function tablaCallesHtml(calles){
@@ -748,7 +853,7 @@ function resumenTiposCallesSeccionHtml(num){
   return `
     <div class="detail-block">
       <div class="detail-block-head-row">
-        <div class="detail-block-head">📋 Evidencia de campo</div>
+        <div class="detail-block-head">${svgIco(ICO_CLIP,14)} Evidencia de campo</div>
         <span class="sub">${total} registro${total===1?'':'s'}</span>
       </div>
       <div class="lead-tiles" style="margin-bottom:14px;">${tiposTilesHtml(porTipo)}</div>
@@ -797,7 +902,7 @@ function renderSecciones(){
         <button class="detail-toggle-btn ${abierta?'expanded':''}" onclick="toggleSeccion('${s.num}')">
           ${abierta?'Ocultar detalles':'Ver detalles'} <span class="chev">${abierta?'︿':'⌄'}</span>
         </button>
-        <button class="btn-compartir" onclick="compartirSeccion('${s.num}')" title="Copiar link de solo esta sección">🔗 Compartir</button>
+        <button class="btn-compartir" onclick="compartirSeccion('${s.num}')" title="Copiar link de solo esta sección">${svgIco(ICO_LINK,14)} Compartir</button>
       </div>
       ${abierta?renderSeccionDetalle(s.num,nativos,mapaSeccion,fotos):''}
     </div>`;
@@ -834,12 +939,12 @@ function renderSeccionDetalle(num,nativos,mapaSeccion,fotos){
     ? `<div class="photo-grid">${fotos.map((f,i)=>`
         <div class="photo-thumb">
           <img src="${f.cloudinary_url}" loading="lazy" alt="Evidencia sección ${num} ${i+1}">
-          <a class="photo-dl" href="${urlDescarga(f.cloudinary_url)}" download title="Descargar esta foto">⬇</a>
+          <a class="photo-dl" href="${urlDescarga(f.cloudinary_url)}" download title="Descargar esta foto">${svgIco(ICO_BAJAR,13)}</a>
         </div>`).join('')}</div>`
     : '<div class="vacio">Sin evidencia fotográfica todavía</div>';
 
   const botonDescargarTodas=fotos.length
-    ? `<button class="btn-download-all" onclick="descargarTodasFotos('${num}',this)">⬇ Descargar todas</button>`
+    ? `<button class="btn-download-all" onclick="descargarTodasFotos('${num}',this)">${svgIco(ICO_BAJAR,13)} Descargar todas</button>`
     : '';
 
   // La asistencia se sigue guardando siempre en la base de datos — este bloque solo
@@ -917,6 +1022,191 @@ async function compartirSeccion(num){
     console.error('No se pudo copiar automáticamente',e);
     window.prompt('Copia el link manualmente:',url);
   }
+}
+
+// ══════════════════════════ FORMATO "EVENTO MASIVO" ══════════════════════════
+// Reporte simplificado para eventos masivos: sin encuestas, calles ni evidencia de
+// campo. "Convocados" = confirmados en la prelista de este evento (global y por
+// padrino); el avance por padrino compara asistieron vs. esos confirmados.
+let mPersonalCache=[];
+let mAsisMap={};
+let mEstadoPorSeccion={};
+let mFotosPorSeccion={};
+let mFotosTodas=[];
+let mConfirmadosIds=new Set();
+let mApoyosExternos=[];
+let mLiderPorSeccion={};
+const mSeccionesExpandidas=new Set();
+
+async function initMasivo(eventoId){
+  const [personal,asisEvento,confirmados,fotos,apoyos]=await Promise.all([
+    sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion,padrino&order=nombre.asc'),
+    sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado,capturado_en_seccion`),
+    sbGet('prelista',`?evento_id=eq.${encodeURIComponent(eventoId)}&estado=eq.CONFIRMADO&select=personal_id`),
+    sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`),
+    sbGet('apoyos_no_registrados',`?evento_id=eq.${encodeURIComponent(eventoId)}`)
+  ]);
+
+  mPersonalCache=Array.isArray(personal)?personal:[];
+  mPersonalCache
+    .filter(p=>p.es_lider_seccion===true && p.seccion)
+    .forEach(p=>{ if(!mLiderPorSeccion[p.seccion]) mLiderPorSeccion[p.seccion]=p.nombre; });
+  (Array.isArray(asisEvento)?asisEvento:[]).forEach(a=>{
+    mAsisMap[a.personal_id]=a.estado||null;
+    const persona=mPersonalCache.find(p=>p.id===a.personal_id);
+    const seccionEfectiva=a.capturado_en_seccion||(persona&&persona.seccion);
+    if(!seccionEfectiva) return;
+    if(!mEstadoPorSeccion[seccionEfectiva]) mEstadoPorSeccion[seccionEfectiva]={};
+    mEstadoPorSeccion[seccionEfectiva][a.personal_id]=a.estado||null;
+  });
+  (Array.isArray(confirmados)?confirmados:[]).forEach(c=>mConfirmadosIds.add(c.personal_id));
+  (Array.isArray(fotos)?fotos:[]).forEach(f=>{
+    if(!mFotosPorSeccion[f.seccion]) mFotosPorSeccion[f.seccion]=[];
+    mFotosPorSeccion[f.seccion].push(f);
+    mFotosTodas.push(f);
+  });
+  mApoyosExternos=Array.isArray(apoyos)?apoyos:[];
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('contenido-masivo').classList.remove('hidden');
+  document.getElementById('m-nombre').textContent=evento.nombre||'—';
+  const metaPartes=[evento.fecha,evento.lugar].filter(Boolean);
+  document.getElementById('m-meta').innerHTML=metaPartes.map(escapeHtml).join(' <span style="opacity:.5">·</span> ');
+
+  cargadoEn=Date.now();
+  actualizarHoraMasivo();
+  setInterval(actualizarHoraMasivo,60000);
+
+  renderMasivoStats();
+  renderMasivoPadrinos();
+  renderMasivoSecciones();
+  renderMasivoGaleria();
+}
+
+// "Actualizado HH:MM" — hora de reloj (no relativa), como pidió el formato masivo.
+function actualizarHoraMasivo(){
+  const d=new Date();
+  document.getElementById('m-actualizado').textContent=`Actualizado ${d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}`;
+}
+
+function renderMasivoStats(){
+  const asistieron=Object.values(mAsisMap).filter(v=>v==='ASISTENCIA').length;
+  const convocados=mConfirmadosIds.size;
+  const pct=convocados>0?Math.round((asistieron/convocados)*1000)/10:null;
+  document.getElementById('m-asistieron').textContent=asistieron;
+  document.getElementById('m-cumplimiento').textContent=pct===null?'—':`${pct}%`;
+  document.getElementById('m-convocados').textContent=convocados;
+  document.getElementById('m-apoyos').textContent=mApoyosExternos.length;
+}
+
+// Compara nombres de padrino sin distinguir mayúsculas/acentos/espacios de sobra —
+// "Martin Yáñez" vs "Martín Yáñez", "Rene" vs "René", etc. Con comparación exacta
+// (===), cualquier variante así deja a ese padrino en 0 y sus confirmados terminan
+// contados en otro lado (ver bug reportado: todo caía en "Rene Espinoza").
+function normalizarPadrino(s){
+  return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
+function renderMasivoPadrinos(){
+  const pads=[['Fernando Amezcua','Fernando'],['Martin Yáñez','Martín'],['Rene Espinoza','René']];
+  document.getElementById('m-padrinos').innerHTML=pads.map(([clave,corto])=>{
+    const claveNorm=normalizarPadrino(clave);
+    const gente=mPersonalCache.filter(p=>normalizarPadrino(p.padrino)===claveNorm);
+    const convocadosP=gente.filter(p=>mConfirmadosIds.has(p.id)).length;
+    const asistieronP=gente.filter(p=>mAsisMap[p.id]==='ASISTENCIA').length;
+    const pct=convocadosP>0?Math.min(100,Math.round((asistieronP/convocadosP)*100)):0;
+    return `<div class="m-padrino-row">
+      <div class="m-padrino-top">
+        <span class="m-padrino-nombre">${corto}</span>
+        <span class="m-padrino-frac">${asistieronP} / ${convocadosP}</span>
+      </div>
+      <div class="m-padrino-bar-track"><div class="m-padrino-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// A diferencia del recorrido (que solo lista secciones con actividad), aquí se listan
+// TODAS las secciones del catálogo: en un evento masivo, una sección en 0 es información
+// relevante (su gente no llegó), no algo que ocultar.
+function renderMasivoSecciones(){
+  const filas=SECCIONES.map(s=>{
+    const nativos=mPersonalCache.filter(p=>p.seccion===s.num);
+    const mapaSeccion=mEstadoPorSeccion[s.num]||{};
+    const asistieron=Object.values(mapaSeccion).filter(e=>e==='ASISTENCIA').length;
+    const fotos=mFotosPorSeccion[s.num]||[];
+    return {s,nativos,mapaSeccion,asistieron,total:nativos.length,fotos};
+  });
+  document.getElementById('m-secciones-sub').textContent=`${filas.length} secciones`;
+  document.getElementById('m-secciones-cont').innerHTML=filas.map(({s,nativos,mapaSeccion,asistieron,total,fotos})=>{
+    const abierta=mSeccionesExpandidas.has(s.num);
+    const pct=total>0?(asistieron/total*100):0;
+    const nivel=pct>=80?'ok':'bajo';
+    return `<div class="detail-card ${abierta?'':'collapsed'}">
+      <div class="detail-head">
+        <div>
+          <div class="detail-sec">Sección ${s.num}</div>
+          <div class="detail-lider">${escapeHtml(mLiderPorSeccion[s.num]||'— sin líder activo —')}</div>
+          <div class="detail-padrino">${fotos.length} foto${fotos.length===1?'':'s'}</div>
+        </div>
+        <span class="m-pill ${nivel}">${asistieron} / ${total}</span>
+      </div>
+      <div class="detail-toggle-row">
+        <button class="detail-toggle-btn ${abierta?'expanded':''}" onclick="toggleSeccionMasivo('${s.num}')">
+          ${abierta?'Ocultar detalles':'Ver detalles'} <span class="chev">${abierta?'︿':'⌄'}</span>
+        </button>
+      </div>
+      ${abierta?renderMasivoSeccionDetalle(nativos,mapaSeccion,fotos):''}
+    </div>`;
+  }).join('');
+}
+
+function renderMasivoSeccionDetalle(nativos,mapaSeccion,fotos){
+  const idsConFila=new Set(Object.keys(mapaSeccion));
+  const filas=nativos.map(p=>({
+    nombre:p.nombre||'',
+    estado:idsConFila.has(String(p.id))?mapaSeccion[p.id]:null
+  }));
+  const asisHtml=filas.length
+    ? `<div class="attend-list">${filas.map(f=>`<div class="attend-chip"><span>${escapeHtml(f.nombre)}</span>${etiquetaEstado(f.estado)}</div>`).join('')}</div>`
+    : '<div class="vacio">Sin personal activo registrado en esta sección.</div>';
+  const fotosHtml=fotos.length
+    ? `<div class="photo-grid">${fotos.map((f,i)=>`
+        <div class="photo-thumb" onclick="abrirLightbox('${f.cloudinary_url}')">
+          <img src="${f.cloudinary_url}" loading="lazy" alt="Foto sección ${i+1}">
+        </div>`).join('')}</div>`
+    : '<div class="vacio">Sin fotos todavía.</div>';
+  const bloques=[];
+  if(evento.ocultar_asistencia!==true){
+    bloques.push(`<div class="detail-block"><div class="detail-block-head">Asistencia</div>${asisHtml}</div>`);
+  }
+  bloques.push(`<div class="detail-block"><div class="detail-block-head">Fotos (${fotos.length})</div>${fotosHtml}</div>`);
+  return `<div style="margin-top:16px">${bloques.join('')}</div>`;
+}
+
+function toggleSeccionMasivo(num){
+  if(mSeccionesExpandidas.has(num)) mSeccionesExpandidas.delete(num);
+  else mSeccionesExpandidas.add(num);
+  renderMasivoSecciones();
+}
+
+function renderMasivoGaleria(){
+  const panel=document.getElementById('m-galeria-panel');
+  if(!mFotosTodas.length){ panel.hidden=true; return; }
+  panel.hidden=false;
+  document.getElementById('m-galeria-sub').textContent=`${mFotosTodas.length} foto${mFotosTodas.length===1?'':'s'}`;
+  document.getElementById('m-galeria-cont').innerHTML=mFotosTodas.map((f,i)=>`
+    <div class="photo-thumb" onclick="abrirLightbox('${f.cloudinary_url}')">
+      <img src="${f.cloudinary_url}" loading="lazy" alt="Foto del evento ${i+1}">
+      <span class="photo-sec-tag">Sec. ${escapeHtml(f.seccion||'—')}</span>
+    </div>`).join('');
+}
+
+function abrirLightbox(url){
+  document.getElementById('m-lightbox-img').src=url;
+  document.getElementById('m-lightbox').classList.add('show');
+}
+function cerrarLightbox(event){
+  event.stopPropagation();
+  document.getElementById('m-lightbox').classList.remove('show');
 }
 
 init();
