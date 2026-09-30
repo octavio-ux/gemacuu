@@ -271,17 +271,24 @@
   .m-stat .lab{font-size:11.5px;font-weight:600;color:var(--muted);margin-top:6px;}
   @media (min-width:640px){ .m-stats-grid{grid-template-columns:repeat(4,1fr);} }
 
+  .m-total-asistentes{background:var(--brand);color:#fff;border-radius:16px;padding:20px 16px;text-align:center;margin-bottom:14px;}
+  .m-total-asistentes .num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:40px;line-height:1;}
+  .m-total-asistentes .lab{font-size:12.5px;font-weight:600;color:#C9D3EC;margin-top:6px;}
+
   .m-padrino-row{margin-bottom:14px;}
   .m-padrino-row:last-child{margin-bottom:0;}
-  .m-padrino-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:13px;}
+  .m-padrino-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:13px;gap:8px;}
   .m-padrino-nombre{font-weight:700;color:var(--ink);}
+  .m-padrino-frac-wrap{display:flex;align-items:baseline;gap:8px;}
   .m-padrino-frac{font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--muted);}
+  .m-apoyos-tag{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;}
   .m-padrino-bar-track{background:var(--paper);border-radius:999px;height:10px;overflow:hidden;}
   .m-padrino-bar-fill{height:100%;border-radius:999px;background:var(--brand);}
 
   .m-pill{font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;}
   .m-pill.ok{background:var(--green-bg);color:var(--green);}
   .m-pill.bajo{background:var(--red-bg);color:var(--red);}
+  .m-sec-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
 
   .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;align-items:center;justify-content:center;padding:24px;}
   .lightbox.show{display:flex;}
@@ -417,10 +424,15 @@
   <div class="body">
 
     <div class="m-stats-grid">
-      <div class="m-stat"><div class="num" id="m-asistieron">0</div><div class="lab">Asistieron</div></div>
-      <div class="m-stat"><div class="num" id="m-cumplimiento">—</div><div class="lab">% Cumplimiento vs. confirmados</div></div>
-      <div class="m-stat"><div class="num" id="m-convocados">0</div><div class="lab">Convocados</div></div>
-      <div class="m-stat"><div class="num" id="m-apoyos">0</div><div class="lab">Apoyos externos</div></div>
+      <div class="m-stat"><div class="num" id="m-asistieron">0</div><div class="lab">Asistieron de la red</div></div>
+      <div class="m-stat"><div class="num" id="m-pct-asistencia">—</div><div class="lab">% de asistencia</div></div>
+      <div class="m-stat"><div class="num" id="m-red-gema">0</div><div class="lab">Red GEMA</div></div>
+      <div class="m-stat"><div class="num" id="m-apoyos">0</div><div class="lab">Apoyos / invitados</div></div>
+    </div>
+
+    <div class="m-total-asistentes">
+      <div class="num" id="m-total-asistentes">0</div>
+      <div class="lab">Total de asistentes (red + apoyos)</div>
     </div>
 
     <div class="panel">
@@ -1026,23 +1038,22 @@ async function compartirSeccion(num){
 
 // ══════════════════════════ FORMATO "EVENTO MASIVO" ══════════════════════════
 // Reporte simplificado para eventos masivos: sin encuestas, calles ni evidencia de
-// campo. "Convocados" = confirmados en la prelista de este evento (global y por
-// padrino); el avance por padrino compara asistieron vs. esos confirmados.
+// campo. Base de conteo: "Red GEMA" = todo el personal activo (tabla personal), por
+// padrino; "Apoyos/invitados" = gente que un líder anotó con "+ Agregar apoyo"
+// (apoyos_no_registrados), que no pertenece a la red pero sí cuenta como asistente.
 let mPersonalCache=[];
 let mAsisMap={};
 let mEstadoPorSeccion={};
 let mFotosPorSeccion={};
 let mFotosTodas=[];
-let mConfirmadosIds=new Set();
 let mApoyosExternos=[];
 let mLiderPorSeccion={};
 const mSeccionesExpandidas=new Set();
 
 async function initMasivo(eventoId){
-  const [personal,asisEvento,confirmados,fotos,apoyos]=await Promise.all([
+  const [personal,asisEvento,fotos,apoyos]=await Promise.all([
     sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion,padrino&order=nombre.asc'),
     sbGet('asistencia_eventos',`?evento_id=eq.${encodeURIComponent(eventoId)}&select=personal_id,estado,capturado_en_seccion`),
-    sbGet('prelista',`?evento_id=eq.${encodeURIComponent(eventoId)}&estado=eq.CONFIRMADO&select=personal_id`),
     sbGet('fotos_actividad_seccion',`?evento_id=eq.${encodeURIComponent(eventoId)}&order=creado_en.asc`),
     sbGet('apoyos_no_registrados',`?evento_id=eq.${encodeURIComponent(eventoId)}`)
   ]);
@@ -1059,7 +1070,6 @@ async function initMasivo(eventoId){
     if(!mEstadoPorSeccion[seccionEfectiva]) mEstadoPorSeccion[seccionEfectiva]={};
     mEstadoPorSeccion[seccionEfectiva][a.personal_id]=a.estado||null;
   });
-  (Array.isArray(confirmados)?confirmados:[]).forEach(c=>mConfirmadosIds.add(c.personal_id));
   (Array.isArray(fotos)?fotos:[]).forEach(f=>{
     if(!mFotosPorSeccion[f.seccion]) mFotosPorSeccion[f.seccion]=[];
     mFotosPorSeccion[f.seccion].push(f);
@@ -1091,12 +1101,14 @@ function actualizarHoraMasivo(){
 
 function renderMasivoStats(){
   const asistieron=Object.values(mAsisMap).filter(v=>v==='ASISTENCIA').length;
-  const convocados=mConfirmadosIds.size;
-  const pct=convocados>0?Math.round((asistieron/convocados)*1000)/10:null;
+  const redGema=mPersonalCache.length;
+  const pct=redGema>0?Math.round((asistieron/redGema)*1000)/10:null;
+  const apoyos=mApoyosExternos.length;
   document.getElementById('m-asistieron').textContent=asistieron;
-  document.getElementById('m-cumplimiento').textContent=pct===null?'—':`${pct}%`;
-  document.getElementById('m-convocados').textContent=convocados;
-  document.getElementById('m-apoyos').textContent=mApoyosExternos.length;
+  document.getElementById('m-pct-asistencia').textContent=pct===null?'—':`${pct}%`;
+  document.getElementById('m-red-gema').textContent=redGema;
+  document.getElementById('m-apoyos').textContent=apoyos;
+  document.getElementById('m-total-asistentes').textContent=asistieron+apoyos;
 }
 
 // Compara nombres de padrino sin distinguir mayúsculas/acentos/espacios de sobra —
@@ -1106,18 +1118,29 @@ function renderMasivoStats(){
 function normalizarPadrino(s){
   return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 }
+// Un apoyo/invitado no tiene padrino propio (no está en la red) — se le asigna el
+// padrino dueño de la sección donde se anotó, igual que ya hace index.html
+// (padrinoDeSeccion) con la prelista.
+function padrinoDeSeccionMasivo(num){
+  const s=SECCIONES.find(s=>s.num===String(num));
+  return s?s.padrino:'';
+}
 function renderMasivoPadrinos(){
   const pads=[['Fernando Amezcua','Fernando'],['Martin Yáñez','Martín'],['Rene Espinoza','René']];
   document.getElementById('m-padrinos').innerHTML=pads.map(([clave,corto])=>{
     const claveNorm=normalizarPadrino(clave);
     const gente=mPersonalCache.filter(p=>normalizarPadrino(p.padrino)===claveNorm);
-    const convocadosP=gente.filter(p=>mConfirmadosIds.has(p.id)).length;
+    const totalP=gente.length;
     const asistieronP=gente.filter(p=>mAsisMap[p.id]==='ASISTENCIA').length;
-    const pct=convocadosP>0?Math.min(100,Math.round((asistieronP/convocadosP)*100)):0;
+    const apoyosP=mApoyosExternos.filter(a=>normalizarPadrino(padrinoDeSeccionMasivo(a.seccion))===claveNorm).length;
+    const pct=totalP>0?Math.min(100,Math.round((asistieronP/totalP)*100)):0;
     return `<div class="m-padrino-row">
       <div class="m-padrino-top">
         <span class="m-padrino-nombre">${corto}</span>
-        <span class="m-padrino-frac">${asistieronP} / ${convocadosP}</span>
+        <div class="m-padrino-frac-wrap">
+          <span class="m-padrino-frac">${asistieronP} / ${totalP}</span>
+          ${apoyosP?`<span class="m-apoyos-tag">+${apoyosP} apoyo${apoyosP===1?'':'s'}</span>`:''}
+        </div>
       </div>
       <div class="m-padrino-bar-track"><div class="m-padrino-bar-fill" style="width:${pct}%"></div></div>
     </div>`;
@@ -1133,10 +1156,11 @@ function renderMasivoSecciones(){
     const mapaSeccion=mEstadoPorSeccion[s.num]||{};
     const asistieron=Object.values(mapaSeccion).filter(e=>e==='ASISTENCIA').length;
     const fotos=mFotosPorSeccion[s.num]||[];
-    return {s,nativos,mapaSeccion,asistieron,total:nativos.length,fotos};
+    const apoyos=mApoyosExternos.filter(a=>String(a.seccion)===s.num);
+    return {s,nativos,mapaSeccion,asistieron,total:nativos.length,fotos,apoyos};
   });
   document.getElementById('m-secciones-sub').textContent=`${filas.length} secciones`;
-  document.getElementById('m-secciones-cont').innerHTML=filas.map(({s,nativos,mapaSeccion,asistieron,total,fotos})=>{
+  document.getElementById('m-secciones-cont').innerHTML=filas.map(({s,nativos,mapaSeccion,asistieron,total,fotos,apoyos})=>{
     const abierta=mSeccionesExpandidas.has(s.num);
     const pct=total>0?(asistieron/total*100):0;
     const nivel=pct>=80?'ok':'bajo';
@@ -1147,19 +1171,22 @@ function renderMasivoSecciones(){
           <div class="detail-lider">${escapeHtml(mLiderPorSeccion[s.num]||'— sin líder activo —')}</div>
           <div class="detail-padrino">${fotos.length} foto${fotos.length===1?'':'s'}</div>
         </div>
-        <span class="m-pill ${nivel}">${asistieron} / ${total}</span>
+        <div class="m-sec-pills">
+          <span class="m-pill ${nivel}">${asistieron} / ${total}</span>
+          ${apoyos.length?`<span class="m-apoyos-tag">+${apoyos.length} apoyo${apoyos.length===1?'':'s'}</span>`:''}
+        </div>
       </div>
       <div class="detail-toggle-row">
         <button class="detail-toggle-btn ${abierta?'expanded':''}" onclick="toggleSeccionMasivo('${s.num}')">
           ${abierta?'Ocultar detalles':'Ver detalles'} <span class="chev">${abierta?'︿':'⌄'}</span>
         </button>
       </div>
-      ${abierta?renderMasivoSeccionDetalle(nativos,mapaSeccion,fotos):''}
+      ${abierta?renderMasivoSeccionDetalle(nativos,mapaSeccion,fotos,apoyos):''}
     </div>`;
   }).join('');
 }
 
-function renderMasivoSeccionDetalle(nativos,mapaSeccion,fotos){
+function renderMasivoSeccionDetalle(nativos,mapaSeccion,fotos,apoyos){
   const idsConFila=new Set(Object.keys(mapaSeccion));
   const filas=nativos.map(p=>({
     nombre:p.nombre||'',
@@ -1168,6 +1195,9 @@ function renderMasivoSeccionDetalle(nativos,mapaSeccion,fotos){
   const asisHtml=filas.length
     ? `<div class="attend-list">${filas.map(f=>`<div class="attend-chip"><span>${escapeHtml(f.nombre)}</span>${etiquetaEstado(f.estado)}</div>`).join('')}</div>`
     : '<div class="vacio">Sin personal activo registrado en esta sección.</div>';
+  const apoyosHtml=apoyos.length
+    ? `<div class="attend-list">${apoyos.map(a=>`<div class="attend-chip"><span>${escapeHtml(a.nombre||'(sin nombre)')}</span><span class="otra">agregó: ${escapeHtml(a.registrado_por||'—')}</span></div>`).join('')}</div>`
+    : '<div class="vacio">Sin apoyos/invitados registrados en esta sección.</div>';
   const fotosHtml=fotos.length
     ? `<div class="photo-grid">${fotos.map((f,i)=>`
         <div class="photo-thumb" onclick="abrirLightbox('${f.cloudinary_url}')">
@@ -1176,8 +1206,9 @@ function renderMasivoSeccionDetalle(nativos,mapaSeccion,fotos){
     : '<div class="vacio">Sin fotos todavía.</div>';
   const bloques=[];
   if(evento.ocultar_asistencia!==true){
-    bloques.push(`<div class="detail-block"><div class="detail-block-head">Asistencia</div>${asisHtml}</div>`);
+    bloques.push(`<div class="detail-block"><div class="detail-block-head">Red GEMA</div>${asisHtml}</div>`);
   }
+  bloques.push(`<div class="detail-block"><div class="detail-block-head">Apoyos / invitados (${apoyos.length})</div>${apoyosHtml}</div>`);
   bloques.push(`<div class="detail-block"><div class="detail-block-head">Fotos (${fotos.length})</div>${fotosHtml}</div>`);
   return `<div style="margin-top:16px">${bloques.join('')}</div>`;
 }
