@@ -188,7 +188,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     </div>
     <div class="fg">
       <label>Número de empleado</label>
-      <input type="text" inputmode="numeric" pattern="[0-9]*" id="inp-empleado-gate" placeholder="ej. 12345" oninput="soloNumeros(this)">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" id="inp-empleado-gate" placeholder="ej. 12345" autocomplete="off" oninput="soloNumeros(this)">
     </div>
     <div id="acceso-error" class="error-msg hidden"></div>
     <button class="btn btn-primary w-full" id="btn-entrar-gate" onclick="confirmarAcceso()">Entrar →</button>
