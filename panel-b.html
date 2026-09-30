@@ -7,8 +7,8 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --pan:#1a1a1a;--pan2:#000000;--pan3:#999999;--pan-light:#ececec;
-  --red:#666666;--red2:#000000;
+  --pan:#1E3A4C;--pan2:#152A38;--pan3:#999999;--pan-light:#ececec;
+  --red:#666666;--red2:#152A38;
   --bg:#f0f0f0;--white:#fff;
   --text:#1a1a1a;--muted:#6b7280;
   --border:#d9d9d9;--shadow:0 2px 12px rgba(0,0,0,.08);
@@ -17,7 +17,7 @@
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* ── LOGIN ── */
-#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#111111 0%,#1a1a1a 60%,#666666 100%)}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#1E3A4C 0%,#1E3A4C 60%,#666666 100%)}
 .lcard{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .lhead{text-align:center;margin-bottom:1.75rem}
 .llogo{width:64px;height:64px;background:var(--pan);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
@@ -41,7 +41,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .tbtn:hover{background:rgba(255,255,255,.25)}
 
 /* ── RESUMEN BAR ── */
-.rbar{background:#111111;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
+.rbar{background:#1E3A4C;padding:8px 1.5rem;display:flex;gap:0;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.08)}
 .rblock{padding:6px 20px;border-right:1px solid rgba(255,255,255,.12);flex-shrink:0}
 .rblock:last-child{border-right:none}
 .rnum{font-size:18px;font-weight:800;color:#fff;line-height:1}
@@ -57,10 +57,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   border:none;border-radius:9px;background:none;cursor:pointer;
   transition:background .15s,color .15s;white-space:nowrap;font-family:inherit;
 }
-.ntab .ntab-ico{font-size:15px;filter:grayscale(100%) opacity(.75);transition:filter .15s}
+.ntab .ntab-ico{display:inline-flex;opacity:.8}
+.ntab .ntab-ico svg{width:15px;height:15px}
 .ntab:hover{background:var(--bg)}
 .ntab.on{color:var(--c);background:var(--c-bg)}
-.ntab.on .ntab-ico{filter:grayscale(100%)}
+.ntab.on .ntab-ico{opacity:1}
 
 /* ── PANELS ── */
 .panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
@@ -85,7 +86,7 @@ tr:hover td{background:#f7f7f7}
 
 /* ── BADGES ── */
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
-.badge-pan{background:#ececec;color:#1a1a1a}
+.badge-pan{background:#ececec;color:#1E3A4C}
 .badge-red{background:#ececec;color:#666666}
 .badge-gray{background:#f0f0f0;color:#555}
 .badge-green{background:#ececec;color:#333333}
@@ -126,7 +127,7 @@ tr:hover td{background:#f7f7f7}
 .org-branches{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;width:100%}
 .org-branch{display:flex;flex-direction:column;align-items:center}
 .org-pad{border-radius:10px;padding:12px 16px;text-align:center;font-weight:700;font-size:14px;box-shadow:var(--shadow);width:100%}
-.org-o60{background:#1a1a1a;color:#fff}
+.org-o60{background:#1E3A4C;color:#fff}
 .org-o30{background:#333333;color:#fff}
 .org-pad-sub{font-size:11px;opacity:.75;font-weight:400;margin-top:3px}
 
@@ -170,7 +171,7 @@ tr:hover td{background:#f7f7f7}
 .estado-select:disabled{opacity:.5;cursor:not-allowed}
 .estado-select.e-asistencia{background:#ececec;border-color:#cccccc;color:#333333}
 .estado-select.e-falta{background:#ececec;border-color:#cccccc;color:#666666}
-.estado-select.e-vacaciones{background:#ececec;border-color:#cccccc;color:#1a1a1a}
+.estado-select.e-vacaciones{background:#ececec;border-color:#cccccc;color:#1E3A4C}
 .estado-select.e-incapacidad{background:#e5e5e5;border-color:#cccccc;color:#444444}
 
 /* ── MOBILE ── */
@@ -237,14 +238,14 @@ tr:hover td{background:#f7f7f7}
 
   <!-- NAV -->
   <div class="nav" id="nav-bar">
-    <button class="ntab on" style="--c:#1a1a1a;--c-bg:#ececec" onclick="goTab('operativa',this)"><span class="ntab-ico">👥</span>Base Operativa</button>
-    <button class="ntab" style="--c:#1a1a1a;--c-bg:#ececec" onclick="goTab('organigrama',this)"><span class="ntab-ico">🏛</span>Organigrama</button>
-    <button class="ntab" style="--c:#1a1a1a;--c-bg:#ececec" onclick="goTab('secciones',this)"><span class="ntab-ico">🗳</span>Secciones</button>
-    <button class="ntab" style="--c:#1a1a1a;--c-bg:#ececec" onclick="goTab('eventos',this)"><span class="ntab-ico">📅</span>Eventos</button>
-    <button class="ntab" id="tab-mapas" style="--c:#1a1a1a;--c-bg:#ececec;display:none" onclick="goTab('mapas',this)"><span class="ntab-ico">📍</span>Mapas</button>
-    <button class="ntab" style="--c:#262626;--c-bg:#e5e5e5" onclick="goTab('faltas',this)"><span class="ntab-ico">📊</span>Faltas</button>
-    <button class="ntab" id="tab-correccion" style="--c:#1a1a1a;--c-bg:#ececec;display:none" onclick="goTab('correccion',this)"><span class="ntab-ico">✏️</span>Corregir asistencia</button>
-    <button class="ntab" id="tab-historial" style="--c:#1a1a1a;--c-bg:#ececec;display:none" onclick="goTab('historial',this)"><span class="ntab-ico">📜</span>Historial de cambios</button>
+    <button class="ntab on" style="--c:#1E3A4C;--c-bg:#ececec" onclick="goTab('operativa',this)"><span class="ntab-ico" data-ico="operativa"></span>Base Operativa</button>
+    <button class="ntab" style="--c:#1E3A4C;--c-bg:#ececec" onclick="goTab('organigrama',this)"><span class="ntab-ico" data-ico="organigrama"></span>Organigrama</button>
+    <button class="ntab" style="--c:#1E3A4C;--c-bg:#ececec" onclick="goTab('secciones',this)"><span class="ntab-ico" data-ico="secciones"></span>Secciones</button>
+    <button class="ntab" style="--c:#1E3A4C;--c-bg:#ececec" onclick="goTab('eventos',this)"><span class="ntab-ico" data-ico="eventos"></span>Eventos</button>
+    <button class="ntab" id="tab-mapas" style="--c:#1E3A4C;--c-bg:#ececec;display:none" onclick="goTab('mapas',this)"><span class="ntab-ico" data-ico="mapa"></span>Mapas</button>
+    <button class="ntab" style="--c:#262626;--c-bg:#e5e5e5" onclick="goTab('faltas',this)"><span class="ntab-ico" data-ico="grafica"></span>Faltas</button>
+    <button class="ntab" id="tab-correccion" style="--c:#1E3A4C;--c-bg:#ececec;display:none" onclick="goTab('correccion',this)"><span class="ntab-ico" data-ico="lapiz"></span>Corregir asistencia</button>
+    <button class="ntab" id="tab-historial" style="--c:#1E3A4C;--c-bg:#ececec;display:none" onclick="goTab('historial',this)"><span class="ntab-ico" data-ico="historial"></span>Historial de cambios</button>
   </div>
 
   <!-- PANEL: BASE OPERATIVA -->
@@ -304,7 +305,7 @@ tr:hover td{background:#f7f7f7}
         <div class="org-branches">
           <div class="org-branch">
             <div class="org-pad org-o60">Oficinas Centrales (60)<div class="org-pad-sub" id="org-sub-60">cargando…</div></div>
-            <div class="org-line" style="background:#1a1a1a"></div>
+            <div class="org-line" style="background:#1E3A4C"></div>
             <div style="font-size:11px;color:var(--muted);text-align:center;line-height:2" id="org-secs-60"></div>
           </div>
           <div class="org-branch">
@@ -392,8 +393,8 @@ tr:hover td{background:#f7f7f7}
             <div style="font-size:10px;color:#666666">Falta</div>
           </div>
           <div style="background:#ececec;border-radius:8px;padding:10px;text-align:center">
-            <div id="ev-vacaciones" style="font-size:22px;font-weight:800;color:#1a1a1a">0</div>
-            <div style="font-size:10px;color:#1a1a1a">Vacaciones</div>
+            <div id="ev-vacaciones" style="font-size:22px;font-weight:800;color:#1E3A4C">0</div>
+            <div style="font-size:10px;color:#1E3A4C">Vacaciones</div>
           </div>
           <div style="background:#e5e5e5;border-radius:8px;padding:10px;text-align:center">
             <div id="ev-incapacidad" style="font-size:22px;font-weight:800;color:#444444">0</div>
@@ -700,6 +701,24 @@ tr:hover td{background:#f7f7f7}
 // gemacuu.org — se abre directo como alumbrado.html.
 // ══════════════════════════════════════════════════════════════
 
+// Íconos de línea (SVG, currentColor) para las pestañas — reemplazan los emoji de
+// color; se pintan al vuelo en cada <span data-ico="clave"> (ver pintarIconos()).
+const ICONOS={
+  operativa:'<circle cx="8" cy="8" r="3"/><path d="M2.5 20c0-3.6 2.6-6 5.5-6s5.5 2.4 5.5 6"/><circle cx="17" cy="9" r="2.2"/><path d="M15 14.3c2.3.4 4 2.3 4 5.7"/>',
+  organigrama:'<circle cx="12" cy="5" r="2"/><path d="M12 7v3M12 10H6v3M12 10h6v3"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/>',
+  secciones:'<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/><path d="M12 13v3"/>',
+  eventos:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  mapa:'<path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/>',
+  grafica:'<line x1="5" y1="20" x2="5" y2="11"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="19" y1="20" x2="19" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/>',
+  lapiz:'<path d="M4 20l1-4.2L15.8 5 19 8.2 8.2 19 4 20Z"/><path d="M13.8 6.2 17.8 10.2"/>',
+  historial:'<path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3.5 4v5h5"/><path d="M12 8v4.3l3 2"/>'
+};
+function pintarIconos(){
+  document.querySelectorAll('[data-ico]').forEach(el=>{
+    const d=ICONOS[el.dataset.ico];
+    if(d) el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  });
+}
 const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
 const CLOUD='da7m6y3kk';
@@ -889,7 +908,7 @@ function renderStats(){
   document.getElementById('rb-30').textContent=`${c30.personas} personas · ${c30.secciones} secciones`;
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat"><div class="stat-n">${total}</div><div class="stat-l">Total activos</div></div>
-    <div class="stat"><div class="stat-n" style="color:#1a1a1a">${c60.personas}</div><div class="stat-l">Oficinas Centrales</div></div>
+    <div class="stat"><div class="stat-n" style="color:#1E3A4C">${c60.personas}</div><div class="stat-l">Oficinas Centrales</div></div>
     <div class="stat"><div class="stat-n" style="color:#333333">${c30.personas}</div><div class="stat-l">Centro de Acopio</div></div>
     <div class="stat"><div class="stat-n" style="color:#444444">${lideres}</div><div class="stat-l">Líderes de sección</div></div>
   `;
@@ -1014,7 +1033,7 @@ function renderSecciones(){
   document.getElementById('sec-grid').innerHTML=lista.length?lista.map(num=>{
     const personas=personalCache.filter(p=>p.seccion===num);
     const oficinaPredom=personas[0]?String(personas[0].oficina):'';
-    const color=oficinaPredom==='60'?'#1a1a1a':'#333333';
+    const color=oficinaPredom==='60'?'#1E3A4C':'#333333';
     const label=OFICINA_LABEL[oficinaPredom]||'';
     return `<div class="sec-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -1204,7 +1223,7 @@ function renderResumenEventosTbody(){
       <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}</td>
       <td style="color:#333333;font-weight:700">${r.asistencia}</td>
       <td style="color:#666666;font-weight:700">${r.falta}</td>
-      <td style="color:#1a1a1a;font-weight:700">${r.vacaciones}</td>
+      <td style="color:#1E3A4C;font-weight:700">${r.vacaciones}</td>
       <td style="color:#444444;font-weight:700">${r.incapacidad}</td>
       <td style="color:var(--muted)">${r.sinCapturar}</td>
       <td>${r.total}</td>
@@ -1890,6 +1909,7 @@ function goTab(name,btn){
 }
 
 iniciarSesionPanelB();
+pintarIconos();
 </script>
 </body>
 </html>
