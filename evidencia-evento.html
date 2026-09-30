@@ -1050,6 +1050,18 @@ let mApoyosExternos=[];
 let mLiderPorSeccion={};
 const mSeccionesExpandidas=new Set();
 
+// "hora" es una columna nueva y opcional en eventos (texto "HH:MM", 24h) — si no existe
+// todavía o el evento no la tiene capturada, simplemente no se muestra esa parte.
+function formatoHoraEvento(hora){
+  if(!hora) return '';
+  const partes=String(hora).split(':');
+  if(partes.length<2) return '';
+  const h=parseInt(partes[0],10), m=parseInt(partes[1],10);
+  if(isNaN(h)||isNaN(m)) return '';
+  const d=new Date(1970,0,1,h,m);
+  return d.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'});
+}
+
 async function initMasivo(eventoId){
   const [personal,asisEvento,fotos,apoyos]=await Promise.all([
     sbGet('personal','?status=eq.activo&select=id,nombre,seccion,es_lider_seccion,padrino&order=nombre.asc'),
@@ -1080,7 +1092,7 @@ async function initMasivo(eventoId){
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('contenido-masivo').classList.remove('hidden');
   document.getElementById('m-nombre').textContent=evento.nombre||'—';
-  const metaPartes=[evento.fecha,evento.lugar].filter(Boolean);
+  const metaPartes=[evento.fecha,formatoHoraEvento(evento.hora),evento.lugar].filter(Boolean);
   document.getElementById('m-meta').innerHTML=metaPartes.map(escapeHtml).join(' <span style="opacity:.5">·</span> ');
 
   cargadoEn=Date.now();
