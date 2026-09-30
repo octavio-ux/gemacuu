@@ -156,7 +156,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .rtag{font-size:11px;color:#999999;font-weight:600}
 
 /* ── PANELS ── */
-.panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
+/* min-width:0: .panel es hijo flex de .main-wrap (column) con margin:0 auto para
+   centrarse — eso desactiva el "stretch" que lo ajustaría al ancho disponible, así
+   que sin esto se dimensiona por el contenido más ancho que tenga adentro (una tabla
+   con encabezados largos, una lista, etc.) y se sale del viewport aunque ese
+   contenido ya tenga su propio overflow/scroll o wrap: nunca llega a necesitarlo
+   porque el panel ya creció de más. Mismo mecanismo ya documentado abajo para mobile
+   (línea ~103), aplicado aquí sin importar el ancho de pantalla. */
+.panel{display:none;padding:1.5rem;max-width:1200px;margin:0 auto;min-width:0}
 .panel.on{display:block}
 
 /* ── CARDS ── */
@@ -183,6 +190,37 @@ tr:hover td{background:#f7f7f7}
 .badge-gray{background:#f0f0f0;color:#555}
 .badge-green{background:#ececec;color:#333333}
 .badge-amber{background:#e5e5e5;color:#444444}
+
+/* ── COLLAPSE genérico (tarjetas plegables: Resumen por padrino y sección, Prelista,
+   Apoyos no registrados, Enlaces temporales) — cerradas por defecto (sin .open). ── */
+.collapse-head{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;min-width:0}
+.collapse-head .card-title{margin-bottom:0;flex:1;min-width:0}
+.collapse-total{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:#ececec;color:#1E3A4C;white-space:nowrap;flex-shrink:0}
+.collapse-caret{color:var(--muted);font-size:12px;transition:transform .15s;flex-shrink:0}
+.collapse-card.open .collapse-caret{transform:rotate(180deg)}
+.collapse-body{display:none;margin-top:12px;min-width:0}
+.collapse-card.open .collapse-body{display:block}
+
+/* ── TARJETAS DE EVENTO (Resumen de asistencia por evento) — reemplazan la tabla ancha
+   por tarjetas que se ajustan al ancho disponible; cerradas por defecto. ── */
+.evt-card{border:1px solid var(--border);border-radius:var(--radius);background:#fff;margin-bottom:10px;overflow:hidden}
+.evt-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;flex-wrap:wrap;min-width:0}
+.evt-head:hover{background:#f7f7f7}
+.evt-name-wrap{flex:1 1 160px;min-width:0}
+.evt-name{font-weight:800;font-size:13px;overflow-wrap:anywhere}
+.evt-date{font-size:11px;color:var(--muted);margin-top:2px}
+.evt-stats{display:flex;gap:6px;flex-wrap:wrap}
+.evt-stat{font-size:11px;padding:3px 9px;border-radius:20px;background:#ececec;font-weight:700;white-space:nowrap}
+.evt-actions{display:flex;gap:6px;flex-wrap:wrap}
+.evt-caret{color:var(--muted);font-size:12px;transition:transform .15s;flex-shrink:0}
+.evt-card.open .evt-caret{transform:rotate(180deg)}
+.evt-body{display:none;padding:0 14px 14px}
+.evt-card.open .evt-body{display:block;border-top:1px solid var(--border);padding-top:14px}
+.evt-body-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.evt-body-stat{background:var(--bg2);border-radius:8px;padding:8px;text-align:center;min-width:0}
+.evt-body-stat b{display:block;font-size:15px}
+.evt-body-stat span{font-size:10px;color:var(--muted)}
+.evt-body-actions{display:flex;gap:6px;flex-wrap:wrap}
 
 /* ── FORM ── */
 .fg{margin-bottom:12px}
@@ -671,12 +709,7 @@ tr:hover td{background:#f7f7f7}
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">📊 Resumen de asistencia por evento</div>
         <button class="btn btn-secondary btn-sm" onclick="exportarResumenEventos()">↓ Excel resumen</button>
       </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>Evento</th><th>Asistencia</th><th>Falta</th><th>Vacaciones</th><th>Incapacidad</th><th>Sin capturar</th><th>Total</th><th title="Personas marcadas como Confirmado en la prelista">Confirmados</th><th title="Confirmados que asistieron ÷ confirmados">% cumplimiento</th><th title="Marcados como Asistencia sin estar confirmados en la prelista">Asistieron sin confirmar</th><th>Totales de la app de encuestas</th><th>Evidencia</th></tr></thead>
-          <tbody id="resumen-eventos-tbody"></tbody>
-        </table>
-      </div>
+      <div id="resumen-eventos-cards"></div>
     </div>
 
     <!-- Panel asistencia del evento seleccionado -->
@@ -723,95 +756,122 @@ tr:hover td{background:#f7f7f7}
       </div>
 
       <!-- Resumen por padrino y sección (uso interno, mismos datos que evidencia-evento.html) -->
-      <div class="card" id="card-resumen-padrino-seccion" style="margin-bottom:1rem">
-        <div class="card-title">🗂 Resumen por padrino y sección</div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Padrino</th><th>Sección</th><th>Líder</th><th>Participaron</th><th>Encuestas</th><th>Fotos</th></tr></thead>
-            <tbody id="resumen-padrino-seccion-tbody"></tbody>
-          </table>
+      <div class="card collapse-card" id="card-resumen-padrino-seccion" style="margin-bottom:1rem">
+        <div class="collapse-head" onclick="toggleCollapse(this)">
+          <div class="card-title">🗂 Resumen por padrino y sección</div>
+          <span class="collapse-total" id="rps-total-badge">0 participaron</span>
+          <span class="collapse-caret">▾</span>
+        </div>
+        <div class="collapse-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Padrino</th><th>Sección</th><th>Líder</th><th>Participaron</th><th>Encuestas</th><th>Fotos</th></tr></thead>
+              <tbody id="resumen-padrino-seccion-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- PRELISTA DE ASISTENCIA del evento seleccionado.
          Editable mientras fecha >= hoy (hora local); después, solo lectura. -->
-    <div id="panel-prelista" class="card" style="margin-bottom:1rem;display:none">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
-        <div>
-          <div class="card-title" style="margin-bottom:2px">📋 Prelista de asistencia</div>
-          <div id="pl-modo" style="font-size:12px;color:var(--muted)"></div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div id="panel-prelista" class="card collapse-card" style="margin-bottom:1rem;display:none">
+      <div class="collapse-head" onclick="toggleCollapse(this)">
+        <div class="card-title">📋 Prelista de asistencia</div>
+        <span class="collapse-total" id="pl-total-badge">0 personas</span>
+        <span class="collapse-caret">▾</span>
+      </div>
+      <div id="pl-modo" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+      <div class="collapse-body">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
           <button class="btn btn-secondary btn-sm" onclick="exportarPrelistaExcel()">↓ Excel</button>
           <button class="btn btn-secondary btn-sm" onclick="exportarPrelistaPDF()">🖨 PDF / imprimir</button>
           <button class="btn btn-primary btn-sm" id="btn-aplicar-prelista" onclick="aplicarPrelista()" style="display:none" title="Marca Vacaciones/Incapacidad en asistencia a quien lo reportó en la prelista y aún no tiene estado capturado">⚡ Aplicar prelista</button>
         </div>
+        <div id="pl-contadores" class="pl-contadores"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:12px 0 10px">
+          <div class="fg" style="flex:1;min-width:180px;margin-bottom:0">
+            <label>Buscar</label>
+            <input type="text" id="pl-buscar" placeholder="nombre o área..." oninput="renderPrelista()">
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label>Padrino</label>
+            <select id="pl-padrino" onchange="renderPrelista()">
+              <option value="">todos</option>
+              <option value="Fernando Amezcua">Fernando Amezcua</option>
+              <option value="Martin Yáñez">Martin Yáñez</option>
+              <option value="Rene Espinoza">Rene Espinoza</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label>Sección</label>
+            <select id="pl-sec" onchange="renderPrelista()">
+              <option value="">todas</option>
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label>Estado</label>
+            <select id="pl-estado" onchange="renderPrelista()">
+              <option value="">todos</option>
+              <option value="CONFIRMADO">Confirmado</option>
+              <option value="NO_ASISTE">No asistirá</option>
+              <option value="PENDIENTE">Pendiente</option>
+            </select>
+          </div>
+        </div>
+        <div id="pl-lista" class="pl-lista"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px" id="pl-count"></div>
+        <div class="collapse-card" id="pl-apoyos-card" style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:16px;display:none">
+          <div class="collapse-head" onclick="toggleCollapse(this)">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;flex:1">🏷️ Apoyos no registrados</div>
+            <span class="collapse-total" id="pl-apoyos-total-badge">0</span>
+            <span class="collapse-caret">▾</span>
+          </div>
+          <div class="collapse-body">
+            <div style="font-size:12px;color:var(--muted);margin:8px 0 6px">Personas que no están en la base y que un líder anotó con "+ Agregar apoyo". Cuentan como que sí van.</div>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Nombre</th><th>Sección</th><th>Padrino</th><th>Líder que lo agregó</th><th>Actividad</th><th>Capturado</th></tr></thead>
+              <tbody id="pl-apoyos-tbody"></tbody>
+            </table></div>
+          </div>
+        </div>
       </div>
-      <div id="pl-contadores" class="pl-contadores"></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:12px 0 10px">
-        <div class="fg" style="flex:1;min-width:180px;margin-bottom:0">
-          <label>Buscar</label>
-          <input type="text" id="pl-buscar" placeholder="nombre o área..." oninput="renderPrelista()">
-        </div>
-        <div class="fg" style="margin-bottom:0">
-          <label>Padrino</label>
-          <select id="pl-padrino" onchange="renderPrelista()">
-            <option value="">todos</option>
-            <option value="Fernando Amezcua">Fernando Amezcua</option>
-            <option value="Martin Yáñez">Martin Yáñez</option>
-            <option value="Rene Espinoza">Rene Espinoza</option>
-          </select>
-        </div>
-        <div class="fg" style="margin-bottom:0">
-          <label>Sección</label>
-          <select id="pl-sec" onchange="renderPrelista()">
-            <option value="">todas</option>
-          </select>
-        </div>
-        <div class="fg" style="margin-bottom:0">
-          <label>Estado</label>
-          <select id="pl-estado" onchange="renderPrelista()">
-            <option value="">todos</option>
-            <option value="CONFIRMADO">Confirmado</option>
-            <option value="NO_ASISTE">No asistirá</option>
-            <option value="PENDIENTE">Pendiente</option>
-          </select>
-        </div>
-      </div>
-      <div id="pl-lista" class="pl-lista"></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px" id="pl-count"></div>
-      <div id="pl-apoyos"></div>
     </div>
 
     <!-- ENLACES TEMPORALES DE ASISTENCIA POR SECCIÓN (solo Octavio) -->
-    <div class="card" id="card-enlaces-temporales" style="display:none">
-      <div class="card-title">🔗 Enlaces temporales de asistencia por sección</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-        Genera un enlace para que un líder de sección o una editora capture asistencia desde su celular, sin iniciar sesión.
-        No caduca hasta que alguien lo abre por primera vez — a partir de ahí tiene la vigencia indicada abajo.
-        Si el evento todavía no llega, el enlace sirve para capturar la <b>prelista</b> de la sección y su vigencia empieza a contar hasta el día del evento.
+    <div class="card collapse-card" id="card-enlaces-temporales" style="display:none">
+      <div class="collapse-head" onclick="toggleCollapse(this)">
+        <div class="card-title">🔗 Enlaces temporales de asistencia por sección</div>
+        <span class="collapse-total" id="enl-total-badge">0 enlaces</span>
+        <span class="collapse-caret">▾</span>
       </div>
-      <div class="fg">
-        <label>Etiqueta (para identificarlo en la lista de abajo)</label>
-        <input type="text" id="enl-etiqueta" placeholder="ej. Enlace general julio">
-      </div>
-      <div class="fg">
-        <label>Actividad *</label>
-        <select id="enl-evento">
-          <option value="">— selecciona un evento —</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label>Horas de vigencia (a partir de la primera apertura)</label>
-        <input type="number" id="enl-horas" min="1" step="1" value="15" inputmode="numeric">
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
-      <div id="enl-resultado" style="margin-top:10px"></div>
+      <div class="collapse-body">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+          Genera un enlace para que un líder de sección o una editora capture asistencia desde su celular, sin iniciar sesión.
+          No caduca hasta que alguien lo abre por primera vez — a partir de ahí tiene la vigencia indicada abajo.
+          Si el evento todavía no llega, el enlace sirve para capturar la <b>prelista</b> de la sección y su vigencia empieza a contar hasta el día del evento.
+        </div>
+        <div class="fg">
+          <label>Etiqueta (para identificarlo en la lista de abajo)</label>
+          <input type="text" id="enl-etiqueta" placeholder="ej. Enlace general julio">
+        </div>
+        <div class="fg">
+          <label>Actividad *</label>
+          <select id="enl-evento">
+            <option value="">— selecciona un evento —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Horas de vigencia (a partir de la primera apertura)</label>
+          <input type="number" id="enl-horas" min="1" step="1" value="15" inputmode="numeric">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="generarEnlace()">🔗 Generar enlace</button>
+        <div id="enl-resultado" style="margin-top:10px"></div>
 
-      <div style="border-top:1px solid var(--border);margin:16px 0"></div>
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
-      <div id="enl-lista"></div>
+        <div style="border-top:1px solid var(--border);margin:16px 0"></div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Enlaces generados</div>
+        <div id="enl-lista"></div>
+      </div>
     </div>
   </div>
 
@@ -2646,6 +2706,26 @@ function copiarEnlaceGenerado(url){
   navigator.clipboard.writeText(url).then(()=>showToast('📋 enlace copiado')).catch(()=>showToast('⚠️ no se pudo copiar'));
 }
 
+// ── Tarjetas/bloques plegables (Resumen por evento, Resumen por padrino y sección,
+// Prelista, Apoyos no registrados, Enlaces temporales) — cerrados por defecto. ──
+function toggleCollapse(headEl){
+  const card=headEl.closest('.collapse-card');
+  if(card) card.classList.toggle('open');
+}
+
+function urlEvidenciaEvento(eventoId){
+  return `${location.origin}${location.pathname.replace(/index\.html$/,'')}evidencia-evento.html?evento=${eventoId}`;
+}
+
+function copiarLinkReporte(eventoId){
+  navigator.clipboard.writeText(urlEvidenciaEvento(eventoId)).then(()=>showToast('📋 link del reporte copiado')).catch(()=>showToast('⚠️ no se pudo copiar'));
+}
+
+function toggleEvtCard(eventoId){
+  const card=document.getElementById('evt-card-'+eventoId);
+  if(card) card.classList.toggle('open');
+}
+
 async function generarEnlace(){
   const eventoId=document.getElementById('enl-evento').value;
   if(!eventoId){ showToast('⚠️ Selecciona una actividad'); return; }
@@ -2686,6 +2766,8 @@ async function cargarEnlaces(){
 function renderListaEnlaces(){
   const el=document.getElementById('enl-lista');
   if(!el) return;
+  const badge=document.getElementById('enl-total-badge');
+  if(badge) badge.textContent=`${enlacesCache.length} enlaces`;
   if(!enlacesCache.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted)">Aún no se han generado enlaces.</div>'; return; }
   el.innerHTML=enlacesCache.map(en=>{
     // Misma regla que asistencia-seccion.html: con el evento en el futuro la vigencia no corre
@@ -3188,10 +3270,10 @@ async function cargarEventos(){
 let resumenEventosCache=[]; // [{evento, asistencia, falta, vacaciones, incapacidad, sinCapturar, total, confirmados, confirmadosAsistieron, asistieronSinConfirmar, encuestas}]
 
 async function cargarResumenEventos(){
-  const tbody=document.getElementById('resumen-eventos-tbody');
+  const cont=document.getElementById('resumen-eventos-cards');
   if(!eventosCache.length){
     resumenEventosCache=[];
-    tbody.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--muted)">Sin eventos registrados aún.</td></tr>';
+    cont.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:1rem 0">Sin eventos registrados aún.</div>';
     return;
   }
   // Paginado (sbGetTodos): con varios eventos la asistencia de todos ya pasa de las 1000
@@ -3236,31 +3318,49 @@ async function cargarResumenEventos(){
 }
 
 function renderResumenEventosTbody(){
-  const tbody=document.getElementById('resumen-eventos-tbody');
+  const cont=document.getElementById('resumen-eventos-cards');
   const isAdmin=currentUser==='Octavio';
-  tbody.innerHTML=resumenEventosCache.map(r=>{
+  if(!resumenEventosCache.length){
+    cont.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:1rem 0">Sin eventos registrados aún.</div>';
+    return;
+  }
+  cont.innerHTML=resumenEventosCache.map(r=>{
     const activa=r.evento.evidencia_publica!==false;
-    return `<tr>
-      <td><b>${r.evento.nombre||''}</b>${r.evento.fecha?' · '+r.evento.fecha:''}${faseEvento(r.evento)==='programado'?' <span class="fase-badge" style="font-size:10px;padding:1px 7px">🗓 Programado</span>':''}</td>
-      <td style="color:#333333;font-weight:700">${r.asistencia}</td>
-      <td style="color:#666666;font-weight:700">${r.falta}</td>
-      <td style="color:#1E3A4C;font-weight:700">${r.vacaciones}</td>
-      <td style="color:#444444;font-weight:700">${r.incapacidad}</td>
-      <td style="color:var(--muted)">${r.sinCapturar}</td>
-      <td>${r.total}</td>
-      <td style="color:#333333;font-weight:700">${r.confirmados}</td>
-      <td style="font-weight:700">${textoCumplimiento(r)}</td>
-      <td>${faseEvento(r.evento)==='programado'?'—':r.asistieronSinConfirmar}</td>
-      <td>${r.encuestas}</td>
-      <td>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <a href="evidencia-evento.html?evento=${r.evento.id}" target="_blank" class="btn btn-secondary btn-xs">🔗 Ver</a>
+    const programado=faseEvento(r.evento)==='programado';
+    return `<div class="evt-card" id="evt-card-${r.evento.id}">
+      <div class="evt-head" onclick="toggleEvtCard('${r.evento.id}')">
+        <div class="evt-name-wrap">
+          <div class="evt-name">${escHtml(r.evento.nombre||'')}${programado?' <span class="fase-badge" style="font-size:10px;padding:1px 7px">🗓 Programado</span>':''}</div>
+          <div class="evt-date">${escHtml(r.evento.fecha||'')}</div>
+        </div>
+        <div class="evt-stats">
+          <span class="evt-stat" style="color:#333333">Asis. ${r.asistencia}</span>
+          <span class="evt-stat" style="color:#666666">Falta ${r.falta}</span>
+          <span class="evt-stat" style="color:#1E3A4C">Conf. ${r.confirmados}</span>
+        </div>
+        <div class="evt-actions" onclick="event.stopPropagation()">
+          <a href="${urlEvidenciaEvento(r.evento.id)}" target="_blank" class="btn btn-secondary btn-xs">🔗 Ver reporte</a>
+          <button class="btn btn-secondary btn-xs" onclick="copiarLinkReporte('${r.evento.id}')">📋 Copiar link</button>
+        </div>
+        <span class="evt-caret">▾</span>
+      </div>
+      <div class="evt-body">
+        <div class="evt-body-stats">
+          <div class="evt-body-stat"><b style="color:#1E3A4C">${r.vacaciones}</b><span>Vacaciones</span></div>
+          <div class="evt-body-stat"><b style="color:#444444">${r.incapacidad}</b><span>Incapacidad</span></div>
+          <div class="evt-body-stat"><b style="color:var(--muted)">${r.sinCapturar}</b><span>Sin capturar</span></div>
+          <div class="evt-body-stat"><b>${r.total}</b><span>Total</span></div>
+          <div class="evt-body-stat"><b>${textoCumplimiento(r)}</b><span>% cumplimiento</span></div>
+          <div class="evt-body-stat"><b>${programado?'—':r.asistieronSinConfirmar}</b><span>Asistieron sin confirmar</span></div>
+          <div class="evt-body-stat"><b>${r.encuestas}</b><span>Encuestas (app)</span></div>
+        </div>
+        <div class="evt-body-actions">
           <button class="btn btn-secondary btn-xs" onclick="exportarEventos('${r.evento.id}')">↓ Excel</button>
-          ${isAdmin?`<button class="btn btn-xs ${activa?'btn-danger':'btn-secondary'}" onclick="toggleEvidenciaPublica('${r.evento.id}')">${activa?'🔒 Desactivar':'🔓 Activar'}</button>`:''}
+          ${isAdmin?`<button class="btn btn-xs ${activa?'btn-danger':'btn-secondary'}" onclick="toggleEvidenciaPublica('${r.evento.id}')">${activa?'🔒 Desactivar reporte':'🔓 Activar reporte'}</button>`:''}
           ${isAdmin?`<button class="btn btn-danger btn-xs" onclick="abrirConfirmEliminarEvento('${r.evento.id}')">🗑️ Eliminar</button>`:''}
         </div>
-      </td>
-    </tr>`;
+      </div>
+    </div>`;
   }).join('');
 }
 
@@ -3569,6 +3669,10 @@ async function renderResumenPadrinoSeccion(eventoId,miToken){
       <td>${encuestasPorSeccion[s.num]||0}</td>
       <td>${fotosPorSeccion[s.num]||0}</td>
     </tr>`).join('');
+
+  const totalParticiparon=Object.values(participaronPorSeccion).reduce((a,b)=>a+b,0);
+  const badge=document.getElementById('rps-total-badge');
+  if(badge) badge.textContent=`${totalParticiparon} participaron`;
 }
 
 // ── PRELISTA DE ASISTENCIA ──
@@ -3699,23 +3803,20 @@ function renderPrelista(){
   const lista=prelistaFiltrada();
   const apoyos=apoyosFiltrados();
   document.getElementById('pl-count').textContent=`${lista.length} personas${prelistaApoyos.length?` · ${apoyos.length} apoyos no registrados`:''}`;
+  document.getElementById('pl-total-badge').textContent=`${lista.length} personas`;
   document.getElementById('pl-lista').innerHTML=lista.length
     ?lista.map(renderFilaPrelista).join('')
     :'<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:13px">Sin resultados.</div>';
-  document.getElementById('pl-apoyos').innerHTML=!prelistaApoyos.length?'':`
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:16px 0 4px">🏷️ Apoyos no registrados (${apoyos.length})</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Personas que no están en la base y que un líder anotó con "+ Agregar apoyo". Cuentan como que sí van.</div>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>Nombre</th><th>Sección</th><th>Padrino</th><th>Líder que lo agregó</th><th>Actividad</th><th>Capturado</th></tr></thead>
-      <tbody>${apoyos.length?apoyos.map(a=>`<tr>
+  document.getElementById('pl-apoyos-card').style.display=prelistaApoyos.length?'':'none';
+  document.getElementById('pl-apoyos-total-badge').textContent=apoyos.length;
+  document.getElementById('pl-apoyos-tbody').innerHTML=apoyos.length?apoyos.map(a=>`<tr>
         <td style="font-weight:600">${escHtml(a.nombre||'—')}</td>
         <td>${escHtml(a.seccion||'—')}</td>
         <td>${escHtml(padrinoDeSeccion(a.seccion)||'—')}</td>
         <td>${escHtml(a.registrado_por||'—')}</td>
         <td>${escHtml(a.actividad||'—')}</td>
         <td style="font-size:12px;color:var(--muted)">${escHtml(textoFechaApoyo(a))}</td>
-      </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin apoyos con los filtros actuales.</td></tr>'}</tbody>
-    </table></div>`;
+      </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin apoyos con los filtros actuales.</td></tr>';
 }
 
 function renderContadoresPrelista(){
