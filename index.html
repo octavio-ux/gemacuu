@@ -2220,21 +2220,29 @@ async function sbDelete(table,params){
   return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
 }
 
-// "tipo" en eventos es una columna nueva y opcional — mientras no se corra la migración
-// en Supabase, un INSERT/PATCH que la incluya falla entero (columna inexistente). Estas
-// dos variantes intentan guardar con "tipo" y, si falla, reintentan una sola vez sin ese
-// campo, para que crear/editar eventos nunca se rompa por esto.
+// "tipo" en eventos es una columna nueva y opcional — un INSERT/PATCH que la incluya
+// puede fallar si Supabase todavía no la tiene, o si ya se corrió el ALTER TABLE pero
+// PostgREST aún no recarga su caché de esquema (tarda unos minutos en notarla sola).
+// Estas dos variantes intentan guardar con "tipo" y, si falla, reintentan una sola vez
+// sin ese campo para que crear/editar eventos nunca se rompa por esto — pero marcan
+// tipoDescartado=true para que quien llama avise al usuario en vez de fingir que sí se
+// guardó (antes fallaba en silencio: el evento se guardaba bien pero "tipo" se perdía
+// sin ningún aviso).
 function sinTipo(obj){ const {tipo,...resto}=obj; return resto; }
 async function sbPatchConFallbackTipo(table,params,body){
   let resp=await sbPatch(table,params,body);
-  if(!resp.ok&&'tipo' in body) resp=await sbPatch(table,params,sinTipo(body));
+  let tipoDescartado=false;
+  if(!resp.ok&&'tipo' in body){ resp=await sbPatch(table,params,sinTipo(body)); tipoDescartado=resp.ok; }
+  resp.tipoDescartado=tipoDescartado;
   return resp;
 }
 async function sbPostRepresentationConFallbackTipo(table,body){
   const r=await sbPostRepresentation(table,body);
-  if(r!==null) return r;
+  if(r!==null){ r.tipoDescartado=false; return r; }
   const sinTipoBody=Array.isArray(body)?body.map(sinTipo):sinTipo(body);
-  return await sbPostRepresentation(table,sinTipoBody);
+  const r2=await sbPostRepresentation(table,sinTipoBody);
+  if(r2!==null) r2.tipoDescartado=true;
+  return r2;
 }
 
 // ── CARGAR PERSONAL ──
@@ -4481,9 +4489,12 @@ async function guardarEvento(){
 
   if(editId){
     const payload={nombre,fecha,padrino,tipo,lugar,ocultar_asistencia:ocultarAsistencia,creado_por:currentUser,created_at:new Date().toISOString()};
-    await sbPatchConFallbackTipo('eventos',`?id=eq.${editId}`,payload);
+    const resp=await sbPatchConFallbackTipo('eventos',`?id=eq.${editId}`,payload);
     const resConfig=await guardarConfigEEEvento(editId,fecha);
-    showToast(resConfig.ok?'✓ Evento actualizado':`⚠️ Evento actualizado, pero ${mensajeConfigEEFallida(resConfig)} — vuelve a intentar`);
+    showToast(!resp.ok?'⚠️ No se pudo actualizar el evento — intenta de nuevo'
+      :resp.tipoDescartado?'⚠️ Evento actualizado, pero el Tipo de evento NO se guardó (Supabase todavía no reconoce la columna) — espera unos minutos y vuelve a guardarlo'
+      :resConfig.ok?'✓ Evento actualizado'
+      :`⚠️ Evento actualizado, pero ${mensajeConfigEEFallida(resConfig)} — vuelve a intentar`);
     closeModal('modal-evento');
     await cargarEventos();
     return;
@@ -4500,7 +4511,9 @@ async function guardarEvento(){
       return;
     }
     const resConfig=await guardarConfigEEEvento(nuevoId,fecha);
-    showToast(resConfig.ok?'✓ Evento creado':`⚠️ Evento creado, pero ${mensajeConfigEEFallida(resConfig)} — edítalo para reintentar`);
+    showToast(inserted.tipoDescartado?'⚠️ Evento creado, pero el Tipo de evento NO se guardó (Supabase todavía no reconoce la columna) — edítalo en unos minutos para volver a guardarlo'
+      :resConfig.ok?'✓ Evento creado'
+      :`⚠️ Evento creado, pero ${mensajeConfigEEFallida(resConfig)} — edítalo para reintentar`);
   } else {
     const fechaFinal=sumarDiasFecha(fecha,dias-1);
     if(!confirm(`¿Crear ${dias} eventos, uno por día del ${fecha} al ${fechaFinal}?`)) return;
@@ -4523,7 +4536,9 @@ async function guardarEvento(){
     } else {
       huboFallo=true;
     }
-    showToast(huboFallo?`⚠️ Eventos creados, pero falló Meta EE/bloqueo en alguno — revísalos`:`✓ ${dias} eventos creados`);
+    showToast(Array.isArray(insertados)&&insertados.tipoDescartado
+      ?`⚠️ ${dias} eventos creados, pero el Tipo de evento NO se guardó (Supabase todavía no reconoce la columna) — edítalos en unos minutos`
+      :huboFallo?`⚠️ Eventos creados, pero falló Meta EE/bloqueo en alguno — revísalos`:`✓ ${dias} eventos creados`);
   }
   closeModal('modal-evento');
   await cargarEventos();
