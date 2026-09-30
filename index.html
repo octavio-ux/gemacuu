@@ -512,7 +512,7 @@ tr:hover td{background:#f7f7f7}
     <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>Nombre</th><th>Área</th><th>Padrino</th><th>Sección</th><th>Núm. Empleado</th><th>Usuario</th><th>🪪 INEs</th><th></th>
+          <th>Nombre</th><th>Área</th><th>Padrino</th><th>Sección</th><th>Núm. Empleado</th><th>Usuario</th><th><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.1"/><path d="M6 16.3c.5-1.6 1.7-2.4 3-2.4s2.5.8 3 2.4M14 9.5h5M14 13h5"/></svg> INEs</th><th></th>
         </tr></thead>
         <tbody id="personal-tbody"></tbody>
       </table>
@@ -2076,16 +2076,16 @@ async function entrarPanelA(){
   document.getElementById('btn-export').style.display=(isAdmin||isEditor)?'inline-flex':'none';
   document.getElementById('btn-nueva-persona').style.display=(isAdmin||isEditor)?'inline-flex':'none';
   document.getElementById('btn-cambiar-panel').style.display=isAdmin?'inline-flex':'none';
-  document.getElementById('tab-red').style.display='block';
-  document.getElementById('tab-eventos').style.display='block';
-  document.getElementById('tab-mapasd17').style.display='block';
-  document.getElementById('tab-faltas').style.display='block';
-  document.getElementById('tab-incidencias').style.display=(isAdmin||isEditor)?'block':'none';
-  document.getElementById('tab-nuevos').style.display=(isAdmin||isEditor)?'block':'none';
-  document.getElementById('tab-control').style.display=(isAdmin||isEditor)?'block':'none';
-  document.getElementById('tab-bajas').style.display=(isAdmin||isEditor)?'block':'none';
-  document.getElementById('tab-correccion').style.display=(isAdmin||isEditor||isPadrino)?'block':'none';
-  document.getElementById('tab-historial').style.display=isAdmin?'block':'none';
+  document.getElementById('tab-red').style.display='flex';
+  document.getElementById('tab-eventos').style.display='flex';
+  document.getElementById('tab-mapasd17').style.display='flex';
+  document.getElementById('tab-faltas').style.display='flex';
+  document.getElementById('tab-incidencias').style.display=(isAdmin||isEditor)?'flex':'none';
+  document.getElementById('tab-nuevos').style.display=(isAdmin||isEditor)?'flex':'none';
+  document.getElementById('tab-control').style.display=(isAdmin||isEditor)?'flex':'none';
+  document.getElementById('tab-bajas').style.display=(isAdmin||isEditor)?'flex':'none';
+  document.getElementById('tab-correccion').style.display=(isAdmin||isEditor||isPadrino)?'flex':'none';
+  document.getElementById('tab-historial').style.display=isAdmin?'flex':'none';
   await cargarPersonal();
   renderStats();
   renderPersonal();
@@ -2263,7 +2263,7 @@ function filtrarPersonal(){
     <td style="font-size:12px;color:var(--muted)">${p.num_empleado||'—'}</td>
     <td style="font-size:12px;font-family:monospace;color:var(--pan)">${p.usuario||'<span style="color:var(--muted)">sin usuario</span>'}</td>
     <td>${ineIcon}</td>
-    <td>${canEdit?`<button class="btn btn-secondary btn-xs" onclick="editarPersona('${p.id}')">✏️</button>`:''}</td>
+    <td>${canEdit?`<button class="btn btn-secondary btn-xs" onclick="editarPersona('${p.id}')" style="line-height:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4.2L15.8 5 19 8.2 8.2 19 4 20Z"/><path d="M13.8 6.2 17.8 10.2"/></svg></button>`:''}</td>
   </tr>`;
   }).join('');
 }
