@@ -1203,10 +1203,20 @@ function renderMasivoPadrinoDetalle(gente,apoyos,totalP,asistieronP){
     const apoyosHtml=aps.length
       ?`<div class="attend-list">${aps.map(a=>`<div class="attend-chip"><span>${escapeHtml(a.nombre||'(sin nombre)')}</span><span class="otra">agregó: ${escapeHtml(a.registrado_por||'—')}</span></div>`).join('')}</div>`
       :'';
+    // Mismas fotos que ya se ven en el acordeón "Secciones" (fotos_actividad_seccion de
+    // esta sección) — aquí faltaban por completo, solo se mostraba quién asistió.
+    const fotosSec=mFotosPorSeccion[sec]||[];
+    const fotosHtml=fotosSec.length
+      ?`<div class="photo-grid" style="margin-top:8px">${fotosSec.map((f,i)=>`
+          <div class="photo-thumb" onclick="abrirLightbox('${f.cloudinary_url}')">
+            <img src="${f.cloudinary_url}" loading="lazy" alt="Foto sección ${escapeHtml(sec)} ${i+1}">
+          </div>`).join('')}</div>`
+      :'';
     return `<div class="detail-block">
-      <div class="detail-block-head">Sección ${escapeHtml(sec)}</div>
+      <div class="detail-block-head">Sección ${escapeHtml(sec)}${fotosSec.length?` · ${fotosSec.length} foto${fotosSec.length===1?'':'s'}`:''}</div>
       ${personasHtml}
       ${apoyosHtml}
+      ${fotosHtml}
     </div>`;
   }).join(''):'<div class="vacio">Sin gente ni apoyos registrados.</div>';
 
