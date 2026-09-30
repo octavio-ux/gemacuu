@@ -495,8 +495,6 @@ async function init(){
   }
   document.getElementById('loading').classList.add('hidden');
 
-  const empleadoGuardado=localStorage.getItem('gemacuu_asis_empleado')||'';
-  if(empleadoGuardado) document.getElementById('inp-empleado-gate').value=empleadoGuardado;
   document.getElementById('acceso-gate').classList.remove('hidden');
   document.getElementById('inp-seccion-gate').focus();
 }
@@ -566,7 +564,6 @@ async function confirmarAcceso(){
 
   empleadoActual=numEmpleado;
   registradoPor=`Empleado ${numEmpleado}`;
-  localStorage.setItem('gemacuu_asis_empleado',numEmpleado);
 
   // ¿La sección ingresada está activa este evento? (tiene fila en encuestas_seccion para este evento_id)
   // Nunca se recuerda una asignación de apoyo de una sesión anterior: si la sección no está
