@@ -1129,6 +1129,13 @@ function padrinoDeSeccionMasivo(num){
   const s=SECCIONES.find(s=>s.num===String(num));
   return s?s.padrino:'';
 }
+const mPadrinosExpandidos=new Set();
+function togglePadrinoMasivo(clave){
+  if(mPadrinosExpandidos.has(clave)) mPadrinosExpandidos.delete(clave);
+  else mPadrinosExpandidos.add(clave);
+  renderMasivoPadrinos();
+}
+
 function renderMasivoPadrinos(){
   const pads=[['Fernando','Fernando'],['Martin','Martín'],['Rene','René']];
   document.getElementById('m-padrinos').innerHTML=pads.map(([clave,corto])=>{
@@ -1136,19 +1143,74 @@ function renderMasivoPadrinos(){
     const totalP=gente.length;
     const asistieronP=gente.filter(p=>mAsisMap[p.id]==='ASISTENCIA').length;
     const claveNorm=normalizarPadrino(clave);
-    const apoyosP=mApoyosExternos.filter(a=>normalizarPadrino(padrinoDeSeccionMasivo(a.seccion)).includes(claveNorm)).length;
+    const apoyos=mApoyosExternos.filter(a=>normalizarPadrino(padrinoDeSeccionMasivo(a.seccion)).includes(claveNorm));
+    const apoyosP=apoyos.length;
     const pct=totalP>0?Math.min(100,Math.round((asistieronP/totalP)*100)):0;
-    return `<div class="m-padrino-row">
-      <div class="m-padrino-top">
-        <span class="m-padrino-nombre">${corto}</span>
+    const abierta=mPadrinosExpandidos.has(clave);
+    return `<div class="detail-card ${abierta?'':'collapsed'}">
+      <div class="detail-head" onclick="togglePadrinoMasivo('${clave}')" style="cursor:pointer">
+        <div style="flex:1;min-width:0">
+          <div class="detail-sec">${corto}</div>
+        </div>
         <div class="m-padrino-frac-wrap">
           <span class="m-padrino-frac">${asistieronP} / ${totalP}</span>
           ${apoyosP?`<span class="m-apoyos-tag">+${apoyosP} apoyo${apoyosP===1?'':'s'}</span>`:''}
         </div>
       </div>
       <div class="m-padrino-bar-track"><div class="m-padrino-bar-fill" style="width:${pct}%"></div></div>
+      <div class="detail-toggle-row">
+        <button class="detail-toggle-btn ${abierta?'expanded':''}" onclick="togglePadrinoMasivo('${clave}')">
+          ${abierta?'Ocultar detalles':'Ver detalles'} <span class="chev">${abierta?'︿':'⌄'}</span>
+        </button>
+      </div>
+      ${abierta?renderMasivoPadrinoDetalle(gente,apoyos,totalP,asistieronP):''}
     </div>`;
   }).join('');
+}
+
+// Agrupa la gente de ESTE padrino (y sus apoyos) por sección — cada persona/apoyo
+// aparece bajo su propia sección (p.seccion), no bajo el catálogo SECCIONES completo.
+function renderMasivoPadrinoDetalle(gente,apoyos,totalP,asistieronP){
+  const faltanP=totalP-asistieronP;
+  const porSeccion={};
+  gente.forEach(p=>{
+    const sec=p.seccion||'sin sección';
+    if(!porSeccion[sec]) porSeccion[sec]={personas:[],apoyos:[]};
+    porSeccion[sec].personas.push(p);
+  });
+  apoyos.forEach(a=>{
+    const sec=String(a.seccion||'sin sección');
+    if(!porSeccion[sec]) porSeccion[sec]={personas:[],apoyos:[]};
+    porSeccion[sec].apoyos.push(a);
+  });
+  const seccionesOrdenadas=Object.keys(porSeccion).sort((a,b)=>{
+    const na=parseInt(a,10),nb=parseInt(b,10);
+    if(isNaN(na)||isNaN(nb)) return a.localeCompare(b,'es');
+    return na-nb;
+  });
+
+  const pillsHtml=`<div class="detail-pills">
+    <div class="d-pill"><span class="num">${totalP}</span><span class="lab">Total de su red</span></div>
+    <div class="d-pill"><span class="num">${asistieronP}</span><span class="lab">Asistieron</span></div>
+    <div class="d-pill"><span class="num">${faltanP}</span><span class="lab">Faltan por asistir</span></div>
+  </div>`;
+
+  const listaHtml=seccionesOrdenadas.length?seccionesOrdenadas.map(sec=>{
+    const {personas,apoyos:aps}=porSeccion[sec];
+    const personasHtml=(evento.ocultar_asistencia!==true&&personas.length)
+      ?`<div class="attend-list">${personas.map(p=>`<div class="attend-chip"><span>${escapeHtml(p.nombre||'')}</span>${etiquetaEstado(mAsisMap[p.id])}</div>`).join('')}</div>`
+      :'';
+    const apoyosHtml=aps.length
+      ?`<div class="attend-list">${aps.map(a=>`<div class="attend-chip"><span>${escapeHtml(a.nombre||'(sin nombre)')}</span><span class="otra">agregó: ${escapeHtml(a.registrado_por||'—')}</span></div>`).join('')}</div>`
+      :'';
+    return `<div class="detail-block">
+      <div class="detail-block-head">Sección ${escapeHtml(sec)}</div>
+      ${personasHtml}
+      ${apoyosHtml}
+    </div>`;
+  }).join(''):'<div class="vacio">Sin gente ni apoyos registrados.</div>';
+
+  return `<div style="margin-top:16px">${pillsHtml}<div style="margin-top:14px">${listaHtml}</div></div>`;
 }
 
 // A diferencia del recorrido (que solo lista secciones con actividad), aquí se listan
