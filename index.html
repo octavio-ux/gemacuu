@@ -1723,6 +1723,14 @@ tr:hover td{background:#f7f7f7}
       </select>
     </div>
     <div class="fg">
+      <label>Tipo de evento</label>
+      <select id="ev-tipo">
+        <option value="recorrido">Recorrido en colonias</option>
+        <option value="masivo">Evento masivo</option>
+      </select>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">Define el formato del reporte público (evidencia-evento.html). Los eventos ya existentes se tratan como "Recorrido" mientras no se editen.</div>
+    </div>
+    <div class="fg">
       <label>Lugar</label>
       <input type="text" id="ev-lugar" placeholder="Ej. Sala 3 Oficinas Centrales...">
     </div>
@@ -2210,6 +2218,23 @@ async function sbPostRepresentation(table,body){
 }
 async function sbDelete(table,params){
   return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+}
+
+// "tipo" en eventos es una columna nueva y opcional — mientras no se corra la migración
+// en Supabase, un INSERT/PATCH que la incluya falla entero (columna inexistente). Estas
+// dos variantes intentan guardar con "tipo" y, si falla, reintentan una sola vez sin ese
+// campo, para que crear/editar eventos nunca se rompa por esto.
+function sinTipo(obj){ const {tipo,...resto}=obj; return resto; }
+async function sbPatchConFallbackTipo(table,params,body){
+  let resp=await sbPatch(table,params,body);
+  if(!resp.ok&&'tipo' in body) resp=await sbPatch(table,params,sinTipo(body));
+  return resp;
+}
+async function sbPostRepresentationConFallbackTipo(table,body){
+  const r=await sbPostRepresentation(table,body);
+  if(r!==null) return r;
+  const sinTipoBody=Array.isArray(body)?body.map(sinTipo):sinTipo(body);
+  return await sbPostRepresentation(table,sinTipoBody);
 }
 
 // ── CARGAR PERSONAL ──
@@ -4241,6 +4266,12 @@ async function marcarAsistenciaSinSobrescribir(eventoId,filas,registradoPor){
   return {marcadas,omitidas:filas.length-marcadas.length};
 }
 
+// Columna "tipo" en eventos: nueva y opcional (puede que Supabase todavía no la tenga —
+// ver sbGuardarEventoConFallbackTipo). Sin valor = "recorrido" (formato de siempre).
+function tipoEventoNormalizado(ev){
+  return ev&&ev.tipo==='masivo'?'masivo':'recorrido';
+}
+
 function abrirFormEvento(){
   document.getElementById('ev-edit-id').value='';
   document.getElementById('ev-nombre').value='';
@@ -4248,6 +4279,7 @@ function abrirFormEvento(){
   document.getElementById('ev-dias').value='1';
   document.getElementById('ev-dias-wrap').style.display='';
   document.getElementById('ev-padrino').value='';
+  document.getElementById('ev-tipo').value='recorrido';
   document.getElementById('ev-lugar').value='';
   document.getElementById('ev-ocultar-asistencia').checked=false;
   document.getElementById('modal-ev-titulo').textContent='📅 Nuevo Evento';
@@ -4267,6 +4299,7 @@ async function editarEvento(){
   document.getElementById('ev-dias').value='1';
   document.getElementById('ev-dias-wrap').style.display='none'; // varios días solo aplica al crear, no al editar
   document.getElementById('ev-padrino').value=ev.padrino||'';
+  document.getElementById('ev-tipo').value=tipoEventoNormalizado(ev);
   document.getElementById('ev-lugar').value=ev.lugar||'';
   document.getElementById('ev-ocultar-asistencia').checked=!!ev.ocultar_asistencia;
   document.getElementById('modal-ev-titulo').textContent='✏️ Editar Evento';
@@ -4441,13 +4474,14 @@ async function guardarEvento(){
   const fecha=document.getElementById('ev-fecha').value;
   if(!nombre||!fecha){showToast('⚠️ Nombre y fecha son obligatorios');return;}
   const padrino=document.getElementById('ev-padrino').value;
+  const tipo=document.getElementById('ev-tipo').value==='masivo'?'masivo':'recorrido';
   const lugar=document.getElementById('ev-lugar').value.trim();
   const ocultarAsistencia=document.getElementById('ev-ocultar-asistencia').checked;
   const editId=document.getElementById('ev-edit-id').value;
 
   if(editId){
-    const payload={nombre,fecha,padrino,lugar,ocultar_asistencia:ocultarAsistencia,creado_por:currentUser,created_at:new Date().toISOString()};
-    await sbPatch('eventos',`?id=eq.${editId}`,payload);
+    const payload={nombre,fecha,padrino,tipo,lugar,ocultar_asistencia:ocultarAsistencia,creado_por:currentUser,created_at:new Date().toISOString()};
+    await sbPatchConFallbackTipo('eventos',`?id=eq.${editId}`,payload);
     const resConfig=await guardarConfigEEEvento(editId,fecha);
     showToast(resConfig.ok?'✓ Evento actualizado':`⚠️ Evento actualizado, pero ${mensajeConfigEEFallida(resConfig)} — vuelve a intentar`);
     closeModal('modal-evento');
@@ -4459,7 +4493,7 @@ async function guardarEvento(){
   const dias=Number.isFinite(diasRaw)&&diasRaw>1?diasRaw:1;
 
   if(dias===1){
-    const inserted=await sbPostRepresentation('eventos',{nombre,fecha,padrino,lugar,ocultar_asistencia:ocultarAsistencia,creado_por:currentUser,created_at:new Date().toISOString()});
+    const inserted=await sbPostRepresentationConFallbackTipo('eventos',{nombre,fecha,padrino,tipo,lugar,ocultar_asistencia:ocultarAsistencia,creado_por:currentUser,created_at:new Date().toISOString()});
     const nuevoId=Array.isArray(inserted)&&inserted[0]?inserted[0].id:null;
     if(!nuevoId){
       showToast('⚠️ No se pudo crear el evento — intenta de nuevo');
@@ -4474,12 +4508,12 @@ async function guardarEvento(){
     const payloads=Array.from({length:dias},(_,i)=>({
       nombre:`${nombre} Día ${i+1}`,
       fecha:sumarDiasFecha(fecha,i),
-      padrino,lugar,
+      padrino,tipo,lugar,
       ocultar_asistencia:ocultarAsistencia,
       creado_por:currentUser,
       created_at:creadoEn
     }));
-    const insertados=await sbPostRepresentation('eventos',payloads);
+    const insertados=await sbPostRepresentationConFallbackTipo('eventos',payloads);
     let huboFallo=false;
     if(Array.isArray(insertados)){
       for(const row of insertados){
