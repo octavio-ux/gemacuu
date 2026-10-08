@@ -12,7 +12,7 @@
 :root{--ink:#15191D;--muted:#4A5259;--soft:#5C646B;--line:#DDE0E3;--bg:#F4F5F6;--brand:#1E3A4C;--red:#8A1C1C}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
 .hidden{display:none!important}
-.wrap{max-width:460px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+.wrap{max-width:460px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg);overflow:hidden}
 .banner{background:var(--brand);color:#fff;padding:28px 24px 24px}
 .banner .kicker{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.8}
 .banner .titulo{font-size:21px;font-weight:700;margin:6px 0}
@@ -86,7 +86,8 @@ h1{margin:0;font-size:26px;line-height:1.2;font-weight:700;font-family:inherit}
     <div style="padding:20px 24px;display:flex;flex-direction:column;gap:18px">
       <div class="kicker">Datos de adscripción</div>
       <div class="field" id="fg-dep"><label for="f-dep">¿A qué dependencia perteneces?</label>
-        <select id="f-dep"><option value="">Elegir</option></select>
+        <input id="f-dep" list="f-dep-list" placeholder="Ej. Secretaría de …" autocomplete="off">
+        <datalist id="f-dep-list"></datalist>
         <div class="field-msg hidden"></div>
       </div>
       <div class="field" id="fg-depto"><label for="f-depto">Departamento</label><input id="f-depto" placeholder="Ej. Análisis y Sistemas"><div class="field-msg hidden"></div></div>
@@ -242,9 +243,19 @@ function haversineKm(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-function fechaChihuahua(iso){
-  if(!iso) return '';
-  return new Date(iso).toLocaleDateString('es-MX',{timeZone:'America/Ciudad_Juarez',weekday:'long',day:'numeric',month:'long',year:'numeric'});
+// fecha_evento es un "date" (sin hora): parsear ese string con new Date() lo interpreta
+// como medianoche UTC, y al formatear con un timeZone de México se recorre un día hacia
+// atrás (por eso un viaje capturado el sábado 10 se veía como "viernes 9"). Aquí se arma
+// la fecha a partir de sus componentes y se formatea con el nombre de día/mes calculado a
+// mano — sin pasar nunca por una conversión de huso horario, muestra tal cual lo capturado.
+const MESES_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS_ES=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function formatoFechaEvento(fechaStr){
+  if(!fechaStr) return '';
+  const [y,m,d]=fechaStr.split('-').map(Number);
+  if(!y||!m||!d) return '';
+  const diaSemana=DIAS_ES[new Date(y,m-1,d).getDay()];
+  return `${diaSemana}, ${d} de ${MESES_ES[m-1]} de ${y}`;
 }
 
 function pantalla(id){
@@ -290,14 +301,14 @@ async function init(){
   logAcceso({fase:faseActual,estatus:'abrio_link'});
   if(faseActual==='1'){
     document.getElementById('p1-titulo').textContent=viaje.nombre||'Viaje';
-    document.getElementById('p1-fecha').textContent=fechaChihuahua(viaje.fecha_evento);
-    const sel=document.getElementById('f-dep');
-    (viaje.dependencias||[]).forEach(d=>{ const o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o); });
+    document.getElementById('p1-fecha').textContent=formatoFechaEvento(viaje.fecha_evento);
+    const lista=document.getElementById('f-dep-list');
+    (viaje.dependencias||[]).forEach(d=>{ const o=document.createElement('option'); o.value=d; lista.appendChild(o); });
     pantalla('p1-numero');
     document.getElementById('p1-num').focus();
   } else if(faseActual==='2'){
     document.getElementById('p2-titulo').textContent=viaje.destino||viaje.nombre||'Asistencia';
-    document.getElementById('p2-fecha').textContent=fechaChihuahua(viaje.fecha_evento);
+    document.getElementById('p2-fecha').textContent=formatoFechaEvento(viaje.fecha_evento);
     pantalla('p2-numero');
     document.getElementById('p2-num').focus();
   } else {
@@ -358,7 +369,7 @@ async function enviarP1(){
   const tipo=document.getElementById('f-tipo').value.trim();
   const pas=document.getElementById('f-pas').value.trim();
   let ok=true;
-  if(!dep){ marcarError('fg-dep','Elige una dependencia.'); ok=false; }
+  if(!dep){ marcarError('fg-dep','Escribe tu dependencia.'); ok=false; }
   if(!nom){ marcarError('fg-nom','Escribe tu nombre completo.'); ok=false; }
   if(!tel){ marcarError('fg-tel','Escribe tu teléfono.'); ok=false; }
   if(!tipo){ marcarError('fg-tipo','Escribe el tipo de vehículo.'); ok=false; }

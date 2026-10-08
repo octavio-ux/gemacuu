@@ -1814,7 +1814,7 @@ tr:hover td{background:#f7f7f7}
         <option value="cerrado">Forzar Cerrado</option>
       </select>
     </div>
-    <div class="fg"><label>Dependencias (una por línea, editable)</label><textarea id="mv-dependencias" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit"></textarea></div>
+    <div class="fg"><label>Dependencias (opcional — una por línea; en el formulario público aparecen como sugerencias, la persona puede escribir cualquier otra)</label><textarea id="mv-dependencias" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit"></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
       <div class="fg"><label>Latitud destino</label><input id="mv-lat" placeholder="31.6904"></div>
       <div class="fg"><label>Longitud destino</label><input id="mv-lng" placeholder="-106.4245"></div>
@@ -5462,24 +5462,24 @@ function generarSlugViaje(){
 }
 
 // Convierte un <input type="datetime-local"> capturado como hora de Chihuahua
-// (America/Ciudad_Juarez) a un timestamp UTC ISO, sin depender de ninguna librería.
+// (America/Chihuahua) a un timestamp UTC ISO, sin depender de ninguna librería.
 function chihuahuaToUTC(localStr){
   if(!localStr) return null;
   const asUTC=new Date(localStr+':00Z');
-  const tzDate=new Date(asUTC.toLocaleString('en-US',{timeZone:'America/Ciudad_Juarez'}));
+  const tzDate=new Date(asUTC.toLocaleString('en-US',{timeZone:'America/Chihuahua'}));
   const diff=asUTC-tzDate;
   return new Date(asUTC.getTime()+diff).toISOString();
 }
 function utcToChihuahuaInput(iso){
   if(!iso) return '';
   const d=new Date(iso);
-  const partes=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Ciudad_Juarez',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);
+  const partes=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Chihuahua',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);
   const get=t=>partes.find(p=>p.type===t).value;
   return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
 }
 function fmtChihuahua(iso){
   if(!iso) return '—';
-  return new Date(iso).toLocaleString('es-MX',{timeZone:'America/Ciudad_Juarez',weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+  return new Date(iso).toLocaleString('es-MX',{timeZone:'America/Chihuahua',weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
 }
 function calcularFaseViaje(v){
   if(v.forzar_fase && v.forzar_fase!=='automatica') return v.forzar_fase;
