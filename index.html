@@ -2128,11 +2128,12 @@ const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
 const CLOUD='da7m6y3kk';
 const PRESET='barrido_electoral';
-const PASSWORDS={'Fernando Amezcua':'24617','Martin Yáñez':'18132','Rene Espinoza':'24181','Octavio':'chelo1942','Karen Alarcón':'25068','Lluvia Aceves':'25872','Vianey':'5936'};
 const EDITORAS=['Karen Alarcón','Lluvia Aceves','Vianey'];
 const PADRINOS=['Fernando Amezcua','Martin Yáñez','Rene Espinoza'];
 // Usuario (primer nombre, minúsculas) -> nombre completo, para la portada única de login.
-// Mismas 7 personas y mismas contraseñas (PASSWORDS) de siempre — nada más cambia.
+// Las contraseñas YA NO viven aquí (texto plano en un archivo público = cualquiera las
+// lee). Viven como hash bcrypt en Supabase (tabla panel_usuarios, sin acceso anon) y se
+// verifican con la función RPC panel_login(), que regresa un token de sesión temporal.
 const D17_USUARIOS={octavio:'Octavio',fernando:'Fernando Amezcua',martin:'Martin Yáñez',rene:'Rene Espinoza',karen:'Karen Alarcón',lluvia:'Lluvia Aceves',vianey:'Vianey'};
 const SECCIONES=[
   {num:'855',encargado:'Karen Alarcón',padrino:'Fernando Amezcua'},
@@ -2193,6 +2194,7 @@ const BAJAS=[
 ];
 
 let currentUser=null;
+let panelToken=null; // token de sesión que regresa panel_login(), ya no es la contraseña
 let personalCache=[];
 let pendientesCache=[];
 let inePersona=null;
@@ -2208,7 +2210,8 @@ const MICROSITIOS_EXTERNOS=[
 
 // ── LOGIN (portada única) ──
 // Usuario = primer nombre, sin importar mayúsculas ni espacios de sobra.
-// 1) D17: mismas 7 personas, mismas PASSWORDS y mismos permisos de siempre.
+// 1) D17: mismas 7 personas y mismos permisos de siempre; la contraseña se valida
+//    server-side vía panel_login() (RPC), nunca contra texto plano en este archivo.
 // 2) Si no es de D17: se valida contra alumbrado_personal, igual que ya lo
 //    hacía panel-b.html — si es correcto, se deja la sesión en sessionStorage
 //    (panelb_sesion) y se manda directo a panel-b.html, sin pedirle nada otra vez.
@@ -2223,18 +2226,24 @@ async function doLogin(){
   btn.disabled=true;btn.textContent='Verificando…';
 
   const nombreD17=D17_USUARIOS[usuarioRaw];
-  if(nombreD17&&PASSWORDS[nombreD17]===pwd){
-    currentUser=nombreD17;
-    document.getElementById('lg-pass').value='';
-    btn.disabled=false;btn.textContent='Entrar →';
-    if(currentUser==='Octavio'){
-      // Único caso con selector: los demás entran derecho a su panel.
-      sessionStorage.setItem('gemacuu_octavio_auth','1');
-      mostrarSelectorPanel();
-    } else {
-      await entrarPanelA();
+  if(nombreD17){
+    const res=await sbRpcJson('panel_login',{p_nombre:nombreD17,p_password:pwd},null);
+    const r=Array.isArray(res)?res[0]:res;
+    if(r&&r.ok){
+      currentUser=nombreD17;
+      panelToken=r.token;
+      sessionStorage.setItem('panel_token',panelToken);
+      document.getElementById('lg-pass').value='';
+      btn.disabled=false;btn.textContent='Entrar →';
+      if(currentUser==='Octavio'){
+        // Único caso con selector: los demás entran derecho a su panel.
+        sessionStorage.setItem('gemacuu_octavio_auth','1');
+        mostrarSelectorPanel();
+      } else {
+        await entrarPanelA();
+      }
+      return;
     }
-    return;
   }
 
   let rows;
@@ -2319,10 +2328,12 @@ function cambiarPanel(){
 
 function doLogout(){
   currentUser=null;
+  panelToken=null;
   document.getElementById('lg-usuario').value='';
   document.getElementById('lg-pass').value='';
   document.getElementById('lerr').textContent='';
   sessionStorage.removeItem('gemacuu_octavio_auth');
+  sessionStorage.removeItem('panel_token');
   sessionStorage.removeItem('panelb_sesion');
   document.getElementById('panel-selector').style.display='none';
   document.getElementById('app').style.display='none';
@@ -2331,9 +2342,11 @@ function doLogout(){
 
 // Si Octavio ya se autenticó en esta pestaña (p.ej. viene de "Cambiar panel" desde
 // panel-b.html), se salta el formulario y entra directo al selector — nadie más
-// conserva sesión entre recargas, es el único caso especial.
+// conserva sesión entre recargas, es el único caso especial. El token de sesión viaja
+// junto con la bandera para que las funciones RPC de admin lo sigan teniendo.
 if(sessionStorage.getItem('gemacuu_octavio_auth')==='1'){
   currentUser='Octavio';
+  panelToken=sessionStorage.getItem('panel_token');
   mostrarSelectorPanel();
 }
 
@@ -5424,13 +5437,11 @@ let currentViajeId=null, currentViajeDetalle=null;
 let vdAccesos=[], vdRegistros=[], vdPersonas=[], vdFotos=[], vdAutorizados=[];
 
 // El panel y la página pública (viaje.html) comparten la misma anon key de Supabase —
-// no hay login real de Supabase Auth, así que RLS no puede distinguir "esto viene del
-// panel de Octavio" de "esto viene de cualquiera con la key". Por eso TODA la bitácora
-// (números, nombres, ubicaciones) vive detrás de funciones RPC que exigen esta misma
-// contraseña como "llave" server-side — igual a la que ya usas para entrar como Octavio.
-// Si alguna vez cambias PASSWORDS['Octavio'], hay que actualizar también la función
-// admin_token_valido() en Supabase (está en el SQL que te compartió Claude).
-const VIAJES_ADMIN_TOKEN=PASSWORDS['Octavio'];
+// no hay RLS que distinga "esto viene del panel de Octavio" de "esto viene de cualquiera
+// con la key". Por eso TODA la bitácora (números, nombres, ubicaciones) vive detrás de
+// funciones RPC que exigen panelToken: el token de sesión que regresó panel_login() al
+// entrar, verificado server-side contra panel_sesiones — nunca una contraseña en texto
+// plano, y nunca visible en el código fuente de esta página.
 async function sbRpc(fn,args){
   return fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
 }
@@ -5479,10 +5490,10 @@ function calcularFaseViaje(v){
 }
 
 async function cargarViajes(){
-  const rows=await sbRpcJson('viajes_admin_listar',{p_admin_token:VIAJES_ADMIN_TOKEN},null);
+  const rows=await sbRpcJson('viajes_admin_listar',{p_admin_token:panelToken},null);
   if(!Array.isArray(rows)){
     viajesCache=[];
-    document.getElementById('viajes-cards').innerHTML='<div style="color:var(--v-muted);font-size:13px;grid-column:1/-1">⚠️ Todavía no existen las funciones de este módulo en Supabase. Corre el SQL que te compartió Claude y recarga esta pestaña.</div>';
+    document.getElementById('viajes-cards').innerHTML='<div style="color:var(--v-muted);font-size:13px;grid-column:1/-1">⚠️ No se pudo cargar: o todavía no existen las funciones de este módulo en Supabase (corre el SQL), o tu sesión expiró (sal y vuelve a entrar).</div>';
     return;
   }
   viajesCache=rows;
@@ -5545,7 +5556,7 @@ async function guardarViaje(){
   if(!nombre||!fase1Fin||!fase2Fin){ showToast('Falta el nombre o los horarios.'); return; }
   const dependencias=document.getElementById('mv-dependencias').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const campos={
-    p_admin_token:VIAJES_ADMIN_TOKEN,
+    p_admin_token:panelToken,
     p_nombre:nombre, p_destino:document.getElementById('mv-destino').value.trim(),
     p_fecha_evento:document.getElementById('mv-fecha').value||null,
     p_fase1_fin:chihuahuaToUTC(fase1Fin),
@@ -5587,15 +5598,15 @@ async function abrirDetalleViaje(id){
   document.getElementById('viajes-lista-cont').style.display='none';
   document.getElementById('viajes-detalle-cont').style.display='block';
   document.getElementById('vd-nombre').textContent='Cargando…';
-  const rows=await sbRpcJson('viajes_admin_obtener',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},null);
+  const rows=await sbRpcJson('viajes_admin_obtener',{p_admin_token:panelToken,p_viaje_id:id},null);
   if(!rows||!rows.length){ showToast('No se encontró el viaje.'); volverListaViajes(); return; }
   currentViajeDetalle=rows[0];
   const [accesos,registros,personas,fotos,autorizados]=await Promise.all([
-    sbRpcJson('viajes_admin_listar_accesos',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
-    sbRpcJson('viajes_admin_listar_registros',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
-    sbRpcJson('viajes_admin_listar_personas',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
-    sbRpcJson('viajes_admin_listar_fotos',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
-    sbRpcJson('viajes_admin_listar_autorizados',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_accesos',{p_admin_token:panelToken,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_registros',{p_admin_token:panelToken,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_personas',{p_admin_token:panelToken,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_fotos',{p_admin_token:panelToken,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_autorizados',{p_admin_token:panelToken,p_viaje_id:id},[]),
   ]);
   vdAccesos=aok(accesos); vdRegistros=aok(registros); vdPersonas=aok(personas);
   vdFotos=aok(fotos); vdAutorizados=aok(autorizados);
@@ -5730,15 +5741,15 @@ async function subirExcelAutorizados(input){
     });
   });
   if(!numeros.size){ showToast('No se encontraron números en ese Excel.'); return; }
-  const r=await sbRpc('viajes_admin_subir_autorizados',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:currentViajeId,p_numeros:[...numeros]});
+  const r=await sbRpc('viajes_admin_subir_autorizados',{p_admin_token:panelToken,p_viaje_id:currentViajeId,p_numeros:[...numeros]});
   if(!r.ok){ showToast('No se pudo guardar la lista.'); return; }
   showToast(`✓ ${numeros.size} números autorizados`);
-  vdAutorizados=aok(await sbRpcJson('viajes_admin_listar_autorizados',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:currentViajeId},[]));
+  vdAutorizados=aok(await sbRpcJson('viajes_admin_listar_autorizados',{p_admin_token:panelToken,p_viaje_id:currentViajeId},[]));
   renderDetalleViaje();
 }
 async function limpiarAutorizados(){
   if(!confirm('¿Quitar la lista de números autorizados? Cualquier número podrá registrarse en la fase 1.')) return;
-  await sbRpc('viajes_admin_limpiar_autorizados',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:currentViajeId});
+  await sbRpc('viajes_admin_limpiar_autorizados',{p_admin_token:panelToken,p_viaje_id:currentViajeId});
   vdAutorizados=[];
   renderDetalleViaje();
 }
