@@ -10,36 +10,33 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--ink:#15191D;--muted:#4A5259;--soft:#5C646B;--line:#DDE0E3;--bg:#F4F5F6;--brand:#1E3A4C;--red:#8A1C1C}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
 .hidden{display:none!important}
-.wrap{max-width:460px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg);overflow:hidden}
+.wrap{max-width:460px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
 .banner{background:var(--brand);color:#fff;padding:28px 24px 24px}
 .banner .kicker{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.8}
 .banner .titulo{font-size:21px;font-weight:700;margin:6px 0}
 .banner .fecha{font-size:14px;opacity:.9}
-.screen{flex:1;display:flex;flex-direction:column;padding:56px 24px 32px;gap:24px;position:relative}
+.screen{flex:1;display:flex;flex-direction:column;padding:56px 24px 32px;gap:24px}
 .screen.form{padding:20px 24px;gap:18px}
 h1{margin:0;font-size:26px;line-height:1.2;font-weight:700;font-family:inherit}
-.field{display:flex;flex-direction:column;gap:6px;position:relative;z-index:6}
+.field{display:flex;flex-direction:column;gap:6px}
 .field label{font-size:14px;font-weight:600}
 .field input,.field select,.field textarea{height:48px;border-radius:10px;border:1px solid #C7CCD1;background:#fff;padding:0 12px;font-family:inherit;font-size:15px;color:var(--ink);width:100%}
 .field textarea{height:88px;padding:12px;resize:none}
-.field.err input,.field.err select{border-color:var(--red)}
+.field.err input{border-color:var(--red)}
 .field-msg{font-size:12px;color:var(--red);font-weight:600}
 .num-input{height:56px!important;border:2px solid var(--brand)!important;border-radius:12px!important;font-size:20px!important;letter-spacing:.04em;padding:0 16px!important;font-family:'Courier New',monospace}
 .kicker{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--soft)}
-.btn{width:100%;height:56px;border:none;border-radius:12px;background:var(--brand);color:#fff;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;position:relative;z-index:6}
+.btn{width:100%;height:56px;border:none;border-radius:12px;background:var(--brand);color:#fff;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer}
 .btn:disabled{opacity:.55;cursor:not-allowed}
-.btn2{height:48px;border-radius:10px;border:1px solid #C7CCD1;background:#fff;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);cursor:pointer;position:relative;z-index:6;width:100%}
-.add{height:48px;border-radius:10px;border:1px dashed #9AA2A9;background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:var(--brand);cursor:pointer;position:relative;z-index:6;width:100%}
-.pills{display:flex;gap:8px;flex-wrap:wrap}
-.pill{min-width:52px;height:44px;padding:0 16px;border-radius:22px;border:1px solid #C7CCD1;background:#fff;font-family:inherit;font-size:15px;cursor:pointer;position:relative;z-index:6}
-.pill.on{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600}
-.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:relative;z-index:6}
+.btn2{height:48px;border-radius:10px;border:1px solid #C7CCD1;background:#fff;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);cursor:pointer;width:100%}
+.add{height:48px;border-radius:10px;border:1px dashed #9AA2A9;background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:var(--brand);cursor:pointer;width:100%}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .ph{aspect-ratio:1;border-radius:10px;background:#D3D8DC;display:flex;align-items:center;justify-content:center;color:var(--soft);font-size:12px;overflow:hidden}
 .ph img{width:100%;height:100%;object-fit:cover}
 .ph.add{border:1px dashed #9AA2A9;background:transparent;height:auto;flex-direction:column;gap:4px}
-.person{display:flex;gap:8px;align-items:center;position:relative;z-index:6}
+.person{display:flex;gap:8px;align-items:center}
 .person span{width:24px;font-size:14px;font-weight:600;color:var(--soft)}
 .person input{flex:1}
 .spinner{width:44px;height:44px;border-radius:50%;border:4px solid #C7CCD1;border-top-color:var(--brand);animation:spin 1s linear infinite;margin:0 auto}
@@ -47,13 +44,20 @@ h1{margin:0;font-size:26px;line-height:1.2;font-weight:700;font-family:inherit}
 .centro{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:22px;text-align:center}
 .check-ico{width:96px;height:96px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center}
 .sub{margin:8px 0 0;font-size:15px;color:var(--muted);line-height:1.5}
-.wm{position:absolute;inset:-220px;pointer-events:none;display:grid;grid-template-columns:repeat(2,1fr);gap:64px 24px;transform:rotate(-28deg);align-content:start;padding-top:30px;z-index:1;overflow:hidden}
-.wm div{font-family:'Courier New',monospace;font-size:16px;font-weight:600;color:rgba(21,25,29,.14);white-space:nowrap;text-align:center}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--brand);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(10,20,30,.3);max-width:calc(100vw - 32px);width:max-content;text-align:center}
 #toast.show{opacity:1}
+/* Marca de agua: capa fija al viewport (no al documento), siempre recortada a la
+   pantalla visible -- nunca puede provocar scroll ni dejar franjas sin cubrir, porque
+   el patrón interior es deliberadamente mucho más grande que cualquier pantalla y se
+   tila con unidades relativas (no depende del tamaño real del dispositivo). */
+#wm-layer{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:40;display:none}
+#wm-layer.show{display:block}
+#wm-pattern{position:absolute;top:50%;left:50%;width:220vmax;height:220vmax;transform:translate(-50%,-50%) rotate(-28deg);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(16,1fr)}
+#wm-pattern span{display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:2.1vmax;font-weight:600;color:rgba(21,25,29,.14);white-space:nowrap}
 </style>
 </head>
 <body>
+<div id="wm-layer"><div id="wm-pattern"></div></div>
 <div class="wrap" id="wrap">
 
   <div class="centro" id="pantalla-cargando">
@@ -64,118 +68,126 @@ h1{margin:0;font-size:26px;line-height:1.2;font-weight:700;font-family:inherit}
     <div><h1 id="error-msg" style="font-size:20px">No disponible</h1></div>
   </div>
 
-  <!-- Fase 1 · paso 1: número -->
-  <div class="screen hidden" id="p1-numero">
-    <h1>Registro</h1>
-    <div class="field">
-      <label for="p1-num">Número de celular o de empleado</label>
-      <input id="p1-num" class="num-input" inputmode="tel" autocomplete="off">
-    </div>
-    <div class="field-msg hidden" id="p1-num-err"></div>
-    <div style="flex:1"></div>
-    <button class="btn" id="p1-num-btn" onclick="validarP1()">Validar</button>
+  <div class="centro hidden" id="pantalla-aun-no-abre">
+    <div><h1 style="font-size:20px">Todavía no abre</h1><p class="sub" id="aun-no-abre-sub"></p></div>
   </div>
 
-  <!-- Fase 1 · paso 2: formulario -->
-  <div class="screen form hidden" id="p1-form" style="padding:0">
+  <div class="centro hidden" id="pantalla-cerrado">
+    <div><h1 style="font-size:20px">Registro cerrado</h1></div>
+  </div>
+
+  <!-- Acceso: número de celular -->
+  <div class="screen hidden" id="acceso-numero">
+    <h1>Acceso</h1>
+    <div class="field">
+      <label for="in-celular">Número de celular</label>
+      <input id="in-celular" class="num-input" inputmode="tel" autocomplete="off">
+    </div>
+    <div class="field-msg hidden" id="acceso-err"></div>
+    <div style="flex:1"></div>
+    <button class="btn" id="acceso-btn" onclick="validarAcceso()">Validar</button>
+  </div>
+
+  <!-- ¿Eres [nombre]? -->
+  <div class="centro hidden" id="acceso-confirmar">
+    <div><h1 id="acceso-confirmar-nombre" style="font-size:22px">¿Eres?</h1></div>
+    <button class="btn" style="width:auto;padding:0 32px" onclick="confirmarIdentidad()">Sí</button>
+  </div>
+
+  <!-- Vehículo extra: no estaba en la lista -->
+  <div class="screen form hidden" id="extra-form">
     <div class="banner">
-      <div class="kicker">Registro de vehículos</div>
-      <div class="titulo" id="p1-titulo">Viaje</div>
-      <div class="fecha" id="p1-fecha"></div>
+      <div class="kicker">Vehículo extra</div>
+      <div class="titulo">No estabas en la lista</div>
     </div>
     <div style="padding:20px 24px;display:flex;flex-direction:column;gap:18px">
-      <div class="kicker">Datos de adscripción</div>
-      <div class="field" id="fg-dep"><label for="f-dep">¿A qué dependencia perteneces?</label>
-        <input id="f-dep" list="f-dep-list" placeholder="Ej. Secretaría de …" autocomplete="off">
-        <datalist id="f-dep-list"></datalist>
-        <div class="field-msg hidden"></div>
-      </div>
-      <div class="field" id="fg-depto"><label for="f-depto">Departamento</label><input id="f-depto" placeholder="Ej. Análisis y Sistemas"><div class="field-msg hidden"></div></div>
-      <div class="field" id="fg-pto"><label for="f-pto">Puesto</label><input id="f-pto" placeholder="Ej. Jefe de Departamento"><div class="field-msg hidden"></div></div>
-      <div class="field" id="fg-nom"><label for="f-nom">Nombre completo</label><input id="f-nom" placeholder="Nombre(s) y apellidos"><div class="field-msg hidden"></div></div>
-      <div class="field" id="fg-tel"><label for="f-tel">Número de teléfono celular</label><input id="f-tel"><div class="field-msg hidden"></div></div>
-      <div class="kicker" style="margin-top:6px">Vehículo</div>
-      <div class="field" id="fg-tipo"><label for="f-tipo">Tipo de vehículo</label><input id="f-tipo" placeholder="Ej. Camioneta Suburban"><div class="field-msg hidden"></div></div>
-      <div class="field"><label>¿De cuántos cilindros es tu vehículo?</label>
-        <div class="pills" id="f-cil">
-          <button type="button" class="pill" data-v="3">3</button>
-          <button type="button" class="pill" data-v="4">4</button>
-          <button type="button" class="pill" data-v="6">6</button>
-          <button type="button" class="pill" data-v="8">8</button>
-          <button type="button" class="pill" data-v="No sé">No sé</button>
-        </div>
-      </div>
-      <div class="field" id="fg-pas"><label for="f-pas">¿Cuántos pasajeros caben?</label><input id="f-pas" placeholder="Sin contar al conductor"><div class="field-msg hidden"></div></div>
-      <div class="field"><label for="f-com">¿Algún comentario adicional?</label><textarea id="f-com"></textarea></div>
-      <button class="btn" onclick="enviarP1()">Enviar</button>
+      <div class="field" id="fg-extra-nombre"><label for="extra-nombre">Nombre completo</label><input id="extra-nombre"><div class="field-msg hidden"></div></div>
+      <div class="field" id="fg-extra-tipo"><label for="extra-tipo">Tipo de vehículo</label><input id="extra-tipo" placeholder="Ej. Camioneta Suburban"><div class="field-msg hidden"></div></div>
+      <button class="btn" onclick="enviarExtra()">Continuar como vehículo extra</button>
     </div>
-    <div class="wm" id="wm-p1-form"></div>
   </div>
 
-  <!-- Fase 1 · paso 3: confirmación -->
-  <div class="centro hidden" id="p1-confirm">
-    <div class="check-ico"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-    <div><h1>¡Registro recibido!</h1><p class="sub">Gracias por poner tu vehículo.<br>El sábado a la 1:00 p.m. vuelve a entrar a este mismo link.</p></div>
-    <div class="wm" id="wm-p1-confirm"></div>
-  </div>
-
-  <!-- Fase 2 · paso 4: número -->
-  <div class="screen hidden" id="p2-numero">
-    <h1>Asistencia</h1>
-    <div class="field">
-      <label for="p2-num">Número de celular o de empleado</label>
-      <input id="p2-num" class="num-input" inputmode="tel" autocomplete="off">
+  <!-- SALIDA -->
+  <div class="screen form hidden" id="salida-form" style="padding:0">
+    <div class="banner">
+      <div class="kicker">Salida</div>
+      <div class="titulo">Viaje a Ciudad Juárez</div>
+      <div class="fecha" id="salida-fecha"></div>
     </div>
-    <div class="field-msg hidden" id="p2-num-err"></div>
-    <div style="flex:1"></div>
-    <button class="btn" id="p2-num-btn" onclick="validarP2()">Validar</button>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:18px">
+      <div class="kicker">¿Quiénes vienen contigo? (sin contarte)</div>
+      <div class="field" style="gap:10px" id="salida-personas-cont"></div>
+      <button type="button" class="add" onclick="agregarPersonaInput()">+ Agregar persona</button>
+      <div style="height:1px;background:var(--line)"></div>
+      <div class="kicker">Foto del vehículo con la gente</div>
+      <div class="photos" id="salida-fotos-grid">
+        <button type="button" class="ph add" data-momento="salida"><span style="font-size:24px;line-height:1">+</span><span style="font-weight:600;color:var(--brand)">Agregar foto</span></button>
+      </div>
+      <div class="field-msg hidden" id="salida-fotos-err"></div>
+      <button class="btn" onclick="enviarSalida()">Enviar salida</button>
+    </div>
   </div>
 
-  <!-- Fase 2 · paso 5: validando ubicación -->
-  <div class="centro hidden" id="p2-validando">
+  <!-- LLEGADA: validando -->
+  <div class="centro hidden" id="llegada-validando">
     <div class="spinner"></div>
     <div style="font-size:16px;font-weight:600">Validando…</div>
   </div>
-  <div class="centro hidden" id="p2-fallo">
+  <div class="centro hidden" id="llegada-fallo">
     <div><h1 style="font-size:20px">No se pudo validar</h1></div>
-    <button class="btn" style="width:auto;padding:0 28px" onclick="reintentarUbicacion()">Reintentar</button>
+    <button class="btn" style="width:auto;padding:0 28px" onclick="reintentarLlegada()">Reintentar</button>
   </div>
 
-  <!-- Fase 2 · paso 6: personas y fotos -->
-  <div class="screen form hidden" id="p2-form" style="padding:0">
+  <!-- LLEGADA: formulario -->
+  <div class="screen form hidden" id="llegada-form" style="padding:0">
     <div class="banner">
-      <div class="kicker">Asistencia</div>
-      <div class="titulo" id="p2-titulo">Ciudad Juárez, Chihuahua</div>
-      <div class="fecha" id="p2-fecha"></div>
+      <div class="kicker">Llegada</div>
+      <div class="titulo">Ciudad Juárez, Chihuahua</div>
+      <div class="fecha" id="llegada-fecha"></div>
     </div>
     <div style="padding:20px 24px;display:flex;flex-direction:column;gap:18px">
-      <div class="kicker">¿Quiénes vienen en tu vehículo?</div>
-      <div class="field" style="gap:10px" id="personas-cont"></div>
-      <button type="button" class="add" onclick="agregarPersonaInput()">+ Agregar persona</button>
-      <div style="height:1px;background:var(--line)"></div>
-      <div class="kicker">Fotos</div>
-      <div class="photos" id="fotos-grid">
-        <button type="button" class="ph add" onclick="document.getElementById('p2-cam').click()"><span style="font-size:24px;line-height:1">+</span><span style="font-weight:600;color:var(--brand)">Agregar foto</span></button>
+      <div class="kicker">Foto de llegada</div>
+      <div class="photos" id="llegada-fotos-grid">
+        <button type="button" class="ph add" data-momento="llegada"><span style="font-size:24px;line-height:1">+</span><span style="font-weight:600;color:var(--brand)">Agregar foto</span></button>
       </div>
-      <input type="file" id="p2-cam" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFotos(this)">
-      <input type="file" id="p2-gal" accept="image/*" multiple class="hidden" onchange="handleFotos(this)">
-      <div class="field"><label for="p2-com">¿Algún comentario?</label><textarea id="p2-com"></textarea></div>
-      <button class="btn" onclick="enviarP2()">Enviar asistencia</button>
+      <div class="field-msg hidden" id="llegada-fotos-err"></div>
+      <button class="btn" onclick="enviarLlegada()">Enviar llegada</button>
     </div>
-    <div class="wm" id="wm-p2-form"></div>
   </div>
 
-  <!-- Fase 2 · paso 7: confirmación -->
-  <div class="centro hidden" id="p2-confirm">
+  <!-- EVENTO -->
+  <div class="screen form hidden" id="evento-form" style="padding:0">
+    <div class="banner">
+      <div class="kicker">En el evento</div>
+      <div class="titulo">Ciudad Juárez, Chihuahua</div>
+      <div class="fecha" id="evento-fecha"></div>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:18px">
+      <div class="kicker">Fotos del evento</div>
+      <div class="photos" id="evento-fotos-grid">
+        <button type="button" class="ph add" data-momento="evento"><span style="font-size:24px;line-height:1">+</span><span style="font-weight:600;color:var(--brand)">Agregar foto</span></button>
+      </div>
+      <button class="btn" onclick="terminarEvento()">Listo por ahora</button>
+    </div>
+  </div>
+
+  <input type="file" id="in-cam" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFotos(this)">
+  <input type="file" id="in-gal" accept="image/*" multiple class="hidden" onchange="handleFotos(this)">
+
+  <!-- Confirmaciones -->
+  <div class="centro hidden" id="confirm-salida">
     <div class="check-ico"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-    <div><h1>¡Asistencia registrada!</h1><p class="sub">Gracias.</p></div>
-    <button class="btn2" style="width:auto;padding:0 20px" onclick="volverAFormP2()">Agregar más personas o fotos</button>
-    <div class="wm" id="wm-p2-confirm"></div>
+    <div><h1>¡Salida registrada!</h1><p class="sub">Cuando llegues a Juárez, vuelve a entrar a este mismo link.</p></div>
   </div>
-
-  <!-- Cierre -->
-  <div class="centro hidden" id="pantalla-cerrado">
-    <div><h1 style="font-size:20px">Registro cerrado</h1></div>
+  <div class="centro hidden" id="confirm-llegada">
+    <div class="check-ico"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <div><h1>¡Llegada registrada!</h1><p class="sub">Puedes agregar fotos del evento cuando quieras.</p></div>
+    <button class="btn2" style="width:auto;padding:0 20px" onclick="mostrarEvento()">Agregar fotos del evento</button>
+  </div>
+  <div class="centro hidden" id="confirm-evento">
+    <div class="check-ico"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <div><h1>¡Gracias!</h1><p class="sub">Puedes volver a entrar cuando quieras para agregar más fotos.</p></div>
+    <button class="btn2" style="width:auto;padding:0 20px" onclick="mostrarEvento()">Agregar más fotos</button>
   </div>
 
 </div>
@@ -187,11 +199,8 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const CLOUD='da7m6y3kk';
 const PRESET='barrido_electoral';
 
-// Esta página NUNCA lee ni escribe las tablas de "viajes" directamente: todo pasa por
-// funciones RPC (security definer) en Supabase, angostas a propósito — cada una hace
-// solo lo que esta pantalla necesita (insertar su propio acceso, leer si SU número ya
-// está registrado, etc.), nunca "dame todo de esta tabla". Así, aunque alguien extraiga
-// la anon key de esta misma página, no puede leer la bitácora de nadie más ni borrar nada.
+// Esta página nunca lee ni escribe las tablas de "viajes" directamente: todo pasa por
+// funciones RPC (security definer) angostas en Supabase. Ver nota de seguridad en el PR.
 async function sbRpc(fn,args){
   return fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
 }
@@ -210,7 +219,6 @@ function showToast(msg){
   clearTimeout(window._tt);
   window._tt=setTimeout(()=>t.classList.remove('show'),2500);
 }
-
 function normNum(s){ return (s||'').replace(/\D/g,''); }
 
 function parseDispositivo(ua){
@@ -224,11 +232,10 @@ function parseDispositivo(ua){
   const disp=esIOS?'iPhone':(esAndroid?'Android':'Escritorio');
   return `${disp} · ${nav}`;
 }
-
-async function logAcceso({fase,numero,estatus,lat,lng}){
+async function logAcceso({momento,estatus,lat,lng}){
   try{
     await sbRpc('viaje_pub_registrar_acceso',{
-      p_viaje_id:viaje.id, p_numero:numero||null, p_fase:fase||null, p_estatus:estatus||null,
+      p_viaje_id:viaje.id, p_numero:celularActual||null, p_fase:momento||null, p_estatus:estatus||null,
       p_dispositivo:parseDispositivo(navigator.userAgent), p_user_agent:navigator.userAgent,
       p_lat:(lat!==undefined?lat:null), p_lng:(lng!==undefined?lng:null)
     });
@@ -244,10 +251,9 @@ function haversineKm(lat1,lng1,lat2,lng2){
 }
 
 // fecha_evento es un "date" (sin hora): parsear ese string con new Date() lo interpreta
-// como medianoche UTC, y al formatear con un timeZone de México se recorre un día hacia
-// atrás (por eso un viaje capturado el sábado 10 se veía como "viernes 9"). Aquí se arma
-// la fecha a partir de sus componentes y se formatea con el nombre de día/mes calculado a
-// mano — sin pasar nunca por una conversión de huso horario, muestra tal cual lo capturado.
+// como medianoche UTC y, al formatear con un timeZone, se puede recorrer un día hacia
+// atrás. Aquí se arma la fecha desde sus componentes, sin pasar nunca por conversión de
+// huso horario: muestra tal cual lo capturado.
 const MESES_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DIAS_ES=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 function formatoFechaEvento(fechaStr){
@@ -257,39 +263,44 @@ function formatoFechaEvento(fechaStr){
   const diaSemana=DIAS_ES[new Date(y,m-1,d).getDay()];
   return `${diaSemana}, ${d} de ${MESES_ES[m-1]} de ${y}`;
 }
+function fmtHoraChihuahua(iso){
+  if(!iso) return '';
+  return new Date(iso).toLocaleString('es-MX',{timeZone:'America/Chihuahua',weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'numeric',minute:'2-digit'});
+}
 
 function pantalla(id){
   document.querySelectorAll('.wrap > div').forEach(d=>d.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
+  const CON_MARCA=['acceso-confirmar','extra-form','salida-form','llegada-form','evento-form','confirm-salida','confirm-llegada','confirm-evento'];
+  if(CON_MARCA.includes(id)) mostrarMarca(); else ocultarMarca();
 }
-
-function pintarMarca(elId,numero){
-  const el=document.getElementById(elId);
-  if(!el) return;
+function mostrarMarca(){ document.getElementById('wm-layer').classList.add('show'); }
+function ocultarMarca(){ document.getElementById('wm-layer').classList.remove('show'); }
+function pintarMarca(texto){
+  const cont=document.getElementById('wm-pattern');
   let h='';
-  for(let i=0;i<60;i++) h+=`<div>${numero}</div>`;
-  el.innerHTML=h;
+  for(let i=0;i<128;i++) h+=`<span>${texto}</span>`;
+  cont.innerHTML=h;
 }
 
 let viaje=null;
-let slugActual=null;
-let faseActual=null;
-let numeroP1=null, normP1=null;
-let numeroP2=null, normP2=null;
-let geoP2=null;
+let celularActual=null, normCelular=null;
+let conductorActual=null;
+let geoLlegada=null;
+let momentoFotosActivo=null; // 'salida' | 'llegada' | 'evento' -- a cuál grid va la próxima foto
 
-function calcularFase(v){
-  if(v.forzar_fase && v.forzar_fase!=='automatica') return v.forzar_fase;
+function calcularEstadoGeneral(v){
+  if(v.forzar_momento==='antes') return 'antes';
+  if(v.forzar_momento==='cerrado') return 'cerrado';
   const ahora=new Date();
-  if(v.fase1_fin && ahora < new Date(v.fase1_fin)) return '1';
-  if(v.fase2_fin && ahora < new Date(v.fase2_fin)) return '2';
-  return 'cerrado';
+  if(v.salida_abre && ahora < new Date(v.salida_abre)) return 'antes';
+  if(v.cierre_general && ahora >= new Date(v.cierre_general)) return 'cerrado';
+  return 'abierto';
 }
 
 async function init(){
   const slug=new URLSearchParams(location.search).get('v');
   if(!slug){ document.getElementById('error-msg').textContent='No disponible'; pantalla('pantalla-error'); return; }
-  slugActual=slug;
   const rows=await sbRpcJson('viaje_pub_por_slug',{p_slug:slug},[]);
   if(!rows || !rows.length){
     document.getElementById('error-msg').textContent='No disponible';
@@ -297,54 +308,54 @@ async function init(){
     return;
   }
   viaje=rows[0];
-  faseActual=calcularFase(viaje);
-  logAcceso({fase:faseActual,estatus:'abrio_link'});
-  if(faseActual==='1'){
-    document.getElementById('p1-titulo').textContent=viaje.nombre||'Viaje';
-    document.getElementById('p1-fecha').textContent=formatoFechaEvento(viaje.fecha_evento);
-    const lista=document.getElementById('f-dep-list');
-    (viaje.dependencias||[]).forEach(d=>{ const o=document.createElement('option'); o.value=d; lista.appendChild(o); });
-    pantalla('p1-numero');
-    document.getElementById('p1-num').focus();
-  } else if(faseActual==='2'){
-    document.getElementById('p2-titulo').textContent=viaje.destino||viaje.nombre||'Asistencia';
-    document.getElementById('p2-fecha').textContent=formatoFechaEvento(viaje.fecha_evento);
-    pantalla('p2-numero');
-    document.getElementById('p2-num').focus();
-  } else {
-    pantalla('pantalla-cerrado');
+  const estado=calcularEstadoGeneral(viaje);
+  if(estado==='antes'){
+    document.getElementById('aun-no-abre-sub').textContent='Abre el '+fmtHoraChihuahua(viaje.salida_abre)+' (hora de Chihuahua).';
+    pantalla('pantalla-aun-no-abre');
+    return;
   }
+  if(estado==='cerrado'){
+    pantalla('pantalla-cerrado');
+    return;
+  }
+  logAcceso({estatus:'abrio_link'});
+  document.getElementById('salida-fecha').textContent=formatoFechaEvento(viaje.fecha_evento);
+  document.getElementById('llegada-fecha').textContent=formatoFechaEvento(viaje.fecha_evento);
+  document.getElementById('evento-fecha').textContent=formatoFechaEvento(viaje.fecha_evento);
+  pantalla('acceso-numero');
+  document.getElementById('in-celular').focus();
 }
 
-async function validarP1(){
-  const input=document.getElementById('p1-num');
-  numeroP1=input.value.trim();
-  normP1=normNum(numeroP1);
-  const errBox=document.getElementById('p1-num-err');
+async function validarAcceso(){
+  const input=document.getElementById('in-celular');
+  celularActual=input.value.trim();
+  normCelular=normNum(celularActual);
+  const errBox=document.getElementById('acceso-err');
   errBox.classList.add('hidden');
-  if(!normP1){ errBox.textContent='Escribe un número.'; errBox.classList.remove('hidden'); return; }
-  const btn=document.getElementById('p1-num-btn');
+  if(!normCelular){ errBox.textContent='Escribe un número.'; errBox.classList.remove('hidden'); return; }
+  const btn=document.getElementById('acceso-btn');
   btn.disabled=true;
   try{
-    const autorizado=await sbRpcJson('viaje_pub_numero_autorizado',{p_viaje_id:viaje.id,p_numero:normP1},true);
-    if(!autorizado){
-      await logAcceso({fase:'1',numero:normP1,estatus:'no_autorizado'});
-      errBox.textContent='Ese número no puede registrarse en este enlace.';
-      errBox.classList.remove('hidden');
-      return;
+    celularActual=normCelular;
+    const rows=await sbRpcJson('viaje_pub_conductor',{p_viaje_id:viaje.id,p_celular:normCelular},[]);
+    if(rows && rows.length){
+      conductorActual=rows[0];
+      await logAcceso({estatus:'encontrado'});
+      pintarMarca(celularActual);
+      document.getElementById('acceso-confirmar-nombre').textContent='¿Eres '+conductorActual.nombre+'?';
+      pantalla('acceso-confirmar');
+    } else {
+      conductorActual=null;
+      await logAcceso({estatus:'no_encontrado'});
+      pintarMarca(celularActual);
+      pantalla('extra-form');
     }
-    const yaRegistrado=await sbRpcJson('viaje_pub_numero_registrado',{p_viaje_id:viaje.id,p_numero:normP1},false);
-    if(yaRegistrado){
-      await logAcceso({fase:'1',numero:normP1,estatus:'ya_registrado'});
-      pintarMarca('wm-p1-confirm',numeroP1);
-      pantalla('p1-confirm');
-      return;
-    }
-    await logAcceso({fase:'1',numero:normP1,estatus:'valido'});
-    if(normP1.length===10) document.getElementById('f-tel').value=numeroP1;
-    pintarMarca('wm-p1-form',numeroP1);
-    pantalla('p1-form');
   } finally { btn.disabled=false; }
+}
+
+async function confirmarIdentidad(){
+  await logAcceso({estatus:'confirmado'});
+  await avanzarSegunEstado();
 }
 
 function marcarError(fgId,msg){
@@ -353,144 +364,123 @@ function marcarError(fgId,msg){
   const m=fg.querySelector('.field-msg');
   m.textContent=msg; m.classList.remove('hidden');
 }
-function limpiarErrores(){
-  document.querySelectorAll('#p1-form .field').forEach(f=>{
+function limpiarErrores(scopeId){
+  document.querySelectorAll('#'+scopeId+' .field').forEach(f=>{
     f.classList.remove('err');
     const m=f.querySelector('.field-msg');
     if(m) m.classList.add('hidden');
   });
 }
 
-async function enviarP1(){
-  limpiarErrores();
-  const dep=document.getElementById('f-dep').value.trim();
-  const nom=document.getElementById('f-nom').value.trim();
-  const tel=document.getElementById('f-tel').value.trim();
-  const tipo=document.getElementById('f-tipo').value.trim();
-  const pas=document.getElementById('f-pas').value.trim();
+async function enviarExtra(){
+  limpiarErrores('extra-form');
+  const nombre=document.getElementById('extra-nombre').value.trim();
+  const tipo=document.getElementById('extra-tipo').value.trim();
   let ok=true;
-  if(!dep){ marcarError('fg-dep','Escribe tu dependencia.'); ok=false; }
-  if(!nom){ marcarError('fg-nom','Escribe tu nombre completo.'); ok=false; }
-  if(!tel){ marcarError('fg-tel','Escribe tu teléfono.'); ok=false; }
-  if(!tipo){ marcarError('fg-tipo','Escribe el tipo de vehículo.'); ok=false; }
-  if(!pas){ marcarError('fg-pas','Escribe cuántos pasajeros caben.'); ok=false; }
+  if(!nombre){ marcarError('fg-extra-nombre','Escribe tu nombre completo.'); ok=false; }
+  if(!tipo){ marcarError('fg-extra-tipo','Escribe el tipo de vehículo.'); ok=false; }
   if(!ok) return;
-  const cilBtn=document.querySelector('#f-cil .pill.on');
-  const r=await sbRpc('viaje_pub_registrar_fase1',{
-    p_viaje_id:viaje.id, p_numero:normP1, p_dependencia:dep,
-    p_departamento:document.getElementById('f-depto').value.trim(),
-    p_puesto:document.getElementById('f-pto').value.trim(),
-    p_nombre_completo:nom, p_telefono:tel, p_tipo_vehiculo:tipo,
-    p_cilindros:cilBtn?cilBtn.dataset.v:null,
-    p_pasajeros:pas, p_comentario:document.getElementById('f-com').value.trim()
-  });
-  if(!r.ok){ showToast('No se pudo enviar. Intenta otra vez.'); return; }
-  await logAcceso({fase:'1',numero:normP1,estatus:'registrado'});
-  pintarMarca('wm-p1-confirm',numeroP1);
-  pantalla('p1-confirm');
+  const r=await sbRpc('viaje_pub_registrar_extra',{p_viaje_id:viaje.id,p_celular:celularActual,p_nombre:nombre,p_tipo_vehiculo:tipo});
+  if(!r.ok){ showToast('No se pudo continuar. Intenta otra vez.'); return; }
+  conductorActual={nombre,tipo_vehiculo:tipo,origen:'extra'};
+  await logAcceso({estatus:'extra_registrado'});
+  await avanzarSegunEstado();
 }
 
-document.getElementById('f-cil').addEventListener('click',e=>{
-  if(e.target.classList.contains('pill')){
-    document.querySelectorAll('#f-cil .pill').forEach(p=>p.classList.remove('on'));
-    e.target.classList.add('on');
-  }
-});
-
-async function validarP2(){
-  const input=document.getElementById('p2-num');
-  numeroP2=input.value.trim();
-  normP2=normNum(numeroP2);
-  const errBox=document.getElementById('p2-num-err');
-  errBox.classList.add('hidden');
-  if(!normP2){ errBox.textContent='Escribe un número.'; errBox.classList.remove('hidden'); return; }
-  const btn=document.getElementById('p2-num-btn');
-  btn.disabled=true;
-  try{
-    const registrado=await sbRpcJson('viaje_pub_numero_registrado',{p_viaje_id:viaje.id,p_numero:normP2},false);
-    if(!registrado){
-      await logAcceso({fase:'2',numero:normP2,estatus:'no_registrado'});
-      errBox.textContent='Este número no está registrado.';
-      errBox.classList.remove('hidden');
-      return;
-    }
-    pantalla('p2-validando');
-    pedirUbicacion();
-  } finally { btn.disabled=false; }
+async function avanzarSegunEstado(){
+  const completados=await sbRpcJson('viaje_pub_estado_momentos',{p_viaje_id:viaje.id,p_celular:celularActual},[]);
+  const set=new Set((completados||[]).map(r=>r.momento));
+  if(!set.has('salida')) await mostrarSalida();
+  else if(!set.has('llegada')) await mostrarLlegada();
+  else await mostrarEvento();
 }
-
-function pedirUbicacion(){
-  if(!navigator.geolocation){
-    logAcceso({fase:'2',numero:normP2,estatus:'sin_geolocalizacion'});
-    pantalla('p2-fallo');
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    const lat=pos.coords.latitude, lng=pos.coords.longitude;
-    const dist=haversineKm(lat,lng,viaje.geofence_lat,viaje.geofence_lng);
-    const dentro=dist<=(viaje.geofence_radio_km||25);
-    await logAcceso({fase:'2',numero:normP2,estatus:dentro?'valido':'fuera_de_zona',lat,lng});
-    if(dentro){
-      geoP2={lat,lng};
-      await abrirFormP2();
-    } else {
-      pantalla('p2-fallo');
-    }
-  }, async err=>{
-    await logAcceso({fase:'2',numero:normP2,estatus:'permiso_denegado'});
-    pantalla('p2-fallo');
-  }, {timeout:15000,enableHighAccuracy:true});
-}
-function reintentarUbicacion(){ pantalla('p2-validando'); pedirUbicacion(); }
 
 let personasCount=0;
 function agregarPersonaInput(nombre){
   personasCount++;
-  const cont=document.getElementById('personas-cont');
+  const cont=document.getElementById('salida-personas-cont');
   const row=document.createElement('div');
   row.className='person';
   row.innerHTML=`<span>${personasCount}</span><input aria-label="Persona ${personasCount}" placeholder="Nombre completo" value="${nombre?nombre.replace(/"/g,'&quot;'):''}">`;
   cont.appendChild(row);
 }
 
-async function abrirFormP2(){
-  document.getElementById('personas-cont').innerHTML='';
-  personasCount=0;
-  for(let i=0;i<4;i++) agregarPersonaInput();
-  document.getElementById('p2-com').value='';
-  await cargarFotosP2();
-  pintarMarca('wm-p2-form',numeroP2);
-  pantalla('p2-form');
-}
-
-async function cargarFotosP2(){
-  const grid=document.getElementById('fotos-grid');
+async function cargarFotosEnGrid(momento,gridId){
+  const grid=document.getElementById(gridId);
   const addBtn=grid.querySelector('.ph.add');
   grid.innerHTML='';
-  const fotos=await sbRpcJson('viaje_pub_mis_fotos',{p_viaje_id:viaje.id,p_numero:normP2},[]);
+  const fotos=await sbRpcJson('viaje_pub_mis_fotos',{p_viaje_id:viaje.id,p_celular:celularActual,p_momento:momento},[]);
   fotos.forEach(f=>{
     const d=document.createElement('div'); d.className='ph';
     d.innerHTML=`<img src="${f.cloudinary_url}">`;
     grid.appendChild(d);
   });
   grid.appendChild(addBtn);
+  return fotos.length;
 }
 
-document.getElementById('fotos-grid').addEventListener('click',e=>{
-  if(e.target.closest('.ph.add')){
-    if(/iPhone|iPad|Android/i.test(navigator.userAgent)){
-      document.getElementById('p2-cam').click();
-    } else {
-      document.getElementById('p2-gal').click();
-    }
+async function mostrarSalida(){
+  document.getElementById('salida-personas-cont').innerHTML='';
+  personasCount=0;
+  agregarPersonaInput();
+  await cargarFotosEnGrid('salida','salida-fotos-grid');
+  pintarMarca(celularActual);
+  pantalla('salida-form');
+}
+
+async function mostrarLlegada(){
+  pantalla('llegada-validando');
+  pedirUbicacionLlegada();
+}
+function pedirUbicacionLlegada(){
+  if(!navigator.geolocation){
+    logAcceso({momento:'llegada',estatus:'sin_geolocalizacion'});
+    pantalla('llegada-fallo');
+    return;
   }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat=pos.coords.latitude, lng=pos.coords.longitude;
+    const dist=haversineKm(lat,lng,viaje.geofence_lat,viaje.geofence_lng);
+    const dentro=dist<=(viaje.geofence_radio_km||25);
+    await logAcceso({momento:'llegada',estatus:dentro?'valido':'fuera_de_zona',lat,lng});
+    if(dentro){
+      geoLlegada={lat,lng};
+      await cargarFotosEnGrid('llegada','llegada-fotos-grid');
+      pintarMarca(celularActual);
+      pantalla('llegada-form');
+    } else {
+      pantalla('llegada-fallo');
+    }
+  }, async()=>{
+    await logAcceso({momento:'llegada',estatus:'permiso_denegado'});
+    pantalla('llegada-fallo');
+  }, {timeout:15000,enableHighAccuracy:true});
+}
+function reintentarLlegada(){ pantalla('llegada-validando'); pedirUbicacionLlegada(); }
+
+async function mostrarEvento(){
+  await cargarFotosEnGrid('evento','evento-fotos-grid');
+  pintarMarca(celularActual);
+  pantalla('evento-form');
+}
+
+document.querySelectorAll('.ph.add').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    momentoFotosActivo=btn.dataset.momento;
+    if(/iPhone|iPad|Android/i.test(navigator.userAgent)){
+      document.getElementById('in-cam').click();
+    } else {
+      document.getElementById('in-gal').click();
+    }
+  });
 });
 
 async function handleFotos(input){
   const files=Array.from(input.files||[]);
   input.value='';
-  if(!files.length) return;
-  const grid=document.getElementById('fotos-grid');
+  if(!files.length || !momentoFotosActivo) return;
+  const momento=momentoFotosActivo;
+  const grid=document.getElementById(momento+'-fotos-grid');
   const addBtn=grid.querySelector('.ph.add');
   for(const file of files){
     const thumb=document.createElement('div');
@@ -500,12 +490,14 @@ async function handleFotos(input){
       const fd=new FormData();
       fd.append('file',file);
       fd.append('upload_preset',PRESET);
-      fd.append('folder',`gemacuu/viajes/${slugActual}/${normP2}`);
+      fd.append('folder',`gemacuu/viajes/${viaje.id}/${celularActual}/${momento}`);
       const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
       const d=await r.json();
       if(d.secure_url){
-        await sbRpc('viaje_pub_agregar_foto',{p_viaje_id:viaje.id,p_numero:normP2,p_cloudinary_url:d.secure_url,p_cloudinary_public_id:d.public_id});
+        await sbRpc('viaje_pub_agregar_foto',{p_viaje_id:viaje.id,p_celular:celularActual,p_momento:momento,p_cloudinary_url:d.secure_url,p_cloudinary_public_id:d.public_id});
         thumb.innerHTML=`<img src="${d.secure_url}">`;
+        const err=document.getElementById(momento+'-fotos-err');
+        if(err) err.classList.add('hidden');
       } else {
         thumb.remove();
         showToast('No se pudo subir una foto.');
@@ -514,23 +506,36 @@ async function handleFotos(input){
   }
 }
 
-async function enviarP2(){
-  const nombres=Array.from(document.querySelectorAll('#personas-cont input')).map(i=>i.value.trim()).filter(Boolean);
-  const comentario=document.getElementById('p2-com').value.trim();
-  try{
-    if(nombres.length){
-      await sbRpc('viaje_pub_agregar_personas',{p_viaje_id:viaje.id,p_numero:normP2,p_nombres:nombres});
-    }
-    if(comentario){
-      await sbRpc('viaje_pub_actualizar_comentario',{p_viaje_id:viaje.id,p_numero:normP2,p_comentario:comentario});
-    }
-  }catch(e){ showToast('No se pudo enviar. Intenta otra vez.'); return; }
-  await logAcceso({fase:'2',numero:normP2,estatus:'asistencia_enviada',lat:geoP2?geoP2.lat:undefined,lng:geoP2?geoP2.lng:undefined});
-  pintarMarca('wm-p2-confirm',numeroP2);
-  pantalla('p2-confirm');
+async function contarFotos(momento,gridId){
+  return document.querySelectorAll('#'+gridId+' .ph img').length;
 }
 
-function volverAFormP2(){ abrirFormP2(); }
+async function enviarSalida(){
+  const nFotos=await contarFotos('salida','salida-fotos-grid');
+  if(nFotos<1){ document.getElementById('salida-fotos-err').textContent='Agrega al menos 1 foto.'; document.getElementById('salida-fotos-err').classList.remove('hidden'); return; }
+  const nombres=Array.from(document.querySelectorAll('#salida-personas-cont input')).map(i=>i.value.trim()).filter(Boolean);
+  try{
+    await sbRpc('viaje_pub_registrar_momento',{p_viaje_id:viaje.id,p_celular:celularActual,p_momento:'salida',p_lat:null,p_lng:null});
+    if(nombres.length) await sbRpc('viaje_pub_agregar_personas',{p_viaje_id:viaje.id,p_celular:celularActual,p_nombres:nombres});
+  }catch(e){ showToast('No se pudo enviar. Intenta otra vez.'); return; }
+  pintarMarca(celularActual);
+  pantalla('confirm-salida');
+}
+
+async function enviarLlegada(){
+  const nFotos=await contarFotos('llegada','llegada-fotos-grid');
+  if(nFotos<1){ document.getElementById('llegada-fotos-err').textContent='Agrega al menos 1 foto.'; document.getElementById('llegada-fotos-err').classList.remove('hidden'); return; }
+  try{
+    await sbRpc('viaje_pub_registrar_momento',{p_viaje_id:viaje.id,p_celular:celularActual,p_momento:'llegada',p_lat:geoLlegada?geoLlegada.lat:null,p_lng:geoLlegada?geoLlegada.lng:null});
+  }catch(e){ showToast('No se pudo enviar. Intenta otra vez.'); return; }
+  pintarMarca(celularActual);
+  pantalla('confirm-llegada');
+}
+
+function terminarEvento(){
+  pintarMarca(celularActual);
+  pantalla('confirm-evento');
+}
 
 init();
 </script>
