@@ -480,6 +480,7 @@ tr:hover td{background:#f7f7f7}
     <button class="side-item" id="tab-correccion" onclick="goTab('correccion',this)"><span class="side-ico" data-ico="lapiz"></span><span class="side-label">Corregir asistencia</span></button>
     <button class="side-item" id="tab-nuevos" onclick="goTab('nuevos',this)"><span class="side-ico" data-ico="mas"></span><span class="side-label">Nuevos Amigos</span></button>
     <button class="side-item" id="tab-incidencias" onclick="goTab('incidencias',this)"><span class="side-ico" data-ico="alerta"></span><span class="side-label">Incidencias</span></button>
+    <button class="side-item" id="tab-viajes" onclick="goTab('viajes',this)"><span class="side-ico" data-ico="viajes"></span><span class="side-label">Asistencia Masiva</span></button>
     <button class="side-item" id="tab-control" onclick="goTab('control',this)"><span class="side-ico" data-ico="engrane"></span><span class="side-label">Control</span></button>
     <button class="side-item" id="tab-bajas" onclick="goTab('bajas',this)"><span class="side-ico" data-ico="bloqueo"></span><span class="side-label">Bajas (30)</span></button>
     <button class="side-item" id="tab-historial" onclick="goTab('historial',this)"><span class="side-ico" data-ico="historial"></span><span class="side-label">Historial de cambios</span></button>
@@ -1090,6 +1091,110 @@ tr:hover td{background:#f7f7f7}
     <div id="nuevos-count" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
   </div>
 
+  <!-- PANEL: ASISTENCIA MASIVA (VIAJES) -->
+  <div id="panel-viajes" class="panel">
+  <style>
+    #panel-viajes{ --v-ink:#15191D; --v-muted:#4A5259; --v-soft:#5C646B; --v-line:#DDE0E3; --v-bg:#F4F5F6; --v-brand:#1E3A4C; --v-red:#8A1C1C; }
+    #panel-viajes *{box-sizing:border-box}
+    #panel-viajes .v-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+    #panel-viajes .v-head h2{font-size:20px;margin:0;color:var(--v-ink)}
+    #panel-viajes .v-head p{margin:4px 0 0;color:var(--v-muted);font-size:13px}
+    #panel-viajes .v-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    #panel-viajes .v-card{background:#fff;border:1px solid var(--v-line);border-radius:14px;padding:16px 18px;cursor:pointer;transition:.15s}
+    #panel-viajes .v-card:hover{border-color:var(--v-brand)}
+    #panel-viajes .v-card-nombre{font-weight:700;font-size:15px;margin-bottom:6px;color:var(--v-ink)}
+    #panel-viajes .v-fase{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--v-brand);color:#fff;margin-bottom:8px}
+    #panel-viajes .v-fase.cerrado{background:#9AA2A9}
+    #panel-viajes .v-card-meta{font-size:12px;color:var(--v-muted)}
+    #panel-viajes .v-back{background:none;border:none;color:var(--v-brand);font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;display:inline-flex;align-items:center;gap:4px}
+    #panel-viajes .v-panel{background:var(--v-bg);border-radius:20px;overflow:hidden;border:1px solid #C7CCD1;padding:24px}
+    #panel-viajes .v-timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+    #panel-viajes .v-tl{background:#fff;border:1px solid var(--v-line);border-radius:12px;padding:12px 14px}
+    #panel-viajes .v-tl small{display:block;font-size:11px;color:var(--v-soft);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+    #panel-viajes .v-tl b{display:block;font-size:14px;margin-top:4px;color:var(--v-ink)}
+    #panel-viajes .v-tl.now{border:2px solid var(--v-brand)}
+    #panel-viajes .v-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+    #panel-viajes .v-stat{background:#fff;border:1px solid var(--v-line);border-radius:12px;padding:14px 16px}
+    #panel-viajes .v-stat .n{font-size:26px;font-weight:700;color:var(--v-ink)}
+    #panel-viajes .v-stat .l{font-size:12px;color:var(--v-muted)}
+    #panel-viajes .v-stat.alert{border-color:var(--v-red)}
+    #panel-viajes .v-stat.alert .n{color:var(--v-red)}
+    #panel-viajes .v-box{background:#fff;border:1px solid var(--v-line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+    #panel-viajes .v-search{border:2px solid var(--v-brand)}
+    #panel-viajes .v-result{background:var(--v-bg);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;font-size:13px;margin-top:4px}
+    #panel-viajes .v-result small{display:block;font-size:11px;color:var(--v-soft)}
+    #panel-viajes .v-tablebox{background:#fff;border:1px solid var(--v-line);border-radius:14px;overflow:hidden}
+    #panel-viajes .v-scroll{overflow-x:auto}
+    #panel-viajes table.v-table{width:100%;min-width:1040px;border-collapse:collapse;font-size:13px}
+    #panel-viajes table.v-table th{background:var(--v-bg);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--v-muted);padding:9px 12px}
+    #panel-viajes table.v-table td{padding:10px 12px;border-top:1px solid #ECEEF0;vertical-align:middle;color:var(--v-ink)}
+    #panel-viajes .v-tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+    #panel-viajes .v-ok{background:var(--v-brand);color:#fff}
+    #panel-viajes .v-mid{border:1px solid var(--v-ink);color:var(--v-ink)}
+    #panel-viajes .v-low{background:#ECEEF0;color:var(--v-muted)}
+    #panel-viajes .v-red{background:#F6E3E3;color:var(--v-red)}
+    #panel-viajes .v-pend{display:inline-block;padding:2px 7px;border-radius:6px;background:#FFF4D6;color:#6B4E00;font-size:11px;font-weight:600}
+    #panel-viajes .v-mono{font-family:'Courier New',monospace}
+  </style>
+
+  <div id="viajes-lista-cont">
+    <div class="v-head">
+      <div><h2>🎟️ Asistencia Masiva</h2><p>Registro público con bitácora — un link, varias fases. Sustituye a Google Forms.</p></div>
+      <button class="btn btn-primary" onclick="abrirNuevoViaje()">+ Nuevo viaje</button>
+    </div>
+    <div class="v-cards" id="viajes-cards"></div>
+  </div>
+
+  <div id="viajes-detalle-cont" style="display:none">
+    <button class="v-back" onclick="volverListaViajes()">← Volver</button>
+    <div class="v-head">
+      <div><h2 id="vd-nombre">—</h2><p id="vd-sub"></p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="editarViaje()">⚙️ Configurar</button>
+        <button class="btn btn-secondary" onclick="copiarLinkViaje()">🔗 Copiar link</button>
+        <button class="btn btn-secondary" onclick="descargarExcelViaje()">↓ Excel</button>
+        <button class="btn btn-secondary" onclick="descargarFotosViaje()">↓ Fotos</button>
+      </div>
+    </div>
+
+    <div class="v-panel">
+      <div class="v-timeline" id="vd-timeline"></div>
+      <div class="v-stats" id="vd-stats"></div>
+
+      <div class="v-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div><div style="font-weight:700;font-size:14px">Lista de números autorizados <span id="vd-autorizados-pend" class="v-pend">Pendiente</span></div>
+          <div style="font-size:12px;color:var(--v-muted);margin-top:4px">Mientras no subas la lista, entra cualquier número en la fase 1. Cuando la subas, solo entran los que estén en ella.</div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" onclick="document.getElementById('vd-excel-autorizados').click()">Subir Excel</button>
+            <button class="btn btn-secondary" id="vd-btn-limpiar-autorizados" style="display:none" onclick="limpiarAutorizados()">Quitar lista</button>
+          </div>
+          <input type="file" id="vd-excel-autorizados" accept=".xlsx,.xls,.csv" style="display:none" onchange="subirExcelAutorizados(this)">
+        </div>
+      </div>
+
+      <div class="v-box v-search">
+        <div><div style="font-weight:700;font-size:14px">¿Quién filtró? Busca el número de la captura</div><div style="font-size:12px;color:var(--v-muted)">Escribe el número que se ve en la marca de agua.</div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input id="vd-buscar" class="v-mono" placeholder="Ej. 614 123 4567" style="flex:1 1 220px;height:44px;border-radius:10px;border:1px solid #C7CCD1;padding:0 12px;font-size:15px">
+          <button class="btn btn-primary" style="height:44px" onclick="buscarNumeroViaje()">Buscar</button>
+        </div>
+        <div id="vd-resultado-busqueda"></div>
+      </div>
+
+      <div class="v-tablebox">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--v-line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="font-weight:700;font-size:14px">Todos los accesos</div>
+          <div style="font-size:12px;color:var(--v-soft)" id="vd-tabla-count"></div>
+        </div>
+        <div class="v-scroll"><table class="v-table"><thead><tr>
+          <th>Número</th><th>Coincide</th><th>Nombre</th><th>Vehículo</th><th>Registro</th><th>Asistencia</th><th>Personas</th><th>Fotos</th><th>Ubicación</th>
+        </tr></thead><tbody id="vd-tabla-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+  </div>
+
   <!-- PANEL: CONTROL -->
 
   <div id="panel-control" class="panel">
@@ -1690,6 +1795,39 @@ tr:hover td{background:#f7f7f7}
 </div>
 
 <!-- MODAL EVENTO -->
+<div id="modal-viaje" class="modal-bg" style="display:none">
+  <div class="modal" style="max-width:560px;max-height:88vh;overflow-y:auto">
+    <div class="modal-hdr"><h3 id="mv-titulo">Nuevo viaje</h3><button class="close-btn" onclick="closeModal('modal-viaje')">✕</button></div>
+    <input type="hidden" id="mv-id">
+    <div class="fg"><label>Nombre</label><input id="mv-nombre" placeholder="Ej. Viaje a Ciudad Juárez"></div>
+    <div class="fg"><label>Destino (se muestra en la fase 2)</label><input id="mv-destino" placeholder="Ej. Ciudad Juárez, Chihuahua"></div>
+    <div class="fg"><label>Fecha del viaje</label><input type="date" id="mv-fecha"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label>Fase 1 termina (hora Chihuahua)</label><input type="datetime-local" id="mv-fase1-fin"></div>
+      <div class="fg"><label>Fase 2 termina (hora Chihuahua)</label><input type="datetime-local" id="mv-fase2-fin"></div>
+    </div>
+    <div class="fg"><label>Forzar fase (para probar sin esperar los horarios)</label>
+      <select id="mv-forzar">
+        <option value="automatica">Automática (según horarios)</option>
+        <option value="1">Forzar Fase 1 · Registro</option>
+        <option value="2">Forzar Fase 2 · Asistencia</option>
+        <option value="cerrado">Forzar Cerrado</option>
+      </select>
+    </div>
+    <div class="fg"><label>Dependencias (una por línea, editable)</label><textarea id="mv-dependencias" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="fg"><label>Latitud destino</label><input id="mv-lat" placeholder="31.6904"></div>
+      <div class="fg"><label>Longitud destino</label><input id="mv-lng" placeholder="-106.4245"></div>
+      <div class="fg"><label>Radio (km)</label><input id="mv-radio" value="25"></div>
+    </div>
+    <div id="mv-link-box" style="display:none;font-size:13px;background:#f0f4ff;border-radius:8px;padding:10px 12px;margin-bottom:12px;word-break:break-all"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal('modal-viaje')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarViaje()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-evento" class="modal-bg" style="display:none">
   <div class="modal" style="max-width:940px">
     <div class="modal-hdr">
@@ -1977,7 +2115,8 @@ const ICONOS={
   alerta:'<path d="M12 3 22 20H2Z"/><path d="M12 9.5v5"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/>',
   engrane:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>',
   bloqueo:'<circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/>',
-  historial:'<path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3.5 4v5h5"/><path d="M12 8v4.3l3 2"/>'
+  historial:'<path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3.5 4v5h5"/><path d="M12 8v4.3l3 2"/>',
+  viajes:'<path d="M4 16l1.4-4.8A2 2 0 0 1 7.3 9.8h9.4a2 2 0 0 1 1.9 1.4L20 16"/><rect x="3" y="16" width="18" height="4" rx="1.5"/><circle cx="7.5" cy="20.3" r="1.3" fill="currentColor" stroke="none"/><circle cx="16.5" cy="20.3" r="1.3" fill="currentColor" stroke="none"/>'
 };
 function pintarIconos(){
   document.querySelectorAll('[data-ico]').forEach(el=>{
@@ -2149,6 +2288,7 @@ async function entrarPanelA(){
   document.getElementById('tab-mapasd17').style.display='flex';
   document.getElementById('tab-faltas').style.display='flex';
   document.getElementById('tab-incidencias').style.display=(isAdmin||isEditor)?'flex':'none';
+  document.getElementById('tab-viajes').style.display=isAdmin?'flex':'none';
   document.getElementById('tab-nuevos').style.display=(isAdmin||isEditor)?'flex':'none';
   document.getElementById('tab-control').style.display=(isAdmin||isEditor)?'flex':'none';
   document.getElementById('tab-bajas').style.display=(isAdmin||isEditor)?'flex':'none';
@@ -5273,6 +5413,365 @@ async function exportarIncidencias(){
   showToast('✓ Excel de incidencias descargado');
 }
 
+// ── ASISTENCIA MASIVA (VIAJES) ──
+// Módulo de registro público con bitácora para viajes/eventos masivos (p.ej. "Viaje a
+// Ciudad Juárez"), pensado para sustituir Google Forms y poder rastrear quién filtró
+// un link. Usa tablas nuevas y separadas (viajes, viajes_registros, viajes_accesos,
+// viajes_asistencia_personas, viajes_fotos, viajes_numeros_autorizados) — si todavía no
+// existen en Supabase, este panel lo avisa en vez de romperse.
+let viajesCache=[];
+let currentViajeId=null, currentViajeDetalle=null;
+let vdAccesos=[], vdRegistros=[], vdPersonas=[], vdFotos=[], vdAutorizados=[];
+
+function normNumV(s){ return (s||'').replace(/\D/g,''); }
+function aok(x){ return Array.isArray(x)?x:[]; }
+
+function generarSlugViaje(){
+  return Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,6);
+}
+
+// Convierte un <input type="datetime-local"> capturado como hora de Chihuahua
+// (America/Ciudad_Juarez) a un timestamp UTC ISO, sin depender de ninguna librería.
+function chihuahuaToUTC(localStr){
+  if(!localStr) return null;
+  const asUTC=new Date(localStr+':00Z');
+  const tzDate=new Date(asUTC.toLocaleString('en-US',{timeZone:'America/Ciudad_Juarez'}));
+  const diff=asUTC-tzDate;
+  return new Date(asUTC.getTime()+diff).toISOString();
+}
+function utcToChihuahuaInput(iso){
+  if(!iso) return '';
+  const d=new Date(iso);
+  const partes=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Ciudad_Juarez',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d);
+  const get=t=>partes.find(p=>p.type===t).value;
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+}
+function fmtChihuahua(iso){
+  if(!iso) return '—';
+  return new Date(iso).toLocaleString('es-MX',{timeZone:'America/Ciudad_Juarez',weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+}
+function calcularFaseViaje(v){
+  if(v.forzar_fase && v.forzar_fase!=='automatica') return v.forzar_fase;
+  const ahora=new Date();
+  if(v.fase1_fin && ahora < new Date(v.fase1_fin)) return '1';
+  if(v.fase2_fin && ahora < new Date(v.fase2_fin)) return '2';
+  return 'cerrado';
+}
+
+async function cargarViajes(){
+  let rows=null;
+  try{ rows=await sbGet('viajes','?select=*&order=creado_en.desc'); }catch(e){ rows=null; }
+  if(!Array.isArray(rows)){
+    viajesCache=[];
+    document.getElementById('viajes-cards').innerHTML='<div style="color:var(--v-muted);font-size:13px;grid-column:1/-1">⚠️ Todavía no existen las tablas de este módulo en Supabase. Corre el SQL que te compartió Claude y recarga esta pestaña.</div>';
+    return;
+  }
+  viajesCache=rows;
+  renderViajesCards();
+}
+function renderViajesCards(){
+  const cont=document.getElementById('viajes-cards');
+  if(!viajesCache.length){ cont.innerHTML='<div style="color:var(--v-muted);font-size:13px;grid-column:1/-1">Todavía no hay viajes. Crea el primero con "+ Nuevo viaje".</div>'; return; }
+  cont.innerHTML=viajesCache.map(v=>{
+    const fase=calcularFaseViaje(v);
+    const faseLabel=fase==='1'?'Fase 1 · Registro':fase==='2'?'Fase 2 · Asistencia':'Cerrado';
+    return `<div class="v-card" onclick="abrirDetalleViaje('${v.id}')">
+      <span class="v-fase ${fase==='cerrado'?'cerrado':''}">${faseLabel}</span>
+      <div class="v-card-nombre">${v.nombre}</div>
+      <div class="v-card-meta">${v.destino||''}${v.fecha_evento?' · '+v.fecha_evento:''}</div>
+    </div>`;
+  }).join('');
+}
+
+function abrirNuevoViaje(){
+  document.getElementById('mv-titulo').textContent='Nuevo viaje';
+  document.getElementById('mv-id').value='';
+  document.getElementById('mv-nombre').value='';
+  document.getElementById('mv-destino').value='';
+  document.getElementById('mv-fecha').value='';
+  document.getElementById('mv-fase1-fin').value='';
+  document.getElementById('mv-fase2-fin').value='';
+  document.getElementById('mv-forzar').value='automatica';
+  document.getElementById('mv-dependencias').value='';
+  document.getElementById('mv-lat').value='';
+  document.getElementById('mv-lng').value='';
+  document.getElementById('mv-radio').value='25';
+  document.getElementById('mv-link-box').style.display='none';
+  document.getElementById('modal-viaje').style.display='flex';
+}
+function editarViaje(){
+  const v=currentViajeDetalle;
+  document.getElementById('mv-titulo').textContent='Configurar viaje';
+  document.getElementById('mv-id').value=v.id;
+  document.getElementById('mv-nombre').value=v.nombre||'';
+  document.getElementById('mv-destino').value=v.destino||'';
+  document.getElementById('mv-fecha').value=v.fecha_evento||'';
+  document.getElementById('mv-fase1-fin').value=utcToChihuahuaInput(v.fase1_fin);
+  document.getElementById('mv-fase2-fin').value=utcToChihuahuaInput(v.fase2_fin);
+  document.getElementById('mv-forzar').value=v.forzar_fase||'automatica';
+  document.getElementById('mv-dependencias').value=(v.dependencias||[]).join('\n');
+  document.getElementById('mv-lat').value=v.geofence_lat??'';
+  document.getElementById('mv-lng').value=v.geofence_lng??'';
+  document.getElementById('mv-radio').value=v.geofence_radio_km??25;
+  const linkBox=document.getElementById('mv-link-box');
+  linkBox.style.display='block';
+  linkBox.textContent=location.origin+'/viaje.html?v='+v.slug;
+  document.getElementById('modal-viaje').style.display='flex';
+}
+async function guardarViaje(){
+  const id=document.getElementById('mv-id').value;
+  const nombre=document.getElementById('mv-nombre').value.trim();
+  const fase1Fin=document.getElementById('mv-fase1-fin').value;
+  const fase2Fin=document.getElementById('mv-fase2-fin').value;
+  if(!nombre||!fase1Fin||!fase2Fin){ showToast('Falta el nombre o los horarios.'); return; }
+  const dependencias=document.getElementById('mv-dependencias').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const body={
+    nombre, destino:document.getElementById('mv-destino').value.trim(),
+    fecha_evento:document.getElementById('mv-fecha').value||null,
+    fase1_fin:chihuahuaToUTC(fase1Fin),
+    fase2_fin:chihuahuaToUTC(fase2Fin),
+    forzar_fase:document.getElementById('mv-forzar').value,
+    dependencias,
+    geofence_lat:parseFloat(document.getElementById('mv-lat').value)||null,
+    geofence_lng:parseFloat(document.getElementById('mv-lng').value)||null,
+    geofence_radio_km:parseFloat(document.getElementById('mv-radio').value)||25,
+  };
+  if(id){
+    const r=await sbPatch('viajes',`?id=eq.${id}`,body);
+    if(!r.ok){ showToast('No se pudo guardar. ¿Ya corriste el SQL en Supabase?'); return; }
+    showToast('✓ Viaje actualizado');
+    closeModal('modal-viaje');
+    await cargarViajes();
+    if(currentViajeId===id) await abrirDetalleViaje(id);
+  } else {
+    body.slug=generarSlugViaje();
+    body.fase1_inicio=new Date().toISOString();
+    body.creado_por=currentUser;
+    const rows=await sbPostRepresentation('viajes',body);
+    if(!rows||!rows.length){ showToast('No se pudo crear. ¿Ya corriste el SQL en Supabase?'); return; }
+    const nuevo=rows[0];
+    document.getElementById('mv-id').value=nuevo.id;
+    document.getElementById('mv-titulo').textContent='Configurar viaje';
+    const linkBox=document.getElementById('mv-link-box');
+    linkBox.style.display='block';
+    linkBox.textContent=location.origin+'/viaje.html?v='+nuevo.slug;
+    showToast('✓ Viaje creado — copia el link desde aquí abajo');
+    await cargarViajes();
+  }
+}
+
+function volverListaViajes(){
+  document.getElementById('viajes-detalle-cont').style.display='none';
+  document.getElementById('viajes-lista-cont').style.display='block';
+  currentViajeId=null; currentViajeDetalle=null;
+}
+async function abrirDetalleViaje(id){
+  currentViajeId=id;
+  document.getElementById('viajes-lista-cont').style.display='none';
+  document.getElementById('viajes-detalle-cont').style.display='block';
+  document.getElementById('vd-nombre').textContent='Cargando…';
+  const rows=await sbGet('viajes',`?id=eq.${id}&select=*&limit=1`);
+  if(!Array.isArray(rows)||!rows.length){ showToast('No se encontró el viaje.'); volverListaViajes(); return; }
+  currentViajeDetalle=rows[0];
+  const [accesos,registros,personas,fotos,autorizados]=await Promise.all([
+    sbGet('viajes_accesos',`?viaje_id=eq.${id}&select=*&order=creado_en.desc`),
+    sbGet('viajes_registros',`?viaje_id=eq.${id}&select=*`),
+    sbGet('viajes_asistencia_personas',`?viaje_id=eq.${id}&select=*`),
+    sbGet('viajes_fotos',`?viaje_id=eq.${id}&select=*`),
+    sbGet('viajes_numeros_autorizados',`?viaje_id=eq.${id}&select=*`),
+  ]);
+  vdAccesos=aok(accesos); vdRegistros=aok(registros); vdPersonas=aok(personas);
+  vdFotos=aok(fotos); vdAutorizados=aok(autorizados);
+  renderDetalleViaje();
+}
+
+function filaBitacora(numero){
+  const registro=vdRegistros.find(r=>normNumV(r.numero)===numero)||null;
+  const accesosNum=vdAccesos.filter(a=>a.numero_ingresado&&normNumV(a.numero_ingresado)===numero);
+  const fase2Accesos=accesosNum.filter(a=>a.fase==='2').sort((a,b)=>new Date(b.creado_en)-new Date(a.creado_en));
+  const ultimaFase2=fase2Accesos[0]||null;
+  let coincide='—', coincideTexto='—';
+  if(registro){
+    const numReg=normNumV(registro.numero), numTel=normNumV(registro.telefono);
+    if(numReg.length!==10){ coincide='emp'; coincideTexto='Nº empleado'; }
+    else if(numReg===numTel){ coincide='si'; coincideTexto='Sí'; }
+    else { coincide='no'; coincideTexto='No coincide'; }
+  }
+  let estatusAsistencia='Pendiente';
+  if(ultimaFase2){
+    if(ultimaFase2.estatus==='valido') estatusAsistencia='En Juárez';
+    else if(ultimaFase2.estatus==='fuera_de_zona') estatusAsistencia='Fuera de Juárez';
+  }
+  const personasNum=vdPersonas.filter(p=>normNumV(p.numero)===numero);
+  const fotosNum=vdFotos.filter(f=>normNumV(f.numero)===numero);
+  const ultimaUbicacion=accesosNum.filter(a=>a.lat!=null&&a.lng!=null).sort((a,b)=>new Date(b.creado_en)-new Date(a.creado_en))[0]||null;
+  return {
+    numero, registro, coincide, coincideTexto,
+    nombre: registro&&registro.nombre_completo?registro.nombre_completo:'—',
+    vehiculo: registro?`${registro.tipo_vehiculo||'—'} · ${registro.cilindros||'—'} cil · ${registro.pasajeros||'—'} pas.`:'—',
+    estatusRegistro: registro?'Registrado':'Vio el viaje, no se registró',
+    estatusAsistencia,
+    personasCount: personasNum.length,
+    fotosCount: fotosNum.length,
+    ultimaUbicacion,
+    ultimoAcceso: accesosNum[0]||null,
+  };
+}
+function tagCoincide(c,texto){
+  if(c==='si')return `<span class="v-tag v-ok">${texto}</span>`;
+  if(c==='no')return `<span class="v-tag v-red">${texto}</span>`;
+  if(c==='emp')return `<span class="v-tag v-low">${texto}</span>`;
+  return `<span style="color:var(--v-soft)">—</span>`;
+}
+function linkMapa(ubic){
+  return ubic?`<a href="https://www.google.com/maps?q=${ubic.lat},${ubic.lng}" target="_blank">Ver mapa</a>`:'—';
+}
+
+function renderDetalleViaje(){
+  const v=currentViajeDetalle;
+  const fase=calcularFaseViaje(v);
+  document.getElementById('vd-nombre').textContent=v.nombre;
+  document.getElementById('vd-sub').textContent='Un solo link para las dos fases'+(v.destino?' · '+v.destino:'');
+
+  document.getElementById('vd-timeline').innerHTML=`
+    <div class="v-tl ${fase==='1'?'now':''}"><small>Fase 1 · Registro</small><b>Hasta ${fmtChihuahua(v.fase1_fin)}</b></div>
+    <div class="v-tl ${fase==='2'?'now':''}"><small>Fase 2 · Asistencia</small><b>Hasta ${fmtChihuahua(v.fase2_fin)}</b></div>
+    <div class="v-tl ${fase==='cerrado'?'now':''}"><small>Link cerrado</small><b>Desde ${fmtChihuahua(v.fase2_fin)}</b></div>
+  `;
+
+  const numeros=new Set([...vdRegistros.map(r=>normNumV(r.numero)), ...vdAccesos.filter(a=>a.numero_ingresado).map(a=>normNumV(a.numero_ingresado))]);
+  const filas=[...numeros].filter(Boolean).map(filaBitacora);
+  const asistenciaEnJuarez=filas.filter(f=>f.estatusAsistencia==='En Juárez').length;
+  const personasReportadas=asistenciaEnJuarez+vdPersonas.length;
+  const noCoincide=filas.filter(f=>f.coincide==='no').length;
+
+  document.getElementById('vd-stats').innerHTML=`
+    <div class="v-stat"><div class="n">${vdAccesos.length}</div><div class="l">Abrieron el link</div></div>
+    <div class="v-stat"><div class="n">${vdRegistros.length}</div><div class="l">Vehículos registrados</div></div>
+    <div class="v-stat"><div class="n">${asistenciaEnJuarez}</div><div class="l">Asistencia en Juárez</div></div>
+    <div class="v-stat"><div class="n">${personasReportadas}</div><div class="l">Personas reportadas</div></div>
+    <div class="v-stat"><div class="n">${vdFotos.length}</div><div class="l">Fotos</div></div>
+    <div class="v-stat ${noCoincide?'alert':''}"><div class="n">${noCoincide}</div><div class="l">Número no coincide</div></div>
+  `;
+
+  document.getElementById('vd-autorizados-pend').style.display=vdAutorizados.length?'none':'inline-block';
+  document.getElementById('vd-btn-limpiar-autorizados').style.display=vdAutorizados.length?'inline-flex':'none';
+
+  document.getElementById('vd-tabla-count').textContent=`${filas.length} número(s)`;
+  document.getElementById('vd-tabla-body').innerHTML=filas.length?filas.map(f=>`
+    <tr>
+      <td class="v-mono" style="font-weight:600">${f.numero}</td>
+      <td>${tagCoincide(f.coincide,f.coincideTexto)}</td>
+      <td>${f.nombre}</td>
+      <td style="color:var(--v-muted)">${f.vehiculo}</td>
+      <td><span class="v-tag ${f.registro?'v-ok':'v-mid'}">${f.estatusRegistro}</span></td>
+      <td><span class="v-tag ${f.estatusAsistencia==='En Juárez'?'v-ok':f.estatusAsistencia==='Fuera de Juárez'?'v-red':'v-mid'}">${f.estatusAsistencia}</span></td>
+      <td>${f.personasCount}</td>
+      <td>${f.fotosCount}</td>
+      <td>${linkMapa(f.ultimaUbicacion)}</td>
+    </tr>
+  `).join(''):'<tr><td colspan="9" style="color:var(--v-muted);text-align:center;padding:20px">Todavía no hay accesos.</td></tr>';
+
+  document.getElementById('vd-resultado-busqueda').innerHTML='';
+}
+
+function buscarNumeroViaje(){
+  const q=normNumV(document.getElementById('vd-buscar').value);
+  const box=document.getElementById('vd-resultado-busqueda');
+  if(!q){ box.innerHTML=''; return; }
+  const f=filaBitacora(q);
+  const acc=f.ultimoAcceso;
+  box.innerHTML=`<div class="v-result">
+    <div><small>Número</small><b class="v-mono">${q}</b></div>
+    <div><small>Registro</small><b>${f.estatusRegistro}</b></div>
+    <div><small>Asistencia</small><b>${f.estatusAsistencia}</b></div>
+    <div><small>Último acceso</small>${acc?fmtChihuahua(acc.creado_en):'—'}</div>
+    <div><small>Ubicación</small>${linkMapa(f.ultimaUbicacion)}</div>
+    <div><small>Dispositivo</small>${acc&&acc.dispositivo?acc.dispositivo:'—'}</div>
+  </div>`;
+}
+
+async function copiarLinkViaje(){
+  const url=location.origin+'/viaje.html?v='+currentViajeDetalle.slug;
+  try{ await navigator.clipboard.writeText(url); showToast('✓ Link copiado'); }
+  catch(e){ showToast(url); }
+}
+
+async function subirExcelAutorizados(input){
+  const file=input.files[0];
+  input.value='';
+  if(!file) return;
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const filasExcel=XLSX.utils.sheet_to_json(ws,{header:1});
+  const numeros=new Set();
+  filasExcel.forEach(fila=>{
+    (fila||[]).forEach(celda=>{
+      const n=String(celda==null?'':celda).replace(/\D/g,'');
+      if(n.length>=5) numeros.add(n);
+    });
+  });
+  if(!numeros.size){ showToast('No se encontraron números en ese Excel.'); return; }
+  await sbDelete('viajes_numeros_autorizados',`?viaje_id=eq.${currentViajeId}`);
+  const body=[...numeros].map(n=>({viaje_id:currentViajeId,numero:n}));
+  const r=await sbPost('viajes_numeros_autorizados',body);
+  if(!r.ok){ showToast('No se pudo guardar la lista.'); return; }
+  showToast(`✓ ${numeros.size} números autorizados`);
+  vdAutorizados=aok(await sbGet('viajes_numeros_autorizados',`?viaje_id=eq.${currentViajeId}&select=*`));
+  renderDetalleViaje();
+}
+async function limpiarAutorizados(){
+  if(!confirm('¿Quitar la lista de números autorizados? Cualquier número podrá registrarse en la fase 1.')) return;
+  await sbDelete('viajes_numeros_autorizados',`?viaje_id=eq.${currentViajeId}`);
+  vdAutorizados=[];
+  renderDetalleViaje();
+}
+
+function descargarExcelViaje(){
+  const v=currentViajeDetalle;
+  const numeros=new Set([...vdRegistros.map(r=>normNumV(r.numero)), ...vdAccesos.filter(a=>a.numero_ingresado).map(a=>normNumV(a.numero_ingresado))]);
+  const hdr=['Número','Coincide','Nombre','Dependencia','Departamento','Puesto','Vehículo','Cilindros','Pasajeros','Estatus registro','Estatus asistencia','# Personas','# Fotos','Latitud','Longitud','Comentario registro','Comentario asistencia','Registrado en'];
+  const data=[...numeros].filter(Boolean).map(num=>{
+    const f=filaBitacora(num);
+    const r=f.registro;
+    return [num,f.coincideTexto,f.nombre,r?r.dependencia||'':'',r?r.departamento||'':'',r?r.puesto||'':'',f.vehiculo,r?r.cilindros||'':'',r?r.pasajeros||'':'',f.estatusRegistro,f.estatusAsistencia,f.personasCount,f.fotosCount,f.ultimaUbicacion?f.ultimaUbicacion.lat:'',f.ultimaUbicacion?f.ultimaUbicacion.lng:'',r?r.comentario||'':'',r?r.comentario_asistencia||'':'',r?r.creado_en||'':''];
+  });
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([hdr,...data]);
+  XLSX.utils.book_append_sheet(wb,ws,'Bitácora');
+  XLSX.writeFile(wb,`${(v.nombre||'viaje').replace(/[^a-z0-9]+/gi,'_')}_bitacora.xlsx`);
+}
+
+async function descargarFotosViaje(){
+  if(!vdFotos.length){ showToast('No hay fotos todavía.'); return; }
+  showToast('Preparando ZIP…');
+  if(!window.JSZip){
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload=resolve; s.onerror=reject;
+      document.head.appendChild(s);
+    });
+  }
+  const zip=new JSZip();
+  let i=0;
+  for(const f of vdFotos){
+    try{
+      const r=await fetch(f.cloudinary_url);
+      const blob=await r.blob();
+      i++;
+      zip.file(`foto_${i}.jpg`,blob);
+    }catch(e){ /* una foto que falle no detiene el resto del ZIP */ }
+  }
+  const content=await zip.generateAsync({type:'blob'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(content);
+  a.download=`${(currentViajeDetalle.nombre||'viaje').replace(/[^a-z0-9]+/gi,'_')}_fotos.zip`;
+  a.click();
+  showToast('✓ ZIP descargado');
+}
+
 // ── NAV ──
 function goTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
@@ -5284,6 +5783,7 @@ function goTab(name,btn){
   if(name==='correccion'){cargarCorreccion();}
   if(name==='historial'){cargarHistorial();}
   if(name==='incidencias'){cargarIncidencias();}
+  if(name==='viajes'){cargarViajes();}
   if(name==='nuevos'){cargarNuevos();}
   if(name==='red'){filtrarRed();}
   if(name==='secciones'){ if(currentUser==='Octavio'||EDITORAS.includes(currentUser)){ cargarMapasSeccion().then(renderSecciones); } else { renderSecciones(); } }
