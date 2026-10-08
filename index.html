@@ -5423,6 +5423,26 @@ let viajesCache=[];
 let currentViajeId=null, currentViajeDetalle=null;
 let vdAccesos=[], vdRegistros=[], vdPersonas=[], vdFotos=[], vdAutorizados=[];
 
+// El panel y la página pública (viaje.html) comparten la misma anon key de Supabase —
+// no hay login real de Supabase Auth, así que RLS no puede distinguir "esto viene del
+// panel de Octavio" de "esto viene de cualquiera con la key". Por eso TODA la bitácora
+// (números, nombres, ubicaciones) vive detrás de funciones RPC que exigen esta misma
+// contraseña como "llave" server-side — igual a la que ya usas para entrar como Octavio.
+// Si alguna vez cambias PASSWORDS['Octavio'], hay que actualizar también la función
+// admin_token_valido() en Supabase (está en el SQL que te compartió Claude).
+const VIAJES_ADMIN_TOKEN=PASSWORDS['Octavio'];
+async function sbRpc(fn,args){
+  return fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
+}
+async function sbRpcJson(fn,args,fallback){
+  try{
+    const r=await sbRpc(fn,args);
+    if(!r.ok) return fallback;
+    const text=await r.text();
+    return text?JSON.parse(text):fallback;
+  }catch(e){ return fallback; }
+}
+
 function normNumV(s){ return (s||'').replace(/\D/g,''); }
 function aok(x){ return Array.isArray(x)?x:[]; }
 
@@ -5459,11 +5479,10 @@ function calcularFaseViaje(v){
 }
 
 async function cargarViajes(){
-  let rows=null;
-  try{ rows=await sbGet('viajes','?select=*&order=creado_en.desc'); }catch(e){ rows=null; }
+  const rows=await sbRpcJson('viajes_admin_listar',{p_admin_token:VIAJES_ADMIN_TOKEN},null);
   if(!Array.isArray(rows)){
     viajesCache=[];
-    document.getElementById('viajes-cards').innerHTML='<div style="color:var(--v-muted);font-size:13px;grid-column:1/-1">⚠️ Todavía no existen las tablas de este módulo en Supabase. Corre el SQL que te compartió Claude y recarga esta pestaña.</div>';
+    document.getElementById('viajes-cards').innerHTML='<div style="color:var(--v-muted);font-size:13px;grid-column:1/-1">⚠️ Todavía no existen las funciones de este módulo en Supabase. Corre el SQL que te compartió Claude y recarga esta pestaña.</div>';
     return;
   }
   viajesCache=rows;
@@ -5525,29 +5544,27 @@ async function guardarViaje(){
   const fase2Fin=document.getElementById('mv-fase2-fin').value;
   if(!nombre||!fase1Fin||!fase2Fin){ showToast('Falta el nombre o los horarios.'); return; }
   const dependencias=document.getElementById('mv-dependencias').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  const body={
-    nombre, destino:document.getElementById('mv-destino').value.trim(),
-    fecha_evento:document.getElementById('mv-fecha').value||null,
-    fase1_fin:chihuahuaToUTC(fase1Fin),
-    fase2_fin:chihuahuaToUTC(fase2Fin),
-    forzar_fase:document.getElementById('mv-forzar').value,
-    dependencias,
-    geofence_lat:parseFloat(document.getElementById('mv-lat').value)||null,
-    geofence_lng:parseFloat(document.getElementById('mv-lng').value)||null,
-    geofence_radio_km:parseFloat(document.getElementById('mv-radio').value)||25,
+  const campos={
+    p_admin_token:VIAJES_ADMIN_TOKEN,
+    p_nombre:nombre, p_destino:document.getElementById('mv-destino').value.trim(),
+    p_fecha_evento:document.getElementById('mv-fecha').value||null,
+    p_fase1_fin:chihuahuaToUTC(fase1Fin),
+    p_fase2_fin:chihuahuaToUTC(fase2Fin),
+    p_forzar_fase:document.getElementById('mv-forzar').value,
+    p_dependencias:dependencias,
+    p_geofence_lat:parseFloat(document.getElementById('mv-lat').value)||null,
+    p_geofence_lng:parseFloat(document.getElementById('mv-lng').value)||null,
+    p_geofence_radio_km:parseFloat(document.getElementById('mv-radio').value)||25,
   };
   if(id){
-    const r=await sbPatch('viajes',`?id=eq.${id}`,body);
-    if(!r.ok){ showToast('No se pudo guardar. ¿Ya corriste el SQL en Supabase?'); return; }
+    const rows=await sbRpcJson('viajes_admin_actualizar',{...campos,p_viaje_id:id},null);
+    if(!rows||!rows.length){ showToast('No se pudo guardar. ¿Ya corriste el SQL en Supabase?'); return; }
     showToast('✓ Viaje actualizado');
     closeModal('modal-viaje');
     await cargarViajes();
     if(currentViajeId===id) await abrirDetalleViaje(id);
   } else {
-    body.slug=generarSlugViaje();
-    body.fase1_inicio=new Date().toISOString();
-    body.creado_por=currentUser;
-    const rows=await sbPostRepresentation('viajes',body);
+    const rows=await sbRpcJson('viajes_admin_crear',{...campos,p_slug:generarSlugViaje(),p_creado_por:currentUser},null);
     if(!rows||!rows.length){ showToast('No se pudo crear. ¿Ya corriste el SQL en Supabase?'); return; }
     const nuevo=rows[0];
     document.getElementById('mv-id').value=nuevo.id;
@@ -5570,15 +5587,15 @@ async function abrirDetalleViaje(id){
   document.getElementById('viajes-lista-cont').style.display='none';
   document.getElementById('viajes-detalle-cont').style.display='block';
   document.getElementById('vd-nombre').textContent='Cargando…';
-  const rows=await sbGet('viajes',`?id=eq.${id}&select=*&limit=1`);
-  if(!Array.isArray(rows)||!rows.length){ showToast('No se encontró el viaje.'); volverListaViajes(); return; }
+  const rows=await sbRpcJson('viajes_admin_obtener',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},null);
+  if(!rows||!rows.length){ showToast('No se encontró el viaje.'); volverListaViajes(); return; }
   currentViajeDetalle=rows[0];
   const [accesos,registros,personas,fotos,autorizados]=await Promise.all([
-    sbGet('viajes_accesos',`?viaje_id=eq.${id}&select=*&order=creado_en.desc`),
-    sbGet('viajes_registros',`?viaje_id=eq.${id}&select=*`),
-    sbGet('viajes_asistencia_personas',`?viaje_id=eq.${id}&select=*`),
-    sbGet('viajes_fotos',`?viaje_id=eq.${id}&select=*`),
-    sbGet('viajes_numeros_autorizados',`?viaje_id=eq.${id}&select=*`),
+    sbRpcJson('viajes_admin_listar_accesos',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_registros',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_personas',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_fotos',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
+    sbRpcJson('viajes_admin_listar_autorizados',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:id},[]),
   ]);
   vdAccesos=aok(accesos); vdRegistros=aok(registros); vdPersonas=aok(personas);
   vdFotos=aok(fotos); vdAutorizados=aok(autorizados);
@@ -5713,17 +5730,15 @@ async function subirExcelAutorizados(input){
     });
   });
   if(!numeros.size){ showToast('No se encontraron números en ese Excel.'); return; }
-  await sbDelete('viajes_numeros_autorizados',`?viaje_id=eq.${currentViajeId}`);
-  const body=[...numeros].map(n=>({viaje_id:currentViajeId,numero:n}));
-  const r=await sbPost('viajes_numeros_autorizados',body);
+  const r=await sbRpc('viajes_admin_subir_autorizados',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:currentViajeId,p_numeros:[...numeros]});
   if(!r.ok){ showToast('No se pudo guardar la lista.'); return; }
   showToast(`✓ ${numeros.size} números autorizados`);
-  vdAutorizados=aok(await sbGet('viajes_numeros_autorizados',`?viaje_id=eq.${currentViajeId}&select=*`));
+  vdAutorizados=aok(await sbRpcJson('viajes_admin_listar_autorizados',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:currentViajeId},[]));
   renderDetalleViaje();
 }
 async function limpiarAutorizados(){
   if(!confirm('¿Quitar la lista de números autorizados? Cualquier número podrá registrarse en la fase 1.')) return;
-  await sbDelete('viajes_numeros_autorizados',`?viaje_id=eq.${currentViajeId}`);
+  await sbRpc('viajes_admin_limpiar_autorizados',{p_admin_token:VIAJES_ADMIN_TOKEN,p_viaje_id:currentViajeId});
   vdAutorizados=[];
   renderDetalleViaje();
 }

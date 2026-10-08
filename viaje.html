@@ -186,18 +186,21 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const CLOUD='da7m6y3kk';
 const PRESET='barrido_electoral';
 
-async function sbGet(table,params=''){
-  const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
-  if(!r.ok) return [];
-  return r.json();
+// Esta página NUNCA lee ni escribe las tablas de "viajes" directamente: todo pasa por
+// funciones RPC (security definer) en Supabase, angostas a propósito — cada una hace
+// solo lo que esta pantalla necesita (insertar su propio acceso, leer si SU número ya
+// está registrado, etc.), nunca "dame todo de esta tabla". Así, aunque alguien extraiga
+// la anon key de esta misma página, no puede leer la bitácora de nadie más ni borrar nada.
+async function sbRpc(fn,args){
+  return fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
 }
-async function sbPost(table,body,onConflict){
-  const url=onConflict?`${SB_URL}/rest/v1/${table}?on_conflict=${onConflict}`:`${SB_URL}/rest/v1/${table}`;
-  const prefer=onConflict?'resolution=merge-duplicates,return=minimal':'return=minimal';
-  return fetch(url,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':prefer},body:JSON.stringify(body)});
-}
-async function sbPatch(table,params,body){
-  return fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+async function sbRpcJson(fn,args,fallback){
+  try{
+    const r=await sbRpc(fn,args);
+    if(!r.ok) return fallback;
+    const text=await r.text();
+    return text?JSON.parse(text):fallback;
+  }catch(e){ return fallback; }
 }
 
 function showToast(msg){
@@ -223,7 +226,11 @@ function parseDispositivo(ua){
 
 async function logAcceso({fase,numero,estatus,lat,lng}){
   try{
-    await sbPost('viajes_accesos',{viaje_id:viaje.id,numero_ingresado:numero||null,fase:fase||null,estatus:estatus||null,dispositivo:parseDispositivo(navigator.userAgent),user_agent:navigator.userAgent,lat:(lat!==undefined?lat:null),lng:(lng!==undefined?lng:null)});
+    await sbRpc('viaje_pub_registrar_acceso',{
+      p_viaje_id:viaje.id, p_numero:numero||null, p_fase:fase||null, p_estatus:estatus||null,
+      p_dispositivo:parseDispositivo(navigator.userAgent), p_user_agent:navigator.userAgent,
+      p_lat:(lat!==undefined?lat:null), p_lng:(lng!==undefined?lng:null)
+    });
   }catch(e){ /* la bitácora no debe romper el flujo del usuario */ }
 }
 
@@ -254,10 +261,10 @@ function pintarMarca(elId,numero){
 }
 
 let viaje=null;
+let slugActual=null;
 let faseActual=null;
 let numeroP1=null, normP1=null;
 let numeroP2=null, normP2=null;
-let registroP2=null;
 let geoP2=null;
 
 function calcularFase(v){
@@ -271,10 +278,9 @@ function calcularFase(v){
 async function init(){
   const slug=new URLSearchParams(location.search).get('v');
   if(!slug){ document.getElementById('error-msg').textContent='No disponible'; pantalla('pantalla-error'); return; }
-  let rows=[];
-  try{ rows=await sbGet('viajes',`?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`); }
-  catch(e){ rows=[]; }
-  if(!rows || !rows.length || rows[0].activo===false){
+  slugActual=slug;
+  const rows=await sbRpcJson('viaje_pub_por_slug',{p_slug:slug},[]);
+  if(!rows || !rows.length){
     document.getElementById('error-msg').textContent='No disponible';
     pantalla('pantalla-error');
     return;
@@ -309,15 +315,15 @@ async function validarP1(){
   const btn=document.getElementById('p1-num-btn');
   btn.disabled=true;
   try{
-    const autorizados=await sbGet('viajes_numeros_autorizados',`?viaje_id=eq.${viaje.id}&select=numero`);
-    if(autorizados.length && !autorizados.some(a=>normNum(a.numero)===normP1)){
+    const autorizado=await sbRpcJson('viaje_pub_numero_autorizado',{p_viaje_id:viaje.id,p_numero:normP1},true);
+    if(!autorizado){
       await logAcceso({fase:'1',numero:normP1,estatus:'no_autorizado'});
       errBox.textContent='Ese número no puede registrarse en este enlace.';
       errBox.classList.remove('hidden');
       return;
     }
-    const existentes=await sbGet('viajes_registros',`?viaje_id=eq.${viaje.id}&numero=eq.${normP1}&select=id`);
-    if(existentes.length){
+    const yaRegistrado=await sbRpcJson('viaje_pub_numero_registrado',{p_viaje_id:viaje.id,p_numero:normP1},false);
+    if(yaRegistrado){
       await logAcceso({fase:'1',numero:normP1,estatus:'ya_registrado'});
       pintarMarca('wm-p1-confirm',numeroP1);
       pantalla('p1-confirm');
@@ -359,16 +365,14 @@ async function enviarP1(){
   if(!pas){ marcarError('fg-pas','Escribe cuántos pasajeros caben.'); ok=false; }
   if(!ok) return;
   const cilBtn=document.querySelector('#f-cil .pill.on');
-  const body={
-    viaje_id:viaje.id, numero:normP1, dependencia:dep,
-    departamento:document.getElementById('f-depto').value.trim(),
-    puesto:document.getElementById('f-pto').value.trim(),
-    nombre_completo:nom, telefono:tel, tipo_vehiculo:tipo,
-    cilindros:cilBtn?cilBtn.dataset.v:null,
-    pasajeros:pas, comentario:document.getElementById('f-com').value.trim(),
-    actualizado_en:new Date().toISOString()
-  };
-  const r=await sbPost('viajes_registros',body,'viaje_id,numero');
+  const r=await sbRpc('viaje_pub_registrar_fase1',{
+    p_viaje_id:viaje.id, p_numero:normP1, p_dependencia:dep,
+    p_departamento:document.getElementById('f-depto').value.trim(),
+    p_puesto:document.getElementById('f-pto').value.trim(),
+    p_nombre_completo:nom, p_telefono:tel, p_tipo_vehiculo:tipo,
+    p_cilindros:cilBtn?cilBtn.dataset.v:null,
+    p_pasajeros:pas, p_comentario:document.getElementById('f-com').value.trim()
+  });
   if(!r.ok){ showToast('No se pudo enviar. Intenta otra vez.'); return; }
   await logAcceso({fase:'1',numero:normP1,estatus:'registrado'});
   pintarMarca('wm-p1-confirm',numeroP1);
@@ -392,14 +396,13 @@ async function validarP2(){
   const btn=document.getElementById('p2-num-btn');
   btn.disabled=true;
   try{
-    const existentes=await sbGet('viajes_registros',`?viaje_id=eq.${viaje.id}&numero=eq.${normP2}&select=*&limit=1`);
-    if(!existentes.length){
+    const registrado=await sbRpcJson('viaje_pub_numero_registrado',{p_viaje_id:viaje.id,p_numero:normP2},false);
+    if(!registrado){
       await logAcceso({fase:'2',numero:normP2,estatus:'no_registrado'});
       errBox.textContent='Este número no está registrado.';
       errBox.classList.remove('hidden');
       return;
     }
-    registroP2=existentes[0];
     pantalla('p2-validando');
     pedirUbicacion();
   } finally { btn.disabled=false; }
@@ -443,7 +446,7 @@ async function abrirFormP2(){
   document.getElementById('personas-cont').innerHTML='';
   personasCount=0;
   for(let i=0;i<4;i++) agregarPersonaInput();
-  document.getElementById('p2-com').value=registroP2.comentario_asistencia||'';
+  document.getElementById('p2-com').value='';
   await cargarFotosP2();
   pintarMarca('wm-p2-form',numeroP2);
   pantalla('p2-form');
@@ -453,8 +456,7 @@ async function cargarFotosP2(){
   const grid=document.getElementById('fotos-grid');
   const addBtn=grid.querySelector('.ph.add');
   grid.innerHTML='';
-  let fotos=[];
-  try{ fotos=await sbGet('viajes_fotos',`?viaje_id=eq.${viaje.id}&numero=eq.${normP2}&select=cloudinary_url`); }catch(e){}
+  const fotos=await sbRpcJson('viaje_pub_mis_fotos',{p_viaje_id:viaje.id,p_numero:normP2},[]);
   fotos.forEach(f=>{
     const d=document.createElement('div'); d.className='ph';
     d.innerHTML=`<img src="${f.cloudinary_url}">`;
@@ -487,11 +489,11 @@ async function handleFotos(input){
       const fd=new FormData();
       fd.append('file',file);
       fd.append('upload_preset',PRESET);
-      fd.append('folder',`gemacuu/viajes/${viaje.slug}/${normP2}`);
+      fd.append('folder',`gemacuu/viajes/${slugActual}/${normP2}`);
       const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
       const d=await r.json();
       if(d.secure_url){
-        await sbPost('viajes_fotos',{viaje_id:viaje.id,numero:normP2,cloudinary_url:d.secure_url,cloudinary_public_id:d.public_id});
+        await sbRpc('viaje_pub_agregar_foto',{p_viaje_id:viaje.id,p_numero:normP2,p_cloudinary_url:d.secure_url,p_cloudinary_public_id:d.public_id});
         thumb.innerHTML=`<img src="${d.secure_url}">`;
       } else {
         thumb.remove();
@@ -506,10 +508,10 @@ async function enviarP2(){
   const comentario=document.getElementById('p2-com').value.trim();
   try{
     if(nombres.length){
-      await sbPost('viajes_asistencia_personas',nombres.map(n=>({viaje_id:viaje.id,numero:normP2,nombre:n})));
+      await sbRpc('viaje_pub_agregar_personas',{p_viaje_id:viaje.id,p_numero:normP2,p_nombres:nombres});
     }
     if(comentario){
-      await sbPatch('viajes_registros',`?viaje_id=eq.${viaje.id}&numero=eq.${normP2}`,{comentario_asistencia:comentario});
+      await sbRpc('viaje_pub_actualizar_comentario',{p_viaje_id:viaje.id,p_numero:normP2,p_comentario:comentario});
     }
   }catch(e){ showToast('No se pudo enviar. Intenta otra vez.'); return; }
   await logAcceso({fase:'2',numero:normP2,estatus:'asistencia_enviada',lat:geoP2?geoP2.lat:undefined,lng:geoP2?geoP2.lng:undefined});
