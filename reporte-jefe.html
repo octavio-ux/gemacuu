@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reporte</title>
+<meta property="og:title" content="Reporte">
+<meta property="og:description" content="Da click para ver.">
+<meta property="og:type" content="website">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#15191D;--muted:#4A5259;--soft:#5C646B;--line:#DDE0E3;--bg:#F4F5F6;--brand:#1E3A4C;--red:#8A1C1C}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+.hidden{display:none!important}
+.wrap{max-width:720px;margin:0 auto;padding:0 0 48px}
+.banner{background:var(--brand);color:#fff;padding:28px 20px 22px}
+.banner .kicker{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.8}
+.banner .titulo{font-size:22px;font-weight:700;margin:6px 0}
+.banner .sub{font-size:13px;opacity:.85}
+.actualizado{display:inline-block;margin-top:10px;font-size:12px;background:rgba(255,255,255,.15);border-radius:999px;padding:4px 12px}
+.cont{padding:20px}
+.seccion-titulo{font-size:16px;font-weight:700;margin:24px 0 12px}
+.seccion-titulo:first-child{margin-top:0}
+.cortes{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat .n{font-size:24px;font-weight:700}
+.stat .l{font-size:12px;color:var(--muted);margin-top:2px}
+.galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+.galeria img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer}
+.vcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.vcard-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.vcard-nombre{font-weight:700;font-size:15px}
+.vcard-tipo{font-size:12px;color:var(--muted)}
+.vcard-tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.tag-ok{background:var(--brand);color:#fff}
+.tag-extra{background:#FFF4D6;color:#6B4E00}
+.vcard-fila{font-size:13px;color:var(--muted);margin:3px 0}
+.vcard-fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin-top:8px}
+.vcard-fotos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;cursor:pointer}
+.vcard-fotos-label{font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.04em;margin-top:8px;margin-bottom:4px}
+.centro{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center}
+.spinner{width:44px;height:44px;border-radius:50%;border:4px solid #C7CCD1;border-top-color:var(--brand);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.lightbox img{max-width:100%;max-height:100%;border-radius:8px}
+#wm-layer{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:40}
+#wm-pattern{position:absolute;top:50%;left:50%;width:220vmax;height:220vmax;transform:translate(-50%,-50%) rotate(-28deg);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(16,1fr)}
+#wm-pattern span{display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:1.8vmax;font-weight:600;color:rgba(21,25,29,.13);white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="wm-layer"><div id="wm-pattern"></div></div>
+
+<div class="centro" id="pantalla-cargando"><div class="spinner"></div></div>
+<div class="centro hidden" id="pantalla-error"><h1 style="font-size:20px">No disponible</h1></div>
+
+<div class="wrap hidden" id="wrap">
+  <div class="banner">
+    <div class="kicker">Reporte</div>
+    <div class="titulo" id="r-titulo">Viaje</div>
+    <div class="sub" id="r-sub"></div>
+    <div class="actualizado" id="r-actualizado">Actualizado --:--</div>
+  </div>
+  <div class="cont">
+    <div class="seccion-titulo">Corte 1 · Salida</div>
+    <div class="cortes" id="r-corte1"></div>
+
+    <div class="seccion-titulo">Corte 2 · Llegada</div>
+    <div class="cortes" id="r-corte2"></div>
+
+    <div class="seccion-titulo">Galería del evento</div>
+    <div class="galeria" id="r-galeria"></div>
+
+    <div class="seccion-titulo">Por vehículo</div>
+    <div id="r-vehiculos"></div>
+  </div>
+</div>
+
+<div class="lightbox hidden" id="lightbox" onclick="this.classList.add('hidden')"><img id="lightbox-img"></div>
+
+<script>
+const SB_URL='https://hhqauklluvlfqbweipxa.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocWF1a2xsdXZsZnFid2VpcHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDg2MjQsImV4cCI6MjA5MTc4NDYyNH0.Y5S2UsRm_hfT7QUuYXJzGVFy-IICJO172iXu8tRieks';
+
+async function sbRpcJson(fn,args,fallback){
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
+    if(!r.ok) return fallback;
+    const text=await r.text();
+    return text?JSON.parse(text):fallback;
+  }catch(e){ return fallback; }
+}
+
+function pintarMarca(texto){
+  const cont=document.getElementById('wm-pattern');
+  let h='';
+  for(let i=0;i<128;i++) h+=`<span>${texto}</span>`;
+  cont.innerHTML=h;
+}
+function abrirLightbox(url){
+  document.getElementById('lightbox-img').src=url;
+  document.getElementById('lightbox').classList.remove('hidden');
+}
+function fotosHtml(urls,claseImg){
+  return (urls||[]).map(u=>`<img src="${u}" class="${claseImg||''}" onclick="event.stopPropagation();abrirLightbox('${u}')">`).join('');
+}
+
+let slug=null;
+let primeraCarga=true;
+
+async function cargarYRenderizar(){
+  const datos=await sbRpcJson('reporte_pub_datos',{p_slug:slug},null);
+  if(!datos){
+    document.getElementById('pantalla-cargando').classList.add('hidden');
+    document.getElementById('wrap').classList.add('hidden');
+    document.getElementById('pantalla-error').classList.remove('hidden');
+    return;
+  }
+  if(primeraCarga){
+    pintarMarca(datos.nombre_jefe||'');
+    primeraCarga=false;
+  }
+  document.getElementById('pantalla-cargando').classList.add('hidden');
+  document.getElementById('pantalla-error').classList.add('hidden');
+  document.getElementById('wrap').classList.remove('hidden');
+
+  document.getElementById('r-titulo').textContent=datos.viaje.nombre;
+  document.getElementById('r-sub').textContent=datos.viaje.destino||'';
+  const hora=new Date(datos.actualizado_en).toLocaleTimeString('es-MX',{timeZone:'America/Chihuahua',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('r-actualizado').textContent='Actualizado '+hora;
+
+  const c1=datos.corte1;
+  document.getElementById('r-corte1').innerHTML=`
+    <div class="stat"><div class="n">${c1.autorizados_salieron}/${c1.autorizados_total}</div><div class="l">Autorizados salieron</div></div>
+    <div class="stat"><div class="n">+${c1.extra_salieron}</div><div class="l">Extra salieron</div></div>
+  `;
+  const c2=datos.corte2;
+  document.getElementById('r-corte2').innerHTML=`
+    <div class="stat"><div class="n">${c2.autorizados_llegaron}</div><div class="l">Autorizados llegaron</div></div>
+    <div class="stat"><div class="n">+${c2.extra_llegaron}</div><div class="l">Extra llegaron</div></div>
+    <div class="stat"><div class="n">${c2.total_salieron}</div><div class="l">Total que salieron</div></div>
+  `;
+
+  const galeria=document.getElementById('r-galeria');
+  galeria.innerHTML=(datos.galeria_evento&&datos.galeria_evento.length)?fotosHtml(datos.galeria_evento):'<div style="color:var(--muted);font-size:13px">Todavía no hay fotos del evento.</div>';
+
+  document.getElementById('r-vehiculos').innerHTML=(datos.vehiculos||[]).map(v=>`
+    <div class="vcard">
+      <div class="vcard-hdr">
+        <div><div class="vcard-nombre">${v.conductor}</div><div class="vcard-tipo">${v.tipo||'—'}</div></div>
+        <span class="vcard-tag ${v.origen==='extra'?'tag-extra':'tag-ok'}">${v.origen==='extra'?'Extra':'Autorizado'}</span>
+      </div>
+      <div class="vcard-fila">Personas: ${v.personas&&v.personas.length?v.personas.join(', '):'—'}</div>
+      <div class="vcard-fila">Salida: ${v.hora_salida?new Date(v.hora_salida).toLocaleTimeString('es-MX',{timeZone:'America/Chihuahua',hour:'2-digit',minute:'2-digit'}):'—'}</div>
+      <div class="vcard-fila">Llegada: ${v.hora_llegada?new Date(v.hora_llegada).toLocaleTimeString('es-MX',{timeZone:'America/Chihuahua',hour:'2-digit',minute:'2-digit'}):'—'}</div>
+      ${v.fotos_salida&&v.fotos_salida.length?`<div class="vcard-fotos-label">Salida</div><div class="vcard-fotos">${fotosHtml(v.fotos_salida)}</div>`:''}
+      ${v.fotos_llegada&&v.fotos_llegada.length?`<div class="vcard-fotos-label">Llegada</div><div class="vcard-fotos">${fotosHtml(v.fotos_llegada)}</div>`:''}
+      ${v.fotos_evento&&v.fotos_evento.length?`<div class="vcard-fotos-label">Evento</div><div class="vcard-fotos">${fotosHtml(v.fotos_evento)}</div>`:''}
+    </div>
+  `).join('')||'<div style="color:var(--muted);font-size:13px">Todavía no hay vehículos.</div>';
+}
+
+async function init(){
+  slug=new URLSearchParams(location.search).get('r');
+  if(!slug){
+    document.getElementById('pantalla-cargando').classList.add('hidden');
+    document.getElementById('pantalla-error').classList.remove('hidden');
+    return;
+  }
+  await cargarYRenderizar();
+  setInterval(cargarYRenderizar, 45000);
+}
+init();
+</script>
+</body>
+</html>
