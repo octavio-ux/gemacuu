@@ -1944,7 +1944,7 @@ tr:hover td{background:#f7f7f7}
 
     <div class="modal-footer-fijo">
       <button class="btn btn-secondary w-full" onclick="closeModal('modal-evento')">Cancelar</button>
-      <button class="btn btn-primary w-full" onclick="guardarEvento()">💾 Guardar evento</button>
+      <button class="btn btn-primary w-full" id="btn-guardar-evento" onclick="guardarEvento()">💾 Guardar evento</button>
     </div>
   </div>
 </div>
@@ -4685,6 +4685,17 @@ async function guardarEvento(){
   const nombre=document.getElementById('ev-nombre').value.trim();
   const fecha=document.getElementById('ev-fecha').value;
   if(!nombre||!fecha){showToast('⚠️ Nombre y fecha son obligatorios');return;}
+
+  // Deshabilitado mientras se guarda: un doble clic (fácil con mala señal en el
+  // celular) disparaba dos POST antes de que el primero terminara y creaba el mismo
+  // evento dos veces — así ya no se puede volver a tocar hasta que termine.
+  const btnGuardar=document.getElementById('btn-guardar-evento');
+  if(btnGuardar.disabled) return;
+  const textoBtnOriginal=btnGuardar.textContent;
+  btnGuardar.disabled=true;
+  btnGuardar.textContent='Guardando…';
+  try{
+
   const padrino=document.getElementById('ev-padrino').value;
   const tipo=document.getElementById('ev-tipo').value==='masivo'?'masivo':'recorrido';
   const lugar=document.getElementById('ev-lugar').value.trim();
@@ -4746,6 +4757,10 @@ async function guardarEvento(){
   }
   closeModal('modal-evento');
   await cargarEventos();
+  }finally{
+    btnGuardar.disabled=false;
+    btnGuardar.textContent=textoBtnOriginal;
+  }
 }
 
 function eliminarEvento(){
