@@ -33,8 +33,8 @@ h1{margin:0;font-size:26px;line-height:1.2;font-weight:700;font-family:inherit}
 .btn2{height:48px;border-radius:10px;border:1px solid #C7CCD1;background:#fff;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);cursor:pointer;width:100%}
 .add{height:48px;border-radius:10px;border:1px dashed #9AA2A9;background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:var(--brand);cursor:pointer;width:100%}
 .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.ph{aspect-ratio:1;border-radius:10px;background:#D3D8DC;display:flex;align-items:center;justify-content:center;color:var(--soft);font-size:12px;overflow:hidden}
-.ph img{width:100%;height:100%;object-fit:cover}
+.ph{position:relative;aspect-ratio:1;border-radius:10px;background:#D3D8DC;display:flex;align-items:center;justify-content:center;color:var(--soft);font-size:12px;overflow:hidden}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .ph.add{border:1px dashed #9AA2A9;background:transparent;height:auto;flex-direction:column;gap:4px}
 .ph.error-foto{background:#F6E3E3;border:1px solid #E8B4B4;flex-direction:column;gap:4px;padding:4px;text-align:center}
 .ph.error-foto span{font-size:11px;color:var(--red);line-height:1.3}
@@ -552,18 +552,24 @@ async function subirFotoTile(momento,thumb,file){
   }
 }
 
-function handleFotos(input){
+// Las miniaturas aparecen todas de inmediato (con su spinner), pero las subidas van
+// una por una, no todas a la vez: varias fotos grandes subiendo en paralelo desde un
+// celular es más propenso a fallos/timeouts que subirlas en orden.
+async function handleFotos(input){
   const files=Array.from(input.files||[]);
   input.value='';
   if(!files.length || !momentoFotosActivo) return;
   const momento=momentoFotosActivo;
   const grid=document.getElementById(momento+'-fotos-grid');
   const addBtn=grid.querySelector('.ph.add');
-  files.forEach(file=>{
+  const tiles=files.map(file=>{
     const thumb=document.createElement('div');
     grid.insertBefore(thumb,addBtn);
-    subirFotoTile(momento,thumb,file);
+    return {thumb,file};
   });
+  for(const {thumb,file} of tiles){
+    await subirFotoTile(momento,thumb,file);
+  }
 }
 
 async function contarFotos(momento,gridId){
