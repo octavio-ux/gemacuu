@@ -36,6 +36,9 @@ h1{margin:0;font-size:26px;line-height:1.2;font-weight:700;font-family:inherit}
 .ph{aspect-ratio:1;border-radius:10px;background:#D3D8DC;display:flex;align-items:center;justify-content:center;color:var(--soft);font-size:12px;overflow:hidden}
 .ph img{width:100%;height:100%;object-fit:cover}
 .ph.add{border:1px dashed #9AA2A9;background:transparent;height:auto;flex-direction:column;gap:4px}
+.ph.error-foto{background:#F6E3E3;border:1px solid #E8B4B4;flex-direction:column;gap:4px;padding:4px;text-align:center}
+.ph.error-foto span{font-size:11px;color:var(--red);line-height:1.3}
+.ph.error-foto button{border:none;background:var(--brand);color:#fff;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer}
 .person{display:flex;gap:8px;align-items:center}
 .person span{width:24px;font-size:14px;font-weight:600;color:var(--soft)}
 .person input{flex:1}
@@ -171,8 +174,9 @@ h1{margin:0;font-size:26px;line-height:1.2;font-weight:700;font-family:inherit}
     </div>
   </div>
 
-  <input type="file" id="in-cam" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFotos(this)">
-  <input type="file" id="in-gal" accept="image/*" multiple class="hidden" onchange="handleFotos(this)">
+  <!-- Sin "capture": así el celular ofrece elegir Cámara o Galería (con "capture" se
+       salta esa elección y abre la cámara directo). "multiple" permite varias a la vez. -->
+  <input type="file" id="in-foto" accept="image/*" multiple class="hidden" onchange="handleFotos(this)">
 
   <!-- Confirmaciones -->
   <div class="centro hidden" id="confirm-salida">
@@ -467,43 +471,99 @@ async function mostrarEvento(){
 document.querySelectorAll('.ph.add').forEach(btn=>{
   btn.addEventListener('click',()=>{
     momentoFotosActivo=btn.dataset.momento;
-    if(/iPhone|iPad|Android/i.test(navigator.userAgent)){
-      document.getElementById('in-cam').click();
-    } else {
-      document.getElementById('in-gal').click();
-    }
+    document.getElementById('in-foto').click();
   });
 });
 
-async function handleFotos(input){
+// Lee el EXIF DateTimeOriginal de un JPEG (si lo trae) sin librerías externas. Nunca
+// lanza: si no es JPEG, no trae EXIF, o el formato no calza, regresa null. El EXIF no
+// trae zona horaria — es la hora local de reloj de la cámara al momento de la foto —
+// así que se guarda tal cual, solo para comparar contra el día del viaje.
+async function exifFechaOriginal(file){
+  try{
+    const buf=await file.slice(0,128*1024).arrayBuffer();
+    const view=new DataView(buf);
+    if(view.getUint16(0)!==0xFFD8) return null; // no es JPEG
+    let offset=2;
+    while(offset<view.byteLength-4){
+      const marker=view.getUint16(offset);
+      if(marker===0xFFE1){
+        const segLen=view.getUint16(offset+2);
+        const segStart=offset+4;
+        if(view.getUint32(segStart)!==0x45786966){ offset+=2+segLen; continue; } // "Exif"
+        const tiffOffset=segStart+6;
+        const little=view.getUint16(tiffOffset)===0x4949;
+        const getU16=o=>view.getUint16(o,little);
+        const getU32=o=>view.getUint32(o,little);
+        const ifd0Offset=tiffOffset+getU32(tiffOffset+4);
+        const numEntries0=getU16(ifd0Offset);
+        let exifIfdOffset=null;
+        for(let i=0;i<numEntries0;i++){
+          const entryOffset=ifd0Offset+2+i*12;
+          if(getU16(entryOffset)===0x8769){ exifIfdOffset=tiffOffset+getU32(entryOffset+8); break; }
+        }
+        if(exifIfdOffset==null) return null;
+        const numEntriesExif=getU16(exifIfdOffset);
+        for(let i=0;i<numEntriesExif;i++){
+          const entryOffset=exifIfdOffset+2+i*12;
+          const tag=getU16(entryOffset);
+          if(tag===0x9003||tag===0x9004){
+            const valueOffset=getU32(entryOffset+8);
+            const strStart=tiffOffset+valueOffset;
+            let str='';
+            for(let j=0;j<19;j++) str+=String.fromCharCode(view.getUint8(strStart+j));
+            const m=str.match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+            return m?`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}`:null;
+          }
+        }
+        return null;
+      } else if((marker&0xFF00)!==0xFF00){
+        return null;
+      } else {
+        const segLen=view.getUint16(offset+2);
+        offset+=2+segLen;
+      }
+    }
+    return null;
+  }catch(e){ return null; }
+}
+
+async function subirFotoTile(momento,thumb,file){
+  thumb.className='ph';
+  thumb.textContent='⏳';
+  try{
+    const fechaToma=await exifFechaOriginal(file);
+    const fd=new FormData();
+    fd.append('file',file);
+    fd.append('upload_preset',PRESET);
+    fd.append('folder',`gemacuu/viajes/${viaje.id}/${celularActual}/${momento}`);
+    const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.secure_url) throw new Error('cloudinary');
+    const rpc=await sbRpc('viaje_pub_agregar_foto',{p_viaje_id:viaje.id,p_celular:celularActual,p_momento:momento,p_cloudinary_url:d.secure_url,p_cloudinary_public_id:d.public_id,p_fecha_toma:fechaToma});
+    if(!rpc.ok) throw new Error('db');
+    thumb.innerHTML=`<img src="${d.secure_url}">`;
+    const err=document.getElementById(momento+'-fotos-err');
+    if(err) err.classList.add('hidden');
+  }catch(e){
+    thumb.className='ph error-foto';
+    thumb.innerHTML=`<span>No se subió</span><button type="button">Reintentar</button>`;
+    thumb.querySelector('button').addEventListener('click',()=>subirFotoTile(momento,thumb,file));
+  }
+}
+
+function handleFotos(input){
   const files=Array.from(input.files||[]);
   input.value='';
   if(!files.length || !momentoFotosActivo) return;
   const momento=momentoFotosActivo;
   const grid=document.getElementById(momento+'-fotos-grid');
   const addBtn=grid.querySelector('.ph.add');
-  for(const file of files){
+  files.forEach(file=>{
     const thumb=document.createElement('div');
-    thumb.className='ph'; thumb.textContent='⏳';
     grid.insertBefore(thumb,addBtn);
-    try{
-      const fd=new FormData();
-      fd.append('file',file);
-      fd.append('upload_preset',PRESET);
-      fd.append('folder',`gemacuu/viajes/${viaje.id}/${celularActual}/${momento}`);
-      const r=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,{method:'POST',body:fd});
-      const d=await r.json();
-      if(d.secure_url){
-        await sbRpc('viaje_pub_agregar_foto',{p_viaje_id:viaje.id,p_celular:celularActual,p_momento:momento,p_cloudinary_url:d.secure_url,p_cloudinary_public_id:d.public_id});
-        thumb.innerHTML=`<img src="${d.secure_url}">`;
-        const err=document.getElementById(momento+'-fotos-err');
-        if(err) err.classList.add('hidden');
-      } else {
-        thumb.remove();
-        showToast('No se pudo subir una foto.');
-      }
-    }catch(e){ thumb.remove(); showToast('No se pudo subir una foto.'); }
-  }
+    subirFotoTile(momento,thumb,file);
+  });
 }
 
 async function contarFotos(momento,gridId){
